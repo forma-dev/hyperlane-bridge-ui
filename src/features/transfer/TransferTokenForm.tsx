@@ -1,8 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
@@ -17,7 +16,7 @@ import PolygonIcon from '../../images/icons/polygon.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
-import { getChainDisplayName } from '../chains/utils';
+import { getChainDisplayName, tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
@@ -27,6 +26,7 @@ import {
   getAccountAddressAndPubKey,
   useAccountAddressForChain,
   useAccounts,
+  useConnectFns,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -233,6 +233,17 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
+  const defaultPlaceholder = "0x123456...";
+  const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
+
+  useEffect(() => {
+    if (['celestia', 'stride'].includes(values.destination)) {
+      setPlaceholder(`${values.destination}1234...`);
+    } else {
+      setPlaceholder(defaultPlaceholder);
+    }
+  }, [values]);
+
   return (
     <div className="mt-4">
       <div className="flex justify-between pr-1">
@@ -244,7 +255,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       <div className="relative w-full">
         <TextField
           name="recipient"
-          placeholder="0x123456..."
+          placeholder={placeholder}
           classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
           hover:shadow-white hover:border-white 
           hover:placeholder-white font-plex text-secondary 
@@ -408,24 +419,43 @@ function ButtonSection({
 
 function SelfButton({ disabled }: { disabled?: boolean }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+  const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
+  const connectFns = useConnectFns();
+  const connectFn = connectFns[protocol];
+
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+
   const address = useAccountAddressForChain(values.destination);
   const onClick = () => {
     if (disabled) return;
-    if (address) setFieldValue('recipient', address);
-    else
-      toast.warn(
-        `No account found for for chain ${getChainDisplayName(
-          values.destination,
-        )}, is your wallet connected?`,
-      );
+    if (address) {
+      setFieldValue('recipient', address);
+    }
+    else {
+      connectFn();
+      setIsConnecting(true);
+    }
+      // toast.warn(
+      //   `No account found for for chain ${getChainDisplayName(
+      //     values.destination,
+      //   )}, is your wallet connected?`,
+      // );
   };
+
+  useEffect(() => {
+    if (address && isConnecting) {
+      setIsConnecting(false);
+      setFieldValue('recipient', address);
+    }
+  }, [address, isConnecting]);
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      SELF
+      {address ? 'SELF' : 'CONNECT'}
     </button>
   );
 }
