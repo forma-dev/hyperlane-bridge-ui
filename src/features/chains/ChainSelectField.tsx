@@ -18,7 +18,7 @@ type Props = {
   transferType: string;
 };
 
-export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
+export function ChainSelectField({ name, label, chains, onChange, disabled }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
 
@@ -32,7 +32,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  // const [isLocked, setIsLocked] = useState(false);
+  const isLocked = false;
 
   const onClick = () => {
     if (!disabled && !isLocked) setIsModalOpen(true);

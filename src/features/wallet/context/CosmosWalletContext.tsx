@@ -18,8 +18,6 @@ const theme = extendTheme({
   },
 });
 
-console.log("theme", theme);
-
 export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
   const { chains, assets } = getCosmosKitConfig();
   const leapWithoutSnap = leapWallets.filter((wallet) => !wallet.walletName.includes('snap'));

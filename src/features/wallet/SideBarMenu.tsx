@@ -152,7 +152,7 @@ export function SideBarMenu({
   );
 }
 
-function AccountSummary({ account, address }: { account: AccountInfo; address: Address }) {
+function AccountSummary({ address }: { account: AccountInfo; address: Address }) {
   const onClickCopy = async () => {
     if (!address) return;
     await tryClipboardSet(address);

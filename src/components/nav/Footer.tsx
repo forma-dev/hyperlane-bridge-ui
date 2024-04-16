@@ -23,7 +23,7 @@ export function Footer({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   );
 }
 
-const styles = {
-  linkCol: 'flex flex-col gap-1.5',
-  linkItem: 'flex items-center capitalize text-decoration-none hover:underline underline-offset-2',
-};
+// const styles = {
+//   linkCol: 'flex flex-col gap-1.5',
+//   linkItem: 'flex items-center capitalize text-decoration-none hover:underline underline-offset-2',
+// };

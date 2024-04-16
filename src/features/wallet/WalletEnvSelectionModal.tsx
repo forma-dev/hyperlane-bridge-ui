@@ -12,7 +12,6 @@ import { useConnectFns } from './hooks/multiProtocol';
 export function WalletEnvSelectionModal({
   isOpen,
   close,
-  isSideBarOpen,
   setIsSideBarOpen,
 }: {
   isOpen: boolean;

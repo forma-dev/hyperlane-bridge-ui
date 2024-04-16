@@ -9,13 +9,11 @@ import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/ut
 
 import { SmallSpinner } from '../../components/animation/SmallSpinner';
 import { ConnectAwareSubmitButton } from '../../components/buttons/ConnectAwareSubmitButton';
-import { IconButton } from '../../components/buttons/IconButton';
 import { SolidButton } from '../../components/buttons/SolidButton';
 import { ChevronIcon } from '../../components/icons/Chevron';
 import { TextField } from '../../components/input/TextField';
 import { getIndexForToken, getTokenByIndex, getTokens, getWarpCore } from '../../context/context';
 import PolygonIcon from '../../images/icons/polygon.svg';
-import SwapIcon from '../../images/icons/swap.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
@@ -104,31 +102,31 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
   );
 }
 
-function SwapChainsButton({ disabled }: { disabled?: boolean }) {
-  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
-  const { origin, destination } = values;
+// function SwapChainsButton({ disabled }: { disabled?: boolean }) {
+//   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+//   const { origin, destination } = values;
 
-  const onClick = () => {
-    if (disabled) return;
-    setFieldValue('origin', destination);
-    setFieldValue('destination', origin);
-    // Reset other fields on chain change
-    setFieldValue('tokenIndex', undefined);
-    setFieldValue('recipient', '');
-  };
+//   const onClick = () => {
+//     if (disabled) return;
+//     setFieldValue('origin', destination);
+//     setFieldValue('destination', origin);
+//     // Reset other fields on chain change
+//     setFieldValue('tokenIndex', undefined);
+//     setFieldValue('recipient', '');
+//   };
 
-  return (
-    <IconButton
-      imgSrc={SwapIcon}
-      width={22}
-      height={22}
-      title="Swap chains"
-      classes={!disabled ? 'hover:rotate-180' : undefined}
-      onClick={onClick}
-      disabled={disabled}
-    />
-  );
-}
+//   return (
+//     <IconButton
+//       imgSrc={SwapIcon}
+//       width={22}
+//       height={22}
+//       title="Swap chains"
+//       classes={!disabled ? 'hover:rotate-180' : undefined}
+//       onClick={onClick}
+//       disabled={disabled}
+//     />
+//   );
+// }
 
 function ChainSelectSection({ isReview, type, transferType }: {
   isReview: boolean;
@@ -365,39 +363,39 @@ function ButtonSection({
   );
 }
 
-function MaxButton({ balance, disabled }: { balance?: TokenAmount; disabled?: boolean }) {
-  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
-  const { origin, destination, tokenIndex } = values;
-  const { accounts } = useAccounts();
-  const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
+// function MaxButton({ balance, disabled }: { balance?: TokenAmount; disabled?: boolean }) {
+//   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+//   const { origin, destination, tokenIndex } = values;
+//   const { accounts } = useAccounts();
+//   const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
 
-  const onClick = async () => {
-    if (!balance || isNullish(tokenIndex) || disabled) return;
-    const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
-    if (isNullish(maxAmount)) return;
-    const decimalsAmount = maxAmount.getDecimalFormattedAmount();
-    const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
-    setFieldValue('amount', roundedAmount);
-  };
+//   const onClick = async () => {
+//     if (!balance || isNullish(tokenIndex) || disabled) return;
+//     const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
+//     if (isNullish(maxAmount)) return;
+//     const decimalsAmount = maxAmount.getDecimalFormattedAmount();
+//     const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
+//     setFieldValue('amount', roundedAmount);
+//   };
 
-  return (
-    <SolidButton
-      type="button"
-      onClick={onClick}
-      color="gray"
-      disabled={disabled}
-      classes="text-xs absolute right-0.5 top-2 bottom-0.5 px-2"
-    >
-      {isLoading ? (
-        <div className="flex items-center">
-          <SmallSpinner />
-        </div>
-      ) : (
-        'MAX'
-      )}
-    </SolidButton>
-  );
-}
+//   return (
+//     <SolidButton
+//       type="button"
+//       onClick={onClick}
+//       color="gray"
+//       disabled={disabled}
+//       classes="text-xs absolute right-0.5 top-2 bottom-0.5 px-2"
+//     >
+//       {isLoading ? (
+//         <div className="flex items-center">
+//           <SmallSpinner />
+//         </div>
+//       ) : (
+//         'MAX'
+//       )}
+//     </SolidButton>
+//   );
+// }
 
 function SelfButton({ disabled }: { disabled?: boolean }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
@@ -530,13 +528,10 @@ async function validateForm(
     const { origin, destination, tokenIndex, amount, recipient } = values;
     const token = getTokenByIndex(tokenIndex);
 
-console.log("token", token);
-
     if (!token) return { token: 'Token is required' };
     const amountWei = toWei(amount, token.decimals);
     const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
 
-console.log("originTokenAmount", token.amount(amountWei));
     const result = await getWarpCore().validateTransfer({
       originTokenAmount: token.amount(amountWei),
       destination,

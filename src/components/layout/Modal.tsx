@@ -9,9 +9,7 @@ export function Modal({
   title,
   close,
   width,
-  height,
   padding,
-  margin,
   children,
   showCloseBtn = true,
 }: PropsWithChildren<{
@@ -19,9 +17,7 @@ export function Modal({
   title?: string;
   close: () => void;
   width?: string;
-  height?: string;
   padding?: string;
-  margin?: string;
   showCloseBtn?: boolean;
 }>) {
   return (
