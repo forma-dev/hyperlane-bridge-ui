@@ -27,7 +27,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     // Reset other fields on chain change
     setFieldValue('recipient', '');
     setFieldValue('amount', '');
-    setFieldValue('tokenIndex', undefined);
+    setFieldValue('tokenIndex', 0);
     if (onChange) onChange(newChainId);
   };
 
@@ -56,7 +56,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (transferType == 'deposit' && label == 'From') {
       handleChange('celestia');
     }
-  }, [transferType, label, handleChange]);
+  }, [transferType, label]);
 
   return (
     <div className="flex flex-col items-start w-full">
