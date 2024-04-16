@@ -6,17 +6,15 @@ interface Props {
 export function Footer({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   return (
     <footer
-      className={`py-8 px-16 h-[96px] ${isSideBarOpen ? 'opacity-50' : ''}`}
+      className={`py-8 px-8 h-[96px] ${isSideBarOpen ? 'opacity-50' : ''}`}
       style={{ borderTop: '4px solid #FFFFFF' }}
       onClick={() => setIsSideBarOpen(false)}
     >
-      <div className="flex flex-row justify-center items-center">
+      <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
-          <div className="hidden sm:flex flex-col">
-            <p className="leading-6  font-bold text-white text-sm">
-              Copyright &copy; Cocoding Labs 2024. All rights reserved
-            </p>
-          </div>
+          <p className="font-bold text-white text-sm">
+            Built with Hyperlane. © Cocoding Labs 2024 ✨
+          </p>
         </div>
       </div>
     </footer>
