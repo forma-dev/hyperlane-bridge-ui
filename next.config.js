@@ -77,6 +77,7 @@ const nextConfig = {
 
   // TODO consider restricting image sources
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
