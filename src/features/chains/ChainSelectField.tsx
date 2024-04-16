@@ -1,6 +1,6 @@
 import { useField, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
@@ -18,7 +18,7 @@ type Props = {
   transferType: string;
 };
 
-export function ChainSelectField({ name, label, chains, onChange, disabled }: Props) {
+export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
 
@@ -32,21 +32,31 @@ export function ChainSelectField({ name, label, chains, onChange, disabled }: Pr
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [isLocked, setIsLocked] = useState(false);
-  const isLocked = false;
+  const [isLocked, setIsLocked] = useState(false);
 
   const onClick = () => {
     if (!disabled && !isLocked) setIsModalOpen(true);
   };
 
-  // useEffect(() => {
-  //   if (transferType == 'withdraw' && label == 'From') {
-  //     handleChange('sketchpad');
-  //     setIsLocked(true);
-  //   } else {
-  //     setIsLocked(false);
-  //   }
-  // }, [transferType, label]);
+  useEffect(() => {
+    if (
+      (transferType == 'withdraw' && label == 'From') ||
+      (transferType == 'deposit' && label == 'To')
+    ) {
+      handleChange('sketchpad');
+      setIsLocked(true);
+    } else {
+      setIsLocked(false);
+    }
+
+    if (transferType == 'withdraw' && label == 'To') {
+      handleChange('stride');
+    }
+
+    if (transferType == 'deposit' && label == 'From') {
+      handleChange('celestia');
+    }
+  }, [transferType, label]);
 
   return (
     <div className="flex flex-col items-start w-full">

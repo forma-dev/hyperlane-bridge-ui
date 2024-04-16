@@ -85,7 +85,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
               type="to"
               transferType={transferType}
             />
-            <TimeTransfer label="Time to Transfer" time="4" />
+            {/* <TimeTransfer label="Time to Transfer" time="4" /> */}
 
             <RecipientSection isReview={isReview} />
             <ReviewDetails visible={isReview} />
@@ -133,7 +133,16 @@ function ChainSelectSection({ isReview, type, transferType }: {
   type: string;
   transferType: string;
 }) {
-  const chains = useMemo(() => getWarpCore().getTokenChains(), []);
+  let chains = useMemo(() => getWarpCore().getTokenChains(), []);
+  if (type === 'from' && transferType === 'deposit') {
+    chains = chains.filter(chain => !['forma', 'sketchpad'].includes(chain));
+  }
+
+  if (type === 'to' && transferType === 'withdraw') {
+    // chains = chains.filter(chain => !['forma', 'sketchpad'].includes(chain));
+    chains = ['stride'];
+  }
+
   return (
     <div className="flex items-center justify-start space-x-7 sm:space-x-10">
       {type === 'from' ? (
@@ -288,18 +297,18 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   );
 }
 
-function TimeTransfer({ label, time }:
-{
-  label: string;
-  time?: string | null;
-}) {
-  return (
-    <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
-      {`${label}:`}
-      <span className="text-primary font-medium">~{`${time}`} minutes</span>
-    </div>
-  );
-}
+// function TimeTransfer({ label, time }:
+// {
+//   label: string;
+//   time?: string | null;
+// }) {
+//   return (
+//     <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
+//       {`${label}:`}
+//       <span className="text-primary font-medium">~{`${time}`} minutes</span>
+//     </div>
+//   );
+// }
 
 function ButtonSection({
   isReview,
