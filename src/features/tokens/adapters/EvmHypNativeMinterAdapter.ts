@@ -1,21 +1,21 @@
 import {
-  EvmNativeTokenAdapter,
-  ITokenAdapter,
+  EvmHypSyntheticAdapter,
+  IHypTokenAdapter,
   MultiProtocolProvider,
-  TransferRemoteParams
+  TransferParams,
+  TransferRemoteParams,
 } from '@hyperlane-xyz/sdk';
 import {
   addressToByteHexString,
   addressToBytes32
 } from '@hyperlane-xyz/utils';
-import { PopulatedTransaction } from 'ethers';
+import { BigNumber, PopulatedTransaction } from 'ethers';
 import { HypNativeMinter__factory } from '../../../contracts/HypNativeMinter__factory';
 
 export class EvmHypNativeMinterAdapter
-  extends EvmNativeTokenAdapter
-  implements ITokenAdapter<PopulatedTransaction>
+  extends EvmHypSyntheticAdapter
+  implements IHypTokenAdapter<PopulatedTransaction>
 {
-  public readonly contract: T;
 
   constructor(
     public readonly chainName: ChainName,
@@ -23,14 +23,27 @@ export class EvmHypNativeMinterAdapter
     public readonly addresses: { token: Address },
     public readonly contractFactory: any = HypNativeMinter__factory,
   ) {
-    super(chainName, multiProvider, addresses);
-    this.contract = contractFactory.connect(
-      addresses.token,
-      this.getProvider(),
-    );
+    super(chainName, multiProvider, addresses, contractFactory);
   }
 
-  override async populateTransferRemoteTx({
+  async isApproveRequired(): Promise<boolean> {
+    return false;
+  }
+
+  async getBalance(address: Address): Promise<bigint> {
+    const balance = await this.getProvider().getBalance(address);
+    return BigInt(balance.toString());
+  }
+
+  async populateTransferTx({
+    weiAmountOrId,
+    recipient,
+  }: TransferParams): Promise<PopulatedTransaction> {
+    const value = BigNumber.from(weiAmountOrId.toString());
+    return { value, to: recipient };
+  }
+
+  async populateTransferRemoteTx({
     weiAmountOrId,
     destination,
     recipient,

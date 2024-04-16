@@ -55,19 +55,7 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
           },
         }}
         modalTheme={{
-          // defaultTheme: 'dark',
-          customTheme: "custom",
-          themeDefs: [
-            {
-              name: "custom",
-              vars: {
-                colors: {
-                  primary500: "#4A5568",
-                  background: '#000',
-                },
-              },
-            },
-          ],
+          defaultTheme: 'dark',
           overrides: {
             'connect-modal': {
               bg: { dark: '#000', light: '#000' },
