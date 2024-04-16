@@ -17,13 +17,6 @@ export const tokenConfigs: WarpCoreConfig = {
       logoURI: '/logos/celestia.png',
       connections: [
         {
-          token:
-            'cosmos|stride|ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
-          type: TokenConnectionType.Ibc,
-          sourcePort: 'transfer',
-          sourceChannel: 'channel-78',
-        },
-        {
           token: 'ethereum|sketchpad|0x943BBcCF80A065Da5194D9d2534769f717d07Eb6',
           type: TokenConnectionType.IbcHyperlane,
           sourcePort: 'transfer',
@@ -33,6 +26,13 @@ export const tokenConfigs: WarpCoreConfig = {
             'stride185rzjf3h7vx9fkw4m20hnehf4985fshky6nxdm7ft0eeylwyxewspqfker',
           intermediateIbcDenom:
             'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
+        },
+        {
+          token:
+            'cosmos|stride|ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
+          type: TokenConnectionType.Ibc,
+          sourcePort: 'transfer',
+          sourceChannel: 'channel-78',
         },
       ],
     },
