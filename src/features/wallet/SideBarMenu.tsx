@@ -8,7 +8,7 @@ import { Identicon } from '../../components/icons/Identicon';
 import { PLACEHOLDER_COSMOS_CHAIN } from '../../consts/values';
 import { tryFindToken } from '../../context/context';
 import ArrowRightIcon from '../../images/icons/arrow-right.svg';
-import CollapseIcon from '../../images/icons/collapse-icon.svg';
+import CollapseIcon from '../../images/icons/collapse-icon-red.svg';
 import Logout from '../../images/icons/logout.svg';
 import ResetIcon from '../../images/icons/reset-icon.svg';
 import Wallet from '../../images/icons/wallet.svg';
@@ -77,15 +77,24 @@ export function SideBarMenu({
       >
         {isMenuOpen && (
           <button
-            className="absolute flex items-center justify-center w-9 h-full -translate-x-full left-0 top-0 bg-white bg-opacity-60 hover:bg-opacity-80 rounded-l-md transition-all"
+            className="absolute flex items-center justify-center w-9 h-full -translate-x-full left-0 top-0 bg-sideBar border-2 border-white border-solid transition-all hover:bg-hoverForm"
             onClick={() => onClose()}
           >
-            <Image src={CollapseIcon} width={15} height={24} alt="" />
+            <Image
+              src={CollapseIcon}
+              width={24}
+              height={24}
+              alt=""
+              style={{
+                filter:
+                  'brightness(0) saturate(100%) invert(95%) sepia(13%) saturate(5448%) hue-rotate(296deg) brightness(96%) contrast(110%)',
+              }}
+            />
           </button>
         )}
-        <div className="w-full h-full flex flex-col overflow-y-auto">
-          <div className="w-full rounded-t-md bg-mint-600 py-2 px-3.5 text-white text-base font-normal tracking-wider">
-            Connected Wallets
+        <div className="bg-sideBar border-2 border-white border-solid w-full h-full flex flex-col overflow-y-auto">
+          <div className="w-full border-2 border-solid border-white bg-black py-2 px-3.5 text-white text-lg font-bold leading-6  tracking-wider">
+            CONNECTED WALLETS
           </div>
           <div className="my-3 px-3 space-y-3">
             {readyAccounts.map((acc, i) =>
@@ -95,16 +104,16 @@ export function SideBarMenu({
               }),
             )}
             <button onClick={onConnectWallet} className={styles.btn}>
-              <Icon src={Wallet} alt="" size={18} />
-              <div className="ml-2">Connect wallet</div>
+              <Icon src={Wallet} alt="" size={24} className="invert" />
+              <div className="ml-2 text-white">Connect wallet</div>
             </button>
             <button onClick={onClickDisconnect} className={styles.btn}>
-              <Icon src={Logout} alt="" size={20} />
-              <div className="ml-2">Disconnect all wallets</div>
+              <Icon src={Logout} alt="" size={24} className="invert" />
+              <div className="ml-2 text-white">Disconnect all wallets</div>
             </button>
           </div>
-          <div className="w-full bg-mint-600 py-2 px-3.5 mb-4 text-white text-base font-normal tracking-wider">
-            Transfer History
+          <div className="w-full border-2 border-solid border-white bg-black py-2 px-3.5 mb-4 text-white text-lg font-bold leading-6 tracking-wider">
+            TRANSFER HISTORY
           </div>
           <div className="flex grow flex-col px-3.5">
             <div className="grow flex flex-col w-full">
@@ -121,9 +130,9 @@ export function SideBarMenu({
                 ))}
             </div>
             {sortedTransfers?.length > 0 && (
-              <button onClick={resetTransfers} className="my-5 mx-2 flex flex-row items-center">
-                <Image className="mr-4" src={ResetIcon} width={17} height={17} alt="" />
-                <span className="text-gray-900 text-sm font-normal">Reset transaction history</span>
+              <button onClick={resetTransfers} className="flex flex-row items-center px-2.5 py-2 my-5 hover:bg-hoverForm transition-all duration-500">
+                <Image className="mr-4 invert" src={ResetIcon} width={17} height={17} alt="" />
+                <span className="text-white text-sm font-normal">Reset transaction history</span>
               </button>
             )}
           </div>
@@ -154,14 +163,14 @@ function AccountSummary({ account, address }: { account: AccountInfo; address: A
     <button
       key={address}
       onClick={onClickCopy}
-      className={`${styles.btn} border border-gray-200 rounded-xl`}
+      className={`${styles.btn} bg-sideBar border border-white border-solid`}
     >
       <div className="shrink-0">
         <Identicon address={address} size={40} />
       </div>
       <div className="flex flex-col mx-3 items-start">
-        <div className="text-gray-800 text-sm font-normal">{account.connectorName || 'Wallet'}</div>
-        <div className="text-xs text-left truncate w-64">{address ? address : 'Unknown'}</div>
+        {/* <div className="text-gray-800 text-sm font-normal">{account.connectorName || 'Wallet'}</div> */}
+        <div className="text-white font-medium leading-6 text-sm truncate w-64">{address ? address : 'Unknown'}</div>
       </div>
     </button>
   );
@@ -181,24 +190,24 @@ function TransferSummary({
     <button
       key={timestamp}
       onClick={onClick}
-      className="flex justify-between items-center rounded-xl border border-gray-200 px-2.5 py-2 mb-2.5 hover:bg-gray-200 active:bg-gray-300 transition-all duration-500"
+      className="flex justify-between items-center border border-white px-2.5 py-2 mb-3 hover:bg-hoverForm transition-all duration-500"
     >
-      <div className="flex">
-        <div className="mr-2.5 flex flex-col items-center justify-center rounded-full bg-gray-100 h-[2.25rem] w-[2.25rem] p-1.5">
-          <ChainLogo chainName={origin} size={20} />
+      <div className="flex items-center">
+        <div className="mr-2.5 flex flex-col items-center justify-center h-[2.25rem] w-[2.25rem] p-1.5">
+          <ChainLogo chainName={origin} size={32} />
         </div>
         <div className="flex flex-col">
           <div className="flex flex-col">
             <div className="flex items items-baseline">
-              <span className="text-gray-800 text-sm font-normal">{amount}</span>
-              <span className="text-gray-800 text-sm font-normal ml-1">{token?.symbol || ''}</span>
+              <span className="text-white text-sm font-medium leading-6">{amount}</span>
+              <span className="text-white text-sm font-medium leading-6 ml-1">{token?.symbol || ''}</span>
             </div>
             <div className="mt-1 flex flex-row items-center">
-              <span className="text-thin text-gray-900 font-normal tracking-wide">
+              <span className="text-white text-sm font-medium leading-6 tracking-wide">
                 {getChainDisplayName(origin, true)}
               </span>
-              <Image className="mx-1" src={ArrowRightIcon} width={10} height={10} alt="" />
-              <span className="text-thin text-gray-900 font-normal tracking-wide">
+              <Image className="mx-1 invert" src={ArrowRightIcon} width={10} height={10} alt="" />
+              <span className="text-white text-sm font-medium leading-6 tracking-wide">
                 {getChainDisplayName(destination, true)}
               </span>
             </div>
@@ -207,7 +216,12 @@ function TransferSummary({
       </div>
       <div className="flex w-6 h-6">
         {STATUSES_WITH_ICON.includes(status) ? (
-          <Image src={getIconByTransferStatus(status)} width={25} height={25} alt="" />
+          <Image src={getIconByTransferStatus(status)} width={28} height={26} alt=""
+            style={{
+              filter:
+                'brightness(0) saturate(100%) invert(100%) sepia(3%) saturate(7474%) hue-rotate(232deg) brightness(105%) contrast(100%)',
+            }}
+          />
         ) : (
           <SmallSpinner className="-ml-1 mr-3" />
         )}
@@ -235,5 +249,5 @@ function Icon({
 }
 
 const styles = {
-  btn: 'w-full flex items-center px-2.5 py-2 text-sm hover:bg-gray-200 active:bg-gray-300 rounded transition-all duration-500',
+  btn: 'w-full flex items-center px-2.5 py-2 text-sm hover:bg-hoverForm transition-all duration-500',
 };

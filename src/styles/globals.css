@@ -34,6 +34,10 @@ select:focus {
   outline: none;
 }
 
+input {
+  color-scheme: dark;
+}
+
 /*
 Text and shadows
 ================
@@ -192,6 +196,26 @@ Toasts
   --toastify-color-progress-success: var(--toastify-color-success);
   --toastify-color-progress-warning: var(--toastify-color-warning);
   --toastify-color-progress-error: var(--toastify-color-error);
+}
+
+.Toastify__toast {
+  background-color: #1e1e1e !important;
+  border-radius: 0;
+  border: 1px solid #737373;
+}
+.Toastify__toast {
+  color: var(--toastify-text-color-dark) !important;
+}
+.Toastify__close-button {
+  color: var(--toastify-text-color-dark) !important;
+}
+.Toastify__toast-body {
+  font-family: IBM Plex Mono;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 21px;
+  letter-spacing: 0em;
+  text-align: left;
 }
 
 /*

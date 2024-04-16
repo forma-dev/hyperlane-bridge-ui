@@ -1,4 +1,4 @@
-import { RainbowKitProvider, connectorsForWallets, lightTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
   argentWallet,
@@ -16,6 +16,7 @@ import { publicProvider } from 'wagmi/providers/public';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
+import merge from 'lodash.merge';
 import { APP_NAME } from '../../../consts/app';
 import { config } from '../../../consts/config';
 import { getWarpCore } from '../../../context/context';
@@ -60,6 +61,27 @@ const wagmiConfig = createConfig({
   connectors,
 });
 
+const customTheme = merge(darkTheme(), {
+  colors: {
+    accentColor: Color.button,
+    modalBorder: '#FFFFFF',
+    modalBackground: '#000000',
+  },
+  radii: {
+    actionButton: '0px',
+    connectButton: '0px',
+    menuButton: '0px',
+    modal: '0px',
+    modalMobile: '0px',
+  },
+  shadows: {
+    dialog: '0 0 #0000, 0 0 #0000, 4px 6px 0px 0px #FFFFFF',
+  },
+  fonts: {
+    body: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
+  },
+} as Theme);
+
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
   const initialChain = useMemo(() => {
     const tokens = getWarpCore().tokens;
@@ -70,12 +92,9 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider
         chains={chains}
-        theme={lightTheme({
-          accentColor: Color.primaryBlue,
-          borderRadius: 'small',
-          fontStack: 'system',
-        })}
+        theme={customTheme}
         initialChain={initialChain}
+        modalSize="compact"
       >
         {children}
       </RainbowKitProvider>

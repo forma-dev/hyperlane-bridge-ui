@@ -4,10 +4,13 @@ import {
   IToken,
   MultiProtocolProvider,
   Token,
-  WarpCore,
+  WarpCore
 } from '@hyperlane-xyz/sdk';
-import { isNullish } from '@hyperlane-xyz/utils';
+import {
+  isNullish
+} from '@hyperlane-xyz/utils';
 
+import { EvmHypNativeMinterAdapter } from '../features/tokens/adapters/EvmHypNativeMinterAdapter';
 import { getChainConfigs } from './chains';
 import { getWarpCoreConfig } from './tokens';
 
@@ -35,6 +38,18 @@ export function initWarpContext() {
   const multiProvider = new MultiProtocolProvider<{ mailbox?: Address }>(chains);
   const coreConfig = getWarpCoreConfig();
   const warpCore = WarpCore.FromConfig(multiProvider, coreConfig);
+
+  for (let i = 0; i < warpCore.tokens.length; i++) {
+    const { standard, chainName, addressOrDenom, } = warpCore.tokens[i];
+    if ((chainName == "sketchpad" || chainName == "forma") && standard == 'EvmNative') {
+      warpCore.tokens[i].getHypAdapter = function(multiProvider, destination) {
+        return new EvmHypNativeMinterAdapter(chainName, multiProvider, {
+          token: addressOrDenom,
+        });
+      };
+    }
+  }
+
   return { chains, multiProvider, warpCore };
 }
 

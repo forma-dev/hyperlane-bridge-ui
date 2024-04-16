@@ -1,24 +1,32 @@
-import { WideChevron } from '@hyperlane-xyz/widgets';
+import { useState } from 'react';
 
 import { Card } from '../../components/layout/Card';
-import { Color } from '../../styles/Color';
 
 import { TransferTokenForm } from './TransferTokenForm';
+import { TransferTokenTab } from './TransferTokenTab';
 
 export function TransferTokenCard() {
+  const [activeTab, setActiveTab] = useState<string>('deposit');
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   return (
-    <Card className="w-100 sm:w-[31rem]">
+    <Card className="w-100 relative">
       <>
-        <div className="absolute left-0 right-0 -top-36 xs:-top-[6.5rem] flex justify-center overflow-hidden z-10">
-          <WideChevron
-            direction="s"
-            height="100%"
-            width="100"
-            rounded={true}
-            color={Color.primaryMint}
+        <div className="relative flex items-start justify-between z-20">
+          <TransferTokenTab
+            activeTab={activeTab}
+            handleTabChange={handleTabChange}
+            transferType="deposit"
+          />
+          <TransferTokenTab
+            activeTab={activeTab}
+            handleTabChange={handleTabChange}
+            transferType="withdraw"
           />
         </div>
-        <TransferTokenForm />
+        <TransferTokenForm transferType={activeTab} />
       </>
     </Card>
   );

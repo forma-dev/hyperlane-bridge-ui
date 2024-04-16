@@ -109,17 +109,17 @@ export function TransfersDetailsModal({
       isOpen={isOpen}
       close={onClose}
       title=""
-      padding="p-4 md:p-5"
+      padding="p-4 md:p-6"
       width="max-w-sm"
     >
       {isFinal && (
         <div className="flex justify-between">
-          <h2 className="text-gray-600 font-medium">{date}</h2>
-          <div className="flex items-center font-medium">
+          <h2 className="text-white font-medium text-base leading-6">{date}</h2>
+          <div className="flex items-center font-medium text-base leading-6">
             {isSent ? (
-              <h3 className="text-mint-500">Sent</h3>
-            ) : (
-              <h3 className="text-red-500">Failed</h3>
+              <h3 className="text-[#35D07F] font-bold">SENT</h3>
+              ) : (
+              <h3 className="text-red-500 font-bold">FAILED</h3>
             )}
             <Image
               src={getIconByTransferStatus(status)}
@@ -132,7 +132,7 @@ export function TransfersDetailsModal({
         </div>
       )}
 
-      <div className="mt-4 p-3 flex items-center justify-center w-full rounded-full bg-mint-200">
+      <div className="mt-4 p-3 flex items-center justify-center w-full bg-toast">
         <TokenIcon token={token} size={30} />
         <div className="ml-2 flex items items-baseline">
           <span className="text-xl font-medium">{amount}</span>
@@ -142,17 +142,17 @@ export function TransfersDetailsModal({
 
       <div className="mt-4 flex items-center justify-around">
         <div className="ml-2 flex flex-col items-center">
-          <ChainLogo chainName={origin} size={64} background={true} />
+          <ChainLogo chainName={origin} size={64} background={false} />
           <span className="mt-1 font-medium tracking-wider">
             {getChainDisplayName(origin, true)}
           </span>
         </div>
-        <div className="flex mb-6 sm:space-x-1.5">
+        <div className="flex mb-5 sm:space-x-1.5">
           <WideChevron />
           <WideChevron />
         </div>
         <div className="mr-2 flex flex-col items-center">
-          <ChainLogo chainName={destination} size={64} background={true} />
+          <ChainLogo chainName={destination} size={64} background={false} />
           <span className="mt-1 font-medium tracking-wider">
             {getChainDisplayName(destination, true)}
           </span>
@@ -191,16 +191,16 @@ export function TransfersDetailsModal({
         </div>
       ) : (
         <div className="py-4 flex flex-col justify-center items-center">
-          <Spinner />
+          <Spinner white={true} />
           <div
-            className={`mt-5 text-sm text-center ${
-              status === TransferStatus.Failed ? 'text-red-600' : 'text-gray-600'
+            className={`mt-5 text-white font-semibold text-sm text-center ${
+              status === TransferStatus.Failed ? 'text-red-600' : 'text-white'
             }`}
           >
             {statusDescription}
           </div>
           {showSignWarning && (
-            <div className="mt-3 text-sm text-center text-gray-600">
+            <div className="mt-3 text-white font-semibold text-sm text-center">
               If your wallet does not show a transaction request, please try the transfer again.
             </div>
           )}
@@ -245,10 +245,16 @@ function TransferProperty({ name, value, url }: { name: string; value: string; u
         <div className="flex items-center space-x-2">
           {url && (
             <a href={url} target="_blank" rel="noopener noreferrer">
-              <Image src={LinkIcon} width={14} height={14} alt="" />
+              <Image
+                className="color-[#1E1E1E] invert hover:opacity-70 active:opacity-90"
+                src={LinkIcon}
+                width={14}
+                height={14}
+                alt=""
+              />
             </a>
           )}
-          <CopyButton copyValue={value} width={14} height={14} />
+          <CopyButton classes="color-[#1E1E1E] invert" copyValue={value} width={14} height={14} />
         </div>
       </div>
       <div className="mt-1 text-sm leading-normal tracking-wider truncate">{value}</div>

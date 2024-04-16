@@ -2,34 +2,42 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { WalletControlBar } from '../../features/wallet/WalletControlBar';
-import Logo from '../../images/logos/app-logo.svg';
-import Name from '../../images/logos/hyperlane-white.svg';
+import Logo from '../../images/logos/Forma-Logo.svg';
+import Name from '../../images/logos/nft4me.png';
 
-export function Header() {
+interface Props {
+  isSideBarOpen?: boolean;
+  setIsSideBarOpen: (isSideBarOpen: boolean) => void;
+}
+
+export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
+  const handleHeaderClick = (e) => {
+    const clickX = e.clientX;
+    // Calculate the width in pixels (22 rem)
+    const headerElement = e.currentTarget;
+    const sideBarWidth = 352; // You need to set your actual sidebar width
+    const headerWidth = headerElement.offsetWidth - sideBarWidth;
+
+    if (clickX >= 0 && clickX <= headerWidth && isSideBarOpen) {
+      setIsSideBarOpen(false);
+    }
+  };
   return (
-    <header className="px-2 sm:px-6 lg:px-12 pt-3 pb-2 w-full">
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col">
-          <Link href="/" className="flex items-center">
-            <Image src={Logo} width={24} alt="" />
-            <Image src={Name} width={130} alt="" className="hidden sm:block mt-0.5 ml-2" />
-            <h1 className="ml-2 pt-0.5 text-2xl text-white font-bold uppercase tracking-wide">
-              Nexus
-            </h1>
-          </Link>
-          <h2 className="flex text-white text-sm md:text-lg font-bold">
-            Powered by Mitosis and Neutron{' '}
-            <Image
-              src="/logos/neutron.svg"
-              alt=""
-              width={18}
-              height={18}
-              className="hidden sm:block ml-1.5 invert"
-            ></Image>
-          </h2>
-        </div>
+    <header
+      className={`pt-3 pb-2 w-full border-b-4 ${
+        isSideBarOpen ? 'border-white/[.5]' : 'border-white'
+      } h-[96px]`}
+      onClick={handleHeaderClick}
+    >
+      <div className="flex justify-between items-center">
+        <Link href="/" className={`py-2 flex items-center ${isSideBarOpen ? 'opacity-50' : ''} `}>
+          <Image src={Logo} width={40} height={40} alt="Forma Bridge Logo" />
+          <Image src={Name} className="ml-[12px]" width={112} height={24} alt="Forma Bridge" />
+          {/* <Image src={Name} width={110} alt="" className="hidden sm:block mt-0.5 ml-2" />
+          <Image src={Title} width={185} alt="" className="mt-0.5 ml-2 pb-px" /> */}
+        </Link>
         <div className="flex flex-col items-end md:flex-row-reverse md:items-start gap-2">
-          <WalletControlBar />
+          <WalletControlBar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
         </div>
       </div>
     </header>

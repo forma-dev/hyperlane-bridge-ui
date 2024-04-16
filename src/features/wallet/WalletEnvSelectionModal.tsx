@@ -9,18 +9,29 @@ import { Modal } from '../../components/layout/Modal';
 
 import { useConnectFns } from './hooks/multiProtocol';
 
-export function WalletEnvSelectionModal({ isOpen, close }: { isOpen: boolean; close: () => void }) {
+export function WalletEnvSelectionModal({
+  isOpen,
+  close,
+  isSideBarOpen,
+  setIsSideBarOpen,
+}: {
+  isOpen: boolean;
+  close: () => void;
+  isSideBarOpen: boolean;
+  setIsSideBarOpen: (isOpen: boolean) => void;
+}) {
   const connectFns = useConnectFns();
 
   const onClickEnv = (env: ProtocolType) => () => {
     close();
+    setIsSideBarOpen(true);
     const connectFn = connectFns[env];
     if (connectFn) connectFn();
   };
 
   return (
-    <Modal title="Select Wallet Environment" isOpen={isOpen} close={close} width="max-w-sm">
-      <div className="pt-4 pb-2 flex flex-col space-y-2.5">
+    <Modal title="Select Network" isOpen={isOpen} close={close} width={'max-w-[405px]'}>
+      <div className="px-8 pt-4 pb-8 mt-8 flex flex-col space-y-6">
         <EnvButton
           onClick={onClickEnv(ProtocolType.Ethereum)}
           subTitle="an EVM"
@@ -28,13 +39,13 @@ export function WalletEnvSelectionModal({ isOpen, close }: { isOpen: boolean; cl
         >
           Ethereum
         </EnvButton>
-        <EnvButton
+        {/* <EnvButton
           onClick={onClickEnv(ProtocolType.Sealevel)}
           subTitle="a Solana"
           logoChainId={chainMetadata.solanadevnet.chainId}
         >
           Solana
-        </EnvButton>
+        </EnvButton> */}
         <EnvButton
           onClick={onClickEnv(ProtocolType.Cosmos)}
           subTitle="a Cosmos"
@@ -67,11 +78,11 @@ function EnvButton({
   return (
     <button
       onClick={onClick}
-      className="w-full py-3.5 space-y-2.5 flex flex-col items-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-200 active:bg-gray-200 transition-all"
+      className="w-full py-6 space-y-2.5 flex flex-col items-center border-2 border-white hover:bg-hoverForm"
     >
       {logo}
-      <div className="uppercase text-gray-800 tracking-wide">{children}</div>
-      <div className="text-sm text-gray-500">{`Connect to ${subTitle} compatible wallet`}</div>
+      <div className="uppercase text-primary font-medium text-sm leading-5 tracking-wide">{children}</div>
+      <div className="text-secondary font-normal text-sm leading-5">{`Connect to ${subTitle} compatible wallet`}</div>
     </button>
   );
 }

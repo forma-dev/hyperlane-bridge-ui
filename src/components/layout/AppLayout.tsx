@@ -1,14 +1,20 @@
 import Head from 'next/head';
-import Image from 'next/image';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useState } from 'react';
 
 import { APP_NAME } from '../../consts/app';
-import Planet1 from '../../images/planets/planet-1.webp';
-import Planet2 from '../../images/planets/planet-2.webp';
+import { Color } from '../../styles/Color';
 import { Footer } from '../nav/Footer';
 import { Header } from '../nav/Header';
 
 export function AppLayout({ children }: PropsWithChildren) {
+  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
+
+  const handleClick = () => {
+    if (isSideBarOpen) {
+      setIsSideBarOpen(false);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -17,31 +23,23 @@ export function AppLayout({ children }: PropsWithChildren) {
         <title>{APP_NAME}</title>
       </Head>
       <div
-        style={styles.container}
+        style={{ backgroundColor: Color.background }}
         id="app-content"
-        className="relative flex flex-col justify-between h-full min-h-screen w-full min-w-screen bg-black2"
+        className="h-full min-h-screen w-full min-w-screen font-plex"
       >
-        <div className="hidden md:flex absolute left-[8%] top-[15%]">
-          <Image src={Planet1} alt="Planet 1" width={200} priority={false} quality={50}></Image>
+        <div className="max-w-screen-xl mx-auto flex flex-col justify-between min-h-screen px-4">
+          <Header isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
+          <main
+            className={`w-full flex-1 pb-36 pt-20 flex items-center justify-center ${
+              isSideBarOpen ? 'opacity-50' : ''
+            }`}
+            onClick={handleClick}
+          >
+            {children}
+          </main>
+          <Footer isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
         </div>
-        <div className="hidden md:flex absolute right-[8%] bottom-1/4">
-          <Image src={Planet2} alt="Planet 2" width={220} priority={false} quality={50}></Image>
-        </div>
-        <Header />
-        <div className="sm:px-4 mx-auto grow flex items-center max-w-screen-xl">
-          <main className="w-full flex-1 my-4 flex items-center justify-center">{children}</main>
-        </div>
-        <Footer />
       </div>
     </>
   );
 }
-
-const styles = {
-  container: {
-    backgroundImage: 'url(/backgrounds/lines-bg-top.svg)',
-    backgroundSize: '94vw',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center 80px',
-  },
-};

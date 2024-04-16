@@ -22,16 +22,20 @@ export function ChainSelectListModal({
   };
 
   return (
-    <Modal isOpen={isOpen} title="Select Chain" close={close}>
-      <div className="mt-2 flex flex-col space-y-1">
+    <Modal width={'max-w-[405px]'} isOpen={isOpen} title="Select Chain" close={close}>
+      <div className="mt-4 flex flex-col space-y-1">
         {chains.map((c) => (
           <button
             key={c}
-            className="py-1.5 px-2 text-sm flex items-center rounded hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
+            className="pb-2 px-6  text-sm flex items-center"
             onClick={onSelectChain(c)}
           >
-            <ChainLogo chainName={c} size={16} background={false} />
-            <span className="ml-2">{getChainDisplayName(c, true)}</span>
+            <div className="px-2 py-2 flex items-center w-full hover:bg-hoverForm ">
+              <ChainLogo chainName={c} size={32} background={false} />
+              <span className="ml-2  font-medium text-sm leading-5">
+                {getChainDisplayName(c, true)}
+              </span>
+            </div>
           </button>
         ))}
       </div>

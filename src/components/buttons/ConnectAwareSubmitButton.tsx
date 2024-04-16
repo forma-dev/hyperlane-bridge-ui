@@ -28,8 +28,8 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
   const hasError = Object.keys(touched).length > 0 && Object.keys(errors).length > 0;
   const firstError = `${Object.values(errors)[0]}` || 'Unknown error';
 
-  const color = hasError ? 'red' : 'mint';
-  const content = hasError ? firstError : isAccountReady ? text : 'Connect Wallet';
+  const color = hasError ? 'red' : 'button';
+  const content = hasError ? firstError : isAccountReady ? text : 'CONNECT WALLET';
   const type = isAccountReady ? 'submit' : 'button';
   const onClick = isAccountReady ? undefined : connectFn;
 
@@ -44,7 +44,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
 
   return (
     <SolidButton type={type} color={color} onClick={onClick} classes={classes}>
-      {content}
+      <div className="ml-1.5 text-white text-sm leading-6 font-bold font-plex">{content}</div>
     </SolidButton>
   );
 }

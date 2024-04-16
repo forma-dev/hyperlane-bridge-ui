@@ -92,20 +92,39 @@ function TokenButton({
       type="button"
       className={`${styles.base} ${disabled ? styles.disabled : styles.enabled}`}
       onClick={onClick}
+      style={{
+        borderLeft: '2px solid #6E6E6E',
+        borderRadius: 'none',
+      }}
     >
       <div className="flex items-center">
-        {token && <TokenIcon token={token} size={20} />}
-        <span className={`ml-2 ${!token?.symbol && 'text-slate-400'}`}>
-          {token?.symbol || (isAutomatic ? 'No routes available' : 'Select Token')}
-        </span>
+        {token ? (
+          <>
+            <TokenIcon token={token} size={24} />
+            <span className={`text-primary ml-2 text-xl font-medium leading-5 ${!token?.symbol}`}>
+              {token?.symbol || ''}
+            </span>
+          </>
+        ) : (
+          <span className={`text-secondary text-xl font-medium leading-5`}>Select</span>
+        )}
       </div>
-      {!isAutomatic && <Image src={ChevronIcon} width={12} height={8} alt="" />}
+      {!isAutomatic && (
+        <Image
+          src={ChevronIcon}
+          className="ml-2 texr-secondary"
+          width={12}
+          height={8}
+          alt=""
+          style={{ filter: 'invert(1)' }}
+        />
+      )}
     </button>
   );
 }
 
 const styles = {
-  base: 'mt-1.5 w-full px-2.5 py-2 flex items-center justify-between text-sm rounded-full border border-mint-300 outline-none transition-colors duration-500',
-  enabled: 'hover:bg-gray-50 active:bg-gray-100 focus:border-mint-500',
-  disabled: 'bg-gray-100 cursor-default',
+  base: 'text-secondary px-3.5 py-2 flex items-center justify-center outline-none transition-colors duration-500 absolute right-0.5 top-2 bottom-0.5 px-2',
+  enabled: 'bg-black',
+  disabled: 'bg-form cursor-default',
 };

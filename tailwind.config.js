@@ -9,6 +9,7 @@ module.exports = {
       sans: ['Neue Haas Grotesk', 'Helvetica', 'sans-serif'],
       serif: ['Garamond', 'serif'],
       mono: ['Courier New', 'monospace'],
+      plex: ['IBM Plex Mono'],
     },
     screens: {
       xs: '480px',
@@ -111,6 +112,21 @@ module.exports = {
       },
       maxWidth: {
         'xl-1': '39.5rem',
+      },
+      backgroundColor: {
+        'button': '#FF6B6B',
+        'form': '#0E0E0E',
+        'sideBar': '#0E0E0E',
+        'hoverForm': '#1E1E1E',
+        'toast': '#1E1E1E',
+      },
+      textColor: {
+        primary: '#FFFFFF',
+        secondary: '#8C8D8F',
+        error: '#FF6B6B',
+      },
+      boxShadow: {
+        dropdown: '2px 4px 0px 0px rgba(255,255,255,0.4)',
       },
     },
   },

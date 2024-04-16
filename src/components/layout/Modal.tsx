@@ -9,15 +9,19 @@ export function Modal({
   title,
   close,
   width,
+  height,
   padding,
+  margin,
   children,
   showCloseBtn = true,
 }: PropsWithChildren<{
   isOpen: boolean;
-  title: string;
+  title?: string;
   close: () => void;
   width?: string;
+  height?: string;
   padding?: string;
+  margin?: string;
   showCloseBtn?: boolean;
 }>) {
   return (
@@ -35,8 +39,8 @@ export function Modal({
           <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+        <div className="fixed inset-0 overflow-y-auto bg-black bg-opacity-70">
+          <div className="flex min-h-full items-center justify-center p-4 text-center font-plex">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -47,23 +51,31 @@ export function Modal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className={`w-full ${
+                className={`bg-black text-primary w-full ${
                   width || 'max-w-xs'
-                } max-h-[90vh] transform overflow-auto rounded-2xl bg-white ${
-                  padding || 'px-4 py-4'
-                } text-left shadow-lg transition-all`}
+                } md:min-h-[357px] mt-20 mr-2 max-h-[90vh] transform overflow-auto ${
+                  padding || ''
+                } text-left transition-all 
+                border-2 border-solid border-white
+                shadow-[4px_6px_0px_0px_#FFFFFF]
+                `}
               >
-                <Dialog.Title as="h3" className="text text-gray-700">
-                  {title}
-                </Dialog.Title>
+                {title ? (
+                  <Dialog.Title
+                    as="h3"
+                    className="text text-primary font-bold text-lg leading-6 mt-6 ml-8"
+                  >
+                    {title}
+                  </Dialog.Title>
+                ) : null}
                 {children}
                 {showCloseBtn && (
-                  <div className="absolute right-3 top-3">
+                  <div className="absolute right-4 top-7">
                     <IconButton
                       imgSrc={XCircle}
                       onClick={close}
                       title="Close"
-                      classes="hover:rotate-90"
+                      classes="hover:rotate-90 bg-white invert"
                     />
                   </div>
                 )}

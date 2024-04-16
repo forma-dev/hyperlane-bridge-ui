@@ -9,6 +9,12 @@ export enum Color {
   primaryBeige = '#F1EDE9',
   primaryRed = '#BF1B15',
   primaryMint = '#31D99C',
+  button = '#FF6B6B',
+  accent = '#FFC901',
+  background = '#000000',
+  primaryText = '#FFFFFF',
+  secondaryText = '#8C8D8F',
+  cardColor = '#0E0E0E',
 }
 
 // Useful for cases when using class names isn't convenient
@@ -21,6 +27,14 @@ export function classNameToColor(className) {
       return Color.primaryRed;
     case 'bg-gray-500':
       return Color.primaryGray;
+    case 'bg-button':
+      return Color.button;
+    case 'text-primary':
+      return Color.primaryText;
+    case 'text-secondary':
+      return Color.secondaryText;
+    case 'bg-form':
+      return Color.cardColor;
     default:
       throw new Error('Missing color for className: ' + className);
   }

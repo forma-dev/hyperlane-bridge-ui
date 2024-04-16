@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
+import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -11,9 +12,9 @@ import { ConnectAwareSubmitButton } from '../../components/buttons/ConnectAwareS
 import { IconButton } from '../../components/buttons/IconButton';
 import { SolidButton } from '../../components/buttons/SolidButton';
 import { ChevronIcon } from '../../components/icons/Chevron';
-import { WideChevron } from '../../components/icons/WideChevron';
 import { TextField } from '../../components/input/TextField';
 import { getIndexForToken, getTokenByIndex, getTokens, getWarpCore } from '../../context/context';
+import PolygonIcon from '../../images/icons/polygon.svg';
 import SwapIcon from '../../images/icons/swap.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
@@ -37,7 +38,7 @@ import { useRecipientBalanceWatcher } from './useBalanceWatcher';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useTokenTransfer } from './useTokenTransfer';
 
-export function TransferTokenForm() {
+export function TransferTokenForm({ transferType }: { transferType: string }) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
 
@@ -62,19 +63,41 @@ export function TransferTokenForm() {
       validateOnBlur={false}
     >
       {({ isValidating }) => (
-        <Form className="flex flex-col items-stretch w-full mt-2">
-          <ChainSelectSection isReview={isReview} />
-          <div className="mt-3 flex justify-between items-end space-x-4">
-            <TokenSection setIsNft={setIsNft} isReview={isReview} />
-            <AmountSection isNft={isNft} isReview={isReview} />
+        <Form className="items-stretch w-full">
+          <div
+            className="px-10 py-4 gap-y-6 flex flex-col"
+            style={{ borderBottom: '2px solid #FFFFFF', borderTop: '1px solid #202025' }}
+          >
+            <ChainSelectSection
+              isReview={isReview}
+              type="from"
+              transferType={transferType}
+            />
+            <div className="flex justify-between">
+              <AmountSection isNft={isNft} setIsNft={setIsNft} isReview={isReview} transferType={transferType} />
+            </div>
           </div>
-          <RecipientSection isReview={isReview} />
-          <ReviewDetails visible={isReview} />
-          <ButtonSection
-            isReview={isReview}
-            isValidating={isValidating}
-            setIsReview={setIsReview}
-          />
+          <div className="relative left-0 right-0 flex justify-center overflow-hidden z-1">
+            <Image src={PolygonIcon} alt="" />
+          </div>
+
+          <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
+            <ChainSelectSection
+              isReview={isReview}
+              type="to"
+              transferType={transferType}
+            />
+            <TimeTransfer label="Time to Transfer" time="4" />
+
+            <RecipientSection isReview={isReview} />
+            <ReviewDetails visible={isReview} />
+            <ButtonSection
+              isReview={isReview}
+              isValidating={isValidating}
+              setIsReview={setIsReview}
+              transferType={transferType}
+            />
+          </div>
         </Form>
       )}
     </Formik>
@@ -107,21 +130,19 @@ function SwapChainsButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-function ChainSelectSection({ isReview }: { isReview: boolean }) {
+function ChainSelectSection({ isReview, type, transferType }: {
+  isReview: boolean;
+  type: string;
+  transferType: string;
+}) {
   const chains = useMemo(() => getWarpCore().getTokenChains(), []);
-
   return (
-    <div className="flex items-center justify-center space-x-7 sm:space-x-10">
-      <ChainSelectField name="origin" label="From" chains={chains} disabled={isReview} />
-      <div className="flex flex-col items-center">
-        <div className="flex mb-6 sm:space-x-1.5">
-          <WideChevron classes="hidden sm:block" />
-          <WideChevron />
-          <WideChevron />
-        </div>
-        <SwapChainsButton disabled={isReview} />
-      </div>
-      <ChainSelectField name="destination" label="To" chains={chains} disabled={isReview} />
+    <div className="flex items-center justify-start space-x-7 sm:space-x-10">
+      {type === 'from' ? (
+        <ChainSelectField name="origin" label="From" chains={chains} disabled={isReview} transferType={transferType} />
+      ) : (
+        <ChainSelectField name="destination" label="To" chains={chains} disabled={isReview} transferType={transferType} />
+      )}
     </div>
   );
 }
@@ -135,41 +156,67 @@ function TokenSection({
 }) {
   return (
     <div className="flex-1">
-      <label htmlFor="tokenIndex" className="block uppercase text-sm text-gray-500 pl-0.5">
-        Token
-      </label>
       <TokenSelectField name="tokenIndex" disabled={isReview} setIsNft={setIsNft} />
     </div>
   );
 }
 
-function AmountSection({ isNft, isReview }: { isNft: boolean; isReview: boolean }) {
+function AmountSection({
+  isNft,
+  isReview,
+  transferType,
+  setIsNft,
+}: {
+  isNft: boolean;
+  isReview: boolean;
+  transferType: string;
+  setIsNft: (b: boolean) => void;
+}) {
   const { values } = useFormikContext<TransferFormValues>();
   const { balance } = useOriginBalance(values);
 
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
-        <label htmlFor="amount" className="block uppercase text-sm text-gray-500 pl-0.5">
-          Amount
+        <label htmlFor="amount" className="block text-sm text-secondary leading-5 font-medium">
+          {transferType === 'deposit' ? 'Amount to Deposit' : 'Amount to Withdraw'}
         </label>
-        <TokenBalance label="My balance" balance={balance} />
+        {/* <TokenBalance label="My balance" balance={balance} /> */}
       </div>
       {isNft ? (
         <SelectOrInputTokenIds disabled={isReview} />
       ) : (
-        <div className="relative w-full">
+        <div className="relative w-fullh-[48px] flex items-center">
           <TextField
             name="amount"
             placeholder="0.00"
-            classes="w-full"
+            classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
+                      hover:shadow-white hover:border-white 
+                      hover:placeholder-white font-plex text-secondary 
+                      leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
             type="number"
             step="any"
             disabled={isReview}
+            style={{
+              fontSize: '40px',
+            }}
+            onFocus={(e: any) => {
+              e.target.style.color = '#FFFFFF';
+              e.target.style.borderColor = '#FFFFFF';
+              e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
+            }}
+            onBlur={(e: any) => {
+              e.target.style.borderColor = '#FFFFFF66';
+              e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
+            }}
           />
-          <MaxButton disabled={isReview} balance={balance} />
+          {/* <MaxButton disabled={isReview} balance={balance} /> */}
+          <TokenSection setIsNft={setIsNft} isReview={isReview} />
         </div>
       )}
+      <div className="pt-4 text-right">
+        <TokenBalance label="Balance" balance={balance} disabled={isReview} />
+      </div>
     </div>
   );
 }
@@ -182,7 +229,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   return (
     <div className="mt-4">
       <div className="flex justify-between pr-1">
-        <label htmlFor="recipient" className="block uppercase text-sm text-gray-500 pl-0.5">
+        <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
         </label>
         <TokenBalance label="Remote balance" balance={balance} />
@@ -191,28 +238,81 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <TextField
           name="recipient"
           placeholder="0x123456..."
-          classes="w-full"
+          classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
+          hover:shadow-white hover:border-white 
+          hover:placeholder-white font-plex text-secondary 
+          leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
           disabled={isReview}
+          onFocus={(e: any) => {
+            e.target.style.color = '#FFFFFF';
+            e.target.style.borderColor = '#FFFFFF';
+            e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
+          }}
+          onBlur={(e: any) => {
+            e.target.style.borderColor = '#FFFFFF66';
+            e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
+          }}
         />
-        <SelfButton disabled={isReview} />
+        {!isReview && <SelfButton disabled={isReview} />}
       </div>
     </div>
   );
 }
 
-function TokenBalance({ label, balance }: { label: string; balance?: TokenAmount | null }) {
+function TokenBalance({ label, balance, disabled }: { label: string; balance?: TokenAmount | null, disabled?: boolean }) {
   const value = balance?.getDecimalFormattedAmount().toFixed(4) || '0';
-  return <div className="text-xs text-gray-500 text-right">{`${label}: ${value}`}</div>;
+  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+  const { origin, destination, tokenIndex } = values;
+  const { accounts } = useAccounts();
+  const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
+
+  const onClick = async () => {
+    if (!balance || isNullish(tokenIndex) || disabled) return;
+    const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
+    if (isNullish(maxAmount)) return;
+    const decimalsAmount = maxAmount.getDecimalFormattedAmount();
+    const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
+    setFieldValue('amount', roundedAmount);
+  };
+  return (
+    <div className="text-[10px] font-semibold leading-5 text-secondary">
+      {label}:
+      <button onClick={onClick}>
+      {isLoading ? (
+        <div className="flex items-center">
+          <SmallSpinner />
+        </div>
+      ) : (
+        <span className="underline ml-1.5">{value}</span>
+      )}
+      </button>
+    </div>
+  );
+}
+
+function TimeTransfer({ label, time }:
+{
+  label: string;
+  time?: string | null;
+}) {
+  return (
+    <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
+      {`${label}:`}
+      <span className="text-primary font-medium">~{`${time}`} minutes</span>
+    </div>
+  );
 }
 
 function ButtonSection({
   isReview,
   isValidating,
   setIsReview,
+  transferType,
 }: {
   isReview: boolean;
   isValidating: boolean;
   setIsReview: (b: boolean) => void;
+  transferType: string;
 }) {
   const { values } = useFormikContext<TransferFormValues>();
 
@@ -234,11 +334,11 @@ function ButtonSection({
 
   if (!isReview) {
     return (
-      <ConnectAwareSubmitButton
-        chainName={values.origin}
-        text={isValidating ? 'Validating...' : 'Continue'}
-        classes="mt-4 px-3 py-1.5"
-      />
+        <ConnectAwareSubmitButton
+          chainName={values.origin}
+          text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
+          classes="py-3 px-8 w-full"
+        />
     );
   }
 
@@ -246,18 +346,18 @@ function ButtonSection({
     <div className="mt-4 flex items-center justify-between space-x-4">
       <SolidButton
         type="button"
-        color="gray"
+        color="black"
         onClick={() => setIsReview(false)}
-        classes="px-6 py-1.5"
-        icon={<ChevronIcon direction="w" width={10} height={6} color={Color.primaryMint} />}
+        classes="flex-1 px-3 py-8 max-h-12 hover:bg-hoverForm"
+        icon={<ChevronIcon direction="w" width={10} height={6} color={Color.primaryWhite} />}
       >
-        <span>Edit</span>
+        <span className="text-sm text-white font-bold leading-6">EDIT</span>
       </SolidButton>
       <SolidButton
         type="button"
-        color="mint"
+        color="button"
         onClick={triggerTransactionsHandler}
-        classes="flex-1 px-3 py-1.5"
+        classes="flex-3 px-3 py-8 max-h-16"
       >
         {`Send to ${getChainDisplayName(values.destination)}`}
       </SolidButton>
@@ -313,15 +413,13 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
       );
   };
   return (
-    <SolidButton
-      type="button"
+    <button
       onClick={onClick}
-      color="gray"
       disabled={disabled}
-      classes="text-xs absolute right-0.5 top-2 bottom-0.5 px-2"
+      className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
       SELF
-    </SolidButton>
+    </button>
   );
 }
 
@@ -352,7 +450,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       } overflow-hidden transition-all`}
     >
       <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
-      <div className="mt-1.5 px-2.5 py-2 space-y-2 rounded border border-gray-400 bg-gray-150 text-sm break-all">
+      <div className="mt-1.5 px-2.5 py-2 space-y-2 border border-gray-400 bg-black text-gray-400 text-sm break-all">
         {isLoading ? (
           <div className="py-6 flex items-center justify-center">
             <SmallSpinner />
@@ -362,7 +460,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
             {isApproveRequired && (
               <div>
                 <h4>Transaction 1: Approve Transfer</h4>
-                <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+                <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-400 space-y-1.5 text-xs">
                   <p>{`Router Address: ${originToken?.addressOrDenom}`}</p>
                   {originToken?.collateralAddressOrDenom && (
                     <p>{`Collateral Address: ${originToken.collateralAddressOrDenom}`}</p>
@@ -372,7 +470,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
             )}
             <div>
               <h4>{`Transaction${isApproveRequired ? ' 2' : ''}: Transfer Remote`}</h4>
-              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-400 space-y-1.5 text-xs">
                 {destinationToken?.addressOrDenom && (
                   <p className="flex">
                     <span className="min-w-[7rem]">Remote Token</span>
@@ -431,9 +529,14 @@ async function validateForm(
   try {
     const { origin, destination, tokenIndex, amount, recipient } = values;
     const token = getTokenByIndex(tokenIndex);
+
+console.log("token", token);
+
     if (!token) return { token: 'Token is required' };
     const amountWei = toWei(amount, token.decimals);
     const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
+
+console.log("originTokenAmount", token.amount(amountWei));
     const result = await getWarpCore().validateTransfer({
       originTokenAmount: token.amount(amountWei),
       destination,

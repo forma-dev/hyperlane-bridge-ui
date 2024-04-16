@@ -15,9 +15,10 @@ type Props = {
   chains: ChainName[];
   onChange?: (id: ChainName) => void;
   disabled?: boolean;
+  transferType: string;
 };
 
-export function ChainSelectField({ name, label, chains, onChange, disabled }: Props) {
+export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
 
@@ -31,32 +32,56 @@ export function ChainSelectField({ name, label, chains, onChange, disabled }: Pr
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   const onClick = () => {
-    if (!disabled) setIsModalOpen(true);
+    if (!disabled && !isLocked) setIsModalOpen(true);
   };
 
+  // useEffect(() => {
+  //   if (transferType == 'withdraw' && label == 'From') {
+  //     handleChange('sketchpad');
+  //     setIsLocked(true);
+  //   } else {
+  //     setIsLocked(false);
+  //   }
+  // }, [transferType, label]);
+
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex flex-col items-center justify-center rounded-full bg-gray-100 h-[5.5rem] w-[5.5rem] p-1.5">
-        <div className="flex items-end h-11">
-          <ChainLogo chainName={field.value} size={34} />
-        </div>
-        <label htmlFor={name} className="mt-2 mb-1 text-sm text-gray-500 uppercase">
+    <div className="flex flex-col items-start w-full">
+      <div className="flex justify-between pr-1">
+        <label htmlFor={name} className="block text-sm text-secondary leading-5 font-medium">
           {label}
         </label>
       </div>
       <button
         type="button"
         name={field.name}
-        className={`${styles.base} ${disabled ? styles.disabled : styles.enabled}`}
+        className={`mt-1.5 w-full border-[1.5px] border-solid border-[#FFFFFF66] h-[48px] shadow-dropdown ${
+          disabled || isLocked ? styles.disabled : styles.enabled
+        }`}
         onClick={onClick}
       >
-        <div className="flex items-center">
-          <ChainLogo chainName={field.value} size={14} />
-          <span className="ml-2">{getChainDisplayName(field.value, true)}</span>
+        <div className="flex items-center justify-between px-3">
+          <div className="flex items-center">
+            <ChainLogo chainName={field.value} size={32} />
+            <span className="text-white font-medium text-base leading-5 ml-2">
+              {getChainDisplayName(field.value, true)}
+            </span>
+          </div>
+          <div>
+            {!disabled && !isLocked && (
+              <Image
+                src={ChevronIcon}
+                className="text-secondary"
+                width={12}
+                height={6}
+                alt=""
+                style={{ filter: 'invert(1)' }}
+              />
+            )}
+          </div>
         </div>
-        <Image src={ChevronIcon} width={12} height={8} alt="" />
       </button>
       <ChainSelectListModal
         isOpen={isModalOpen}
@@ -69,7 +94,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled }: Pr
 }
 
 const styles = {
-  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded-full border border-mint-300 outline-none transition-colors duration-500',
-  enabled: 'hover:bg-gray-50 active:bg-gray-100 focus:border-mint-500',
-  disabled: 'bg-gray-150 cursor-default',
+  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
+  enabled: 'hover:border-white hover:shadow-white bg-black',
+  disabled: 'cursor-default bg-form',
 };

@@ -6,34 +6,35 @@ import { ProtocolType } from '@hyperlane-xyz/utils';
 // Chains already in the SDK need not be included here unless you want to override some fields
 // Schema here: https://github.com/hyperlane-xyz/hyperlane-monorepo/blob/main/typescript/sdk/src/metadata/chainMetadataTypes.ts
 export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
-  // mycustomchain: {
-  //   protocol: ProtocolType.Ethereum,
-  //   chainId: 123123,
-  //   domainId: 123123,
-  //   name: 'mycustomchain',
-  //   displayName: 'My Chain',
-  //   nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  //   rpcUrls: [{ http: 'https://mycustomchain-rpc.com' }],
-  //   blockExplorers: [
-  //     {
-  //       name: 'MyCustomScan',
-  //       url: 'https://mycustomchain-scan.com',
-  //       apiUrl: 'https://api.mycustomchain-scan.com/api',
-  //       family: ExplorerFamily.Etherscan,
-  //     },
-  //   ],
-  //   blocks: {
-  //     confirmations: 1,
-  //     reorgPeriod: 1,
-  //     estimateBlockTime: 10,
-  //   },
-  //   logoURI: '/logo.svg',
-  // },
-
+  sketchpad: {
+    name: 'sketchpad',
+    displayName: 'Forma Sketchpad',
+    displayNameShort: 'Sketchpad',
+    logoURI: '/logos/forma.svg',
+    chainId: 984123,
+    domainId: 984123,
+    protocol: ProtocolType.Ethereum,
+    isTestnet: true,
+    rpcUrls: [{ http: 'https://rpc.sketchpad-1.forma.art' }],
+    nativeToken: {
+      name: 'Tia',
+      symbol: 'TIA',
+      decimals: 18,
+      denom: 'atia',
+    },
+    blockExplorers: [
+      {
+        name: 'Forma Explorer',
+        url: 'https://explorer.sketchpad-1.forma.art',
+        apiUrl: 'https://explorer.sketchpad-1.forma.art/api',
+        family: ExplorerFamily.Blockscout,
+      }
+    ]
+  },
   celestia: {
     protocol: ProtocolType.Cosmos,
     domainId: 123456789, // TODO not a real domain id
-    chainId: 'celestia',
+    chainId: 'mocha-4',
     name: 'celestia',
     displayName: 'Celestia',
     bech32Prefix: 'celestia',
@@ -44,9 +45,9 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       decimals: 6,
       denom: 'utia',
     },
-    grpcUrls: [{ http: 'https://grpc.celestia.nodestake.top' }],
-    restUrls: [{ http: 'https://public-celestia-lcd.numia.xyz' }],
-    rpcUrls: [{ http: 'https://public-celestia-rpc.numia.xyz' }],
+    grpcUrls: [{ http: 'https://grpc.celestia-mocha.com' }],
+    restUrls: [{ http: 'https://api.celestia-mocha.com' }],
+    rpcUrls: [{ http: 'https://rpc.celestia-mocha.com' }],
     blockExplorers: [
       {
         name: 'MintScan',
@@ -59,6 +60,29 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
     logoURI: '/logos/celestia.png',
     transactionOverrides: {
       gasPrice: 0.1,
+    },
+  },
+  stride: {
+    protocol: ProtocolType.Cosmos,
+    domainId: 1651,
+    chainId: 'stride-internal-1',
+    name: 'stride',
+    displayName: 'Stride',
+    bech32Prefix: 'stride',
+    slip44: 118,
+    nativeToken: {
+      name: 'Stride',
+      symbol: 'STRD',
+      decimals: 6,
+      denom: 'ustrd',
+    },
+    grpcUrls: [{ http: 'http://stride-direct.testnet-1.stridenet.co:9090' }],
+    restUrls: [{ http: 'https://stride.testnet-1.stridenet.co/api/' }],
+    rpcUrls: [{ http: 'https://stride.testnet-1.stridenet.co' }],
+    blockExplorers: [],
+    logoURI: '/logos/stride.png',
+    transactionOverrides: {
+      gasPrice: 0.025,
     },
   },
 };

@@ -1,25 +1,28 @@
-import Image from 'next/image';
 import { useState } from 'react';
 
 import { shortenAddress } from '@hyperlane-xyz/utils';
 
 import { SolidButton } from '../../components/buttons/SolidButton';
 import { Identicon } from '../../components/icons/Identicon';
-import Wallet from '../../images/icons/wallet.svg';
 import { useIsSsr } from '../../utils/ssr';
 
 import { SideBarMenu } from './SideBarMenu';
 import { WalletEnvSelectionModal } from './WalletEnvSelectionModal';
 import { useAccounts } from './hooks/multiProtocol';
 
-export function WalletControlBar() {
+interface Props {
+  isSideBarOpen?: boolean;
+  setIsSideBarOpen: (isSideBarOpen: boolean) => void;
+}
+
+export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   const [showEnvSelectModal, setShowEnvSelectModal] = useState(false);
-  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
 
   const { readyAccounts } = useAccounts();
   const isSsr = useIsSsr();
 
   const numReady = readyAccounts.length;
+  const color = 'navBarButton';
 
   if (isSsr) {
     // https://github.com/wagmi-dev/wagmi/issues/542#issuecomment-1144178142
@@ -31,55 +34,56 @@ export function WalletControlBar() {
       <div className="relative">
         {numReady === 0 && (
           <SolidButton
-            classes="py-2 px-3"
+            classes="py-1.5 px-2.5"
             onClick={() => setShowEnvSelectModal(true)}
             title="Choose wallet"
-            icon={<Image src={Wallet} alt="" width={16} height={16} />}
-            color="white"
+            color={color}
           >
-            <div className="ml-1.5 text-xs sm:text-sm">Connect Wallet</div>
+            <div className="ml-1.5 text-white text-sm leading-6 font-bold ">CONNECT WALLET</div>
           </SolidButton>
         )}
 
         {numReady === 1 && (
-          <SolidButton onClick={() => setIsSideBarOpen(true)} classes="px-2.5 py-1" color="white">
-            <div className="flex items-center justify-center">
-              <Identicon address={readyAccounts[0].addresses[0]?.address} size={26} />
-              <div className="flex flex-col mx-3 items-start">
-                <div className="text-xs text-gray-500">
-                  {readyAccounts[0].connectorName || 'Wallet'}
-                </div>
-                <div className="text-xs">
-                  {readyAccounts[0].addresses.length
-                    ? shortenAddress(readyAccounts[0].addresses[0].address, true)
-                    : 'Unknown'}
-                </div>
+          <button
+            onClick={() => setIsSideBarOpen(true)}
+            style={{ boxShadow: '4px 6px 0px 0px #FFFFFF' }}
+            className="flex items-center justify-center bg-black py-3 px-8 text-white border-2 border-white hover:bg-hoverForm"
+          >
+            <Identicon address={readyAccounts[0].addresses[0].address} size={26} />
+            <div className="flex flex-col mx-3 items-start">
+              <div className="text-white text-sm leading-6 font-bold ">
+                {readyAccounts[0].addresses
+                  ? shortenAddress(readyAccounts[0].addresses[0].address, true)
+                  : 'Unknown'}
               </div>
             </div>
-          </SolidButton>
+          </button>
         )}
 
         {numReady > 1 && (
-          <SolidButton onClick={() => setIsSideBarOpen(true)} classes="px-2.5 py-1" color="white">
-            <div className="flex items-center justify-center">
-              <div
-                style={{ height: 26, width: 26 }}
-                className="bg-pink-500 text-white flex items-center justify-center rounded-full"
-              >
-                {numReady}
-              </div>
-              <div className="flex flex-col mx-3 items-start">
-                <div className="text-xs text-gray-500">Wallets</div>
-                <div className="text-xs">{`${numReady} Connected`}</div>
-              </div>
+          <button
+            onClick={() => setIsSideBarOpen(true)}
+            className="px-2.5 py-1 flex items-center justify-center shadow-[4px_6px_0px_0px_#FFFFFF] border-2 border-solid border-white bg-black hover:bg-hoverForm transition-all duration-500"
+          >
+            <div
+              style={{ height: 26, width: 26 }}
+              className="bg-[#FFC901] text-black text-sm font-bold leading-6 flex items-center justify-center rounded-full"
+            >
+              {numReady}
             </div>
-          </SolidButton>
+            <div className="flex flex-col mx-3 items-start font-plex">
+              <div className="text-xs leading-6 text-white">WALLETS</div>
+              <div className="text-sm font-bold leading-6 text-white">{`${numReady} CONNECTED`}</div>
+            </div>
+          </button>
         )}
       </div>
 
       <WalletEnvSelectionModal
         isOpen={showEnvSelectModal}
         close={() => setShowEnvSelectModal(false)}
+        isSideBarOpen={isSideBarOpen}
+        setIsSideBarOpen={setIsSideBarOpen}
       />
       {numReady > 0 && (
         <SideBarMenu
