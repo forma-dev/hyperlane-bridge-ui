@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import { SmallSpinner } from '../../components/animation/SmallSpinner';
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Identicon } from '../../components/icons/Identicon';
-import { PLACEHOLDER_COSMOS_CHAIN } from '../../consts/values';
 import { tryFindToken } from '../../context/context';
 import ArrowRightIcon from '../../images/icons/arrow-right.svg';
 import CollapseIcon from '../../images/icons/collapse-icon-red.svg';
@@ -99,7 +98,7 @@ export function SideBarMenu({
           <div className="my-3 px-3 space-y-3">
             {readyAccounts.map((acc, i) =>
               acc.addresses.map((addr, j) => {
-                if (addr?.chainName?.includes(PLACEHOLDER_COSMOS_CHAIN)) return null;
+                //if (addr?.chainName?.includes(PLACEHOLDER_COSMOS_CHAIN)) return null;
                 return <AccountSummary key={`${i}-${j}`} account={acc} address={addr.address} />;
               }),
             )}
