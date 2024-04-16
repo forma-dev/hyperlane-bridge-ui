@@ -2,8 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { WalletControlBar } from '../../features/wallet/WalletControlBar';
-import Logo from '../../images/logos/Forma-Logo.svg';
-import Name from '../../images/logos/nft4me.png';
+import Logo from '../../images/logos/forma.png';
 
 interface Props {
   isSideBarOpen?: boolean;
@@ -31,10 +30,7 @@ export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
     >
       <div className="flex justify-between items-center">
         <Link href="/" className={`py-2 flex items-center ${isSideBarOpen ? 'opacity-50' : ''} `}>
-          <Image src={Logo} width={40} height={40} alt="Forma Bridge Logo" />
-          <Image src={Name} className="ml-[12px]" width={112} height={24} alt="Forma Bridge" />
-          {/* <Image src={Name} width={110} alt="" className="hidden sm:block mt-0.5 ml-2" />
-          <Image src={Title} width={185} alt="" className="mt-0.5 ml-2 pb-px" /> */}
+          <Image src={Logo} height={40} alt="Forma Bridge" />
         </Link>
         <div className="flex flex-col items-end md:flex-row-reverse md:items-start gap-2">
           <WalletControlBar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />

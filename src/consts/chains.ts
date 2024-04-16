@@ -10,7 +10,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
     name: 'sketchpad',
     displayName: 'Forma Sketchpad',
     displayNameShort: 'Sketchpad',
-    logoURI: '/logos/forma.svg',
+    logoURI: '/logos/forma.png',
     chainId: 984123,
     domainId: 984123,
     protocol: ProtocolType.Ethereum,
