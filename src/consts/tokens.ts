@@ -17,7 +17,7 @@ export const tokenConfigs: WarpCoreConfig = {
       logoURI: '/logos/celestia.png',
       connections: [
         {
-          token: 'ethereum|sketchpad|0x943BBcCF80A065Da5194D9d2534769f717d07Eb6',
+          token: 'ethereum|sketchpad|0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
           type: TokenConnectionType.IbcHyperlane,
           sourcePort: 'transfer',
           sourceChannel: 'channel-78',
@@ -48,7 +48,7 @@ export const tokenConfigs: WarpCoreConfig = {
       collateralAddressOrDenom:
         'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
       logoURI: '/logos/celestia.png',
-      connections: [{ token: 'ethereum|sketchpad|0x943BBcCF80A065Da5194D9d2534769f717d07Eb6' }],
+      connections: [{ token: 'ethereum|sketchpad|0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53' }],
     },
 
     // TIA on Forma from Stride
@@ -58,7 +58,7 @@ export const tokenConfigs: WarpCoreConfig = {
       name: 'TIA',
       symbol: 'TIA',
       decimals: 18,
-      addressOrDenom: '0x943BBcCF80A065Da5194D9d2534769f717d07Eb6',
+      addressOrDenom: '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
       logoURI: '/logos/celestia.png',
       connections: [
         {

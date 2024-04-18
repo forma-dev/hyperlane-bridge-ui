@@ -9,6 +9,7 @@
     "@cosmjs/cosmwasm-stargate": "patch:@cosmjs/cosmwasm-stargate@npm%3A0.31.3#~/.yarn/patches/@cosmjs-cosmwasm-stargate-npm-0.31.3-4b3bafffd4.patch",
     "@cosmjs/stargate": "^0.31.3",
     "@cosmos-kit/core": "^2.7.2",
+    "@cosmos-kit/cosmos-extension-metamask": "^0.4.11",
     "@cosmos-kit/cosmostation": "^2.4.4",
     "@cosmos-kit/keplr": "^2.4.4",
     "@cosmos-kit/leap": "^2.4.3",

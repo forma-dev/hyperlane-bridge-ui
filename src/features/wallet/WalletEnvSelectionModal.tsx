@@ -83,13 +83,6 @@ export function WalletEnvSelectionModal({
   return (
     <Modal title="Select Network" isOpen={isOpen} close={close} width={'max-w-[405px]'}>
       <div className="px-8 pt-4 pb-8 mt-8 flex flex-col space-y-6">
-        <EnvButton
-          onClick={onClickEnv(ProtocolType.Ethereum)}
-          subTitle="an EVM"
-          logoChainId={chainMetadata.ethereum.chainId}
-        >
-          Ethereum
-        </EnvButton>
         {/* <EnvButton
           onClick={onClickEnv(ProtocolType.Sealevel)}
           subTitle="a Solana"
@@ -99,10 +92,17 @@ export function WalletEnvSelectionModal({
         </EnvButton> */}
         <EnvButton
           onClick={onClickEnv(ProtocolType.Cosmos)}
-          subTitle="a Cosmos"
-          logo={<Image src={'/logos/cosmos.svg'} width={34} height={34} alt="" />}
+          subTitle="a Celestia"
+          logo={<Image src={'/logos/celestia.png'} width={34} height={34} alt="" />}
         >
-          Cosmos
+          Celestia
+        </EnvButton>
+        <EnvButton
+          onClick={onClickEnv(ProtocolType.Ethereum)}
+          subTitle="an EVM"
+          logoChainId={chainMetadata.ethereum.chainId}
+        >
+          Ethereum
         </EnvButton>
       </div>
     </Modal>
