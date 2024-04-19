@@ -105,13 +105,13 @@ export const tokenConfigs: WarpCoreConfig = {
       {
         origin: 'sketchpad',
         destination: 'stride',
-        amount: 25e15,
+        amount: 2500000000000000,
         addressOrDenom: 'atia',
       },
       {
         origin: 'sketchpad',
         destination: 'celestia',
-        amount: 25e15,
+        amount: 2500000000000000,
         addressOrDenom: 'atia',
       },
     ],
