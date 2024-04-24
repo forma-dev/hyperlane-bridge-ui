@@ -76,7 +76,7 @@ export function SideBarMenu({
       >
         {isMenuOpen && (
           <button
-            className="absolute flex items-center justify-center w-9 h-full -translate-x-full left-0 top-0 bg-sideBar border-2 border-white border-solid transition-all hover:bg-hoverForm"
+            className="absolute flex items-center justify-center w-9 h-full -translate-x-full left-0 top-0 bg-sideBar border-[0.5px] border-white border-solid transition-all hover:bg-hoverForm"
             onClick={() => onClose()}
           >
             <Image
@@ -91,8 +91,8 @@ export function SideBarMenu({
             />
           </button>
         )}
-        <div className="bg-sideBar border-2 border-white border-solid w-full h-full flex flex-col overflow-y-auto">
-          <div className="w-full border-2 border-solid border-white bg-black py-2 px-3.5 text-white text-lg font-bold leading-6  tracking-wider">
+        <div className="bg-sideBar w-full h-full flex flex-col overflow-y-auto">
+          <div className="w-full border-[0.5px] border-l-0 border-solid border-white bg-black py-2 px-3.5 text-white text-lg font-bold leading-6  tracking-wider">
             CONNECTED WALLETS
           </div>
           <div className="my-3 px-3 space-y-3">
@@ -111,7 +111,7 @@ export function SideBarMenu({
               <div className="ml-2 text-white">Disconnect all wallets</div>
             </button>
           </div>
-          <div className="w-full border-2 border-solid border-white bg-black py-2 px-3.5 mb-4 text-white text-lg font-bold leading-6 tracking-wider">
+          <div className="w-full border-[0.5px] border-l-0 border-solid border-white bg-black py-2 px-3.5 mb-4 text-white text-lg font-bold leading-6 tracking-wider">
             TRANSFER HISTORY
           </div>
           <div className="flex grow flex-col px-3.5">
@@ -162,7 +162,7 @@ function AccountSummary({ address }: { account: AccountInfo; address: Address })
     <button
       key={address}
       onClick={onClickCopy}
-      className={`${styles.btn} bg-sideBar border border-white border-solid`}
+      className={`${styles.btn} bg-sideBar border-[0.5px] border-white border-solid`}
     >
       <div className="shrink-0">
         <Identicon address={address} size={40} />
@@ -189,7 +189,7 @@ function TransferSummary({
     <button
       key={timestamp}
       onClick={onClick}
-      className="flex justify-between items-center border border-white px-2.5 py-2 mb-3 hover:bg-hoverForm transition-all duration-500"
+      className="flex justify-between items-center border-[0.5px] border-white px-2.5 py-2 mb-3 hover:bg-hoverForm transition-all duration-500"
     >
       <div className="flex items-center">
         <div className="mr-2.5 flex flex-col items-center justify-center h-[2.25rem] w-[2.25rem] p-1.5">
