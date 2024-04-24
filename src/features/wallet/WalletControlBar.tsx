@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import { shortenAddress } from '@hyperlane-xyz/utils';
+// import { shortenAddress } from '@hyperlane-xyz/utils';
 
-import { SolidButton } from '../../components/buttons/SolidButton';
-import { Identicon } from '../../components/icons/Identicon';
+// import { SolidButton } from '../../components/buttons/SolidButton';
+// import { Identicon } from '../../components/icons/Identicon';
 import { useIsSsr } from '../../utils/ssr';
 
 import { SideBarMenu } from './SideBarMenu';
@@ -22,7 +22,7 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
   const isSsr = useIsSsr();
 
   const numReady = readyAccounts.length;
-  const color = 'navBarButton';
+  // const color = 'navBarButton';
 
   if (isSsr) {
     // https://github.com/wagmi-dev/wagmi/issues/542#issuecomment-1144178142
@@ -32,7 +32,12 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
   return (
     <div className="relative">
       <div className="relative">
-        {numReady === 0 && (
+        <button
+            className="burger"
+            onClick={() => setIsSideBarOpen(true)}
+        ></button>
+
+        {/* {numReady === 0 && (
           <SolidButton
             classes="py-1.5 px-2.5"
             onClick={() => setShowEnvSelectModal(true)}
@@ -76,7 +81,7 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
               <div className="text-sm font-bold leading-6 text-white">{`${numReady} CONNECTED`}</div>
             </div>
           </button>
-        )}
+        )} */}
       </div>
 
       <WalletEnvSelectionModal
