@@ -85,7 +85,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
               type="to"
               transferType={transferType}
             />
-            <TimeTransfer label="Time to Transfer" time="<1" />
+            <TimeTransfer label="TIME TO TRANSFER" time="<1" />
 
             <RecipientSection isReview={isReview} />
             <ReviewDetails visible={isReview} />
@@ -220,7 +220,7 @@ function AmountSection({
         </div>
       )}
       <div className="pt-4 text-right">
-        <TokenBalance label="Balance" balance={balance} disabled={isReview} />
+        <TokenBalance label="BALANCE" balance={balance} disabled={isReview} />
       </div>
     </div>
   );
@@ -248,7 +248,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
         </label>
-        <TokenBalance label="Remote balance" balance={balance} />
+        <TokenBalance label="REMOTE BALANCE" balance={balance} />
       </div>
       <div className="relative w-full">
         <TextField
