@@ -64,7 +64,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
         <Form className="items-stretch w-full">
           <div
             className="px-10 py-4 gap-y-6 flex flex-col"
-            style={{ borderBottom: '2px solid #FFFFFF', borderTop: '1px solid #202025' }}
+            style={{ borderBottom: '0.5px solid #FFFFFF', borderTop: '0.5px solid #FFFFFF' }}
           >
             <ChainSelectSection
               isReview={isReview}
@@ -197,8 +197,8 @@ function AmountSection({
           <TextField
             name="amount"
             placeholder="0.00"
-            classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
-                      hover:shadow-white hover:border-white 
+            classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] 
+                      hover:border-white 
                       hover:placeholder-white font-plex text-secondary 
                       leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
             type="number"
@@ -210,11 +210,9 @@ function AmountSection({
             onFocus={(e: any) => {
               e.target.style.color = '#FFFFFF';
               e.target.style.borderColor = '#FFFFFF';
-              e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
             }}
             onBlur={(e: any) => {
               e.target.style.borderColor = '#FFFFFF66';
-              e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
             }}
           />
           {/* <MaxButton disabled={isReview} balance={balance} /> */}
@@ -256,19 +254,20 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <TextField
           name="recipient"
           placeholder={placeholder}
-          classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
-          hover:shadow-white hover:border-white 
+          style={{
+            boxShadow: '0 0 #0000'
+          }}
+          classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66]
+          hover:border-white shadow-none
           hover:placeholder-white font-plex text-secondary 
           leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
           disabled={isReview}
           onFocus={(e: any) => {
             e.target.style.color = '#FFFFFF';
             e.target.style.borderColor = '#FFFFFF';
-            e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
           }}
           onBlur={(e: any) => {
             e.target.style.borderColor = '#FFFFFF66';
-            e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
           }}
         />
         {!isReview && <SelfButton disabled={isReview} />}

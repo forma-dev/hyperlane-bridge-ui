@@ -68,7 +68,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       <button
         type="button"
         name={field.name}
-        className={`mt-1.5 w-full border-[1.5px] border-solid border-[#FFFFFF66] h-[48px] shadow-dropdown ${
+        className={`mt-1.5 w-full border-[1.5px] border-solid border-[#FFFFFF66] h-[48px] ${
           disabled || isLocked ? styles.disabled : styles.enabled
         }`}
         onClick={onClick}

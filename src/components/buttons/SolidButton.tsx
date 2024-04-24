@@ -31,11 +31,11 @@ export function SolidButton(
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
     style = {
-      boxShadow: '4px 6px 0px 0px #FFFFFF',
+      boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   } else if (color === 'navBarButton') {
     baseColors = 'bg-button text-white';
-    style = { boxShadow: '4px 6px 0px 0px #FFFFFF', width: '188px', height: '40px' };
+    style = { boxShadow: '2px 3px 0px 0px #FFFFFF', width: '188px', height: '40px' };
   } else if (color === 'blue') {
     baseColors = 'bg-blue-500 text-white';
     onHover = 'hover:bg-blue-600';
@@ -60,7 +60,7 @@ export function SolidButton(
     baseColors = 'bg-black text-secondary';
     style = {
       border: '2px solid #FFFFFF',
-      boxShadow: '4px 6px 0px 0px #FFFFFF',
+      boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';

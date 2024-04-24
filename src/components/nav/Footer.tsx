@@ -7,7 +7,6 @@ export function Footer({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   return (
     <footer
       className={`py-8 px-8 h-[96px] ${isSideBarOpen ? 'opacity-50' : ''}`}
-      style={{ borderTop: '4px solid #FFFFFF' }}
       onClick={() => setIsSideBarOpen(false)}
     >
       <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
