@@ -11,7 +11,7 @@ export function Footer({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
     >
       <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
-          <p className="font-bold text-white text-sm">
+          <p className="text-white text-sm">
             Built with Hyperlane. © Cocoding Labs 2024 ✨
           </p>
         </div>
