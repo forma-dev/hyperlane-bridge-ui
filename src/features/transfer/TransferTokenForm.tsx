@@ -219,7 +219,7 @@ function AmountSection({
           <TokenSection setIsNft={setIsNft} isReview={isReview} />
         </div>
       )}
-      <div className="pt-4 text-right">
+      <div className="pt-1 text-right">
         <TokenBalance label="BALANCE" balance={balance} disabled={isReview} />
       </div>
     </div>
