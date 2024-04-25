@@ -231,16 +231,33 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
+  const { accounts } = useAccounts();
+  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
+  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
+
   const defaultPlaceholder = "0x123456...";
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
+  const [recipientValue, setRecipientValue] = useState<string>("");
 
   useEffect(() => {
+    if (['celestia', 'stride'].includes(values.destination)) {
+      if(cosmosAddress)
+        setRecipientValue(cosmosAddress);
+      else 
+        setRecipientValue("");
+    } else if (['sketchpad'].includes(values.destination)) {
+      if(evmAddress)
+        setRecipientValue(evmAddress);
+      else 
+        setRecipientValue("");
+    } 
+
     if (['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [values]);
+  }, [values, cosmosAddress, evmAddress]);
 
   return (
     <div className="mt-4">
@@ -269,6 +286,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
           onBlur={(e: any) => {
             e.target.style.borderColor = '#FFFFFF66';
           }}
+          value={recipientValue}
         />
         {!isReview && <SelfButton disabled={isReview} />}
       </div>
