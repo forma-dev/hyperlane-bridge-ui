@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
@@ -41,7 +42,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
   const { accounts } = useAccounts();
 
   // Flag for if form is in input vs review mode
-  const [isReview, setIsReview] = useState(false);
+  const [isReview, setIsReview] = useState(true);
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
@@ -85,7 +86,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
               type="to"
               transferType={transferType}
             />
-            <TimeTransfer label="TIME TO TRANSFER" time="<1" />
+            {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
 
             <RecipientSection isReview={isReview} />
             <ReviewDetails visible={isReview} />
@@ -378,7 +379,7 @@ function ButtonSection({
   }
 
   return (
-    <div className="mt-4 flex items-center justify-between space-x-4">
+    <div className="flex items-center justify-between space-x-4">
       <SolidButton
         type="button"
         color="black"
@@ -503,7 +504,27 @@ function ReviewDetails({ visible }: { visible: boolean }) {
         visible ? 'max-h-screen duration-1000 ease-in' : 'max-h-0 duration-500'
       } overflow-hidden transition-all`}
     >
-      <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
+      {fees?.localQuote && fees.localQuote.amount > 0n && (
+        <p className="flex">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Local Gas (est.)</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.localQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
+            fees.localQuote.token.symbol || ''
+          }`}</span>
+        </p>
+      )}
+      {fees?.interchainQuote && fees.interchainQuote.amount > 0n && (
+        <p className="flex justify-between">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Interchain Gas</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.interchainQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
+            fees.interchainQuote.token.symbol || ''
+          }`}</span>
+        </p>
+      )}
+      <p className="flex justify-between">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Time to Transfer</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`<1 Minute`}</span>
+      </p>
+      {/* <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
       <div className="mt-1.5 px-2.5 py-2 space-y-2 border border-gray-400 bg-black text-gray-400 text-sm break-all">
         {isLoading ? (
           <div className="py-6 flex items-center justify-center">
@@ -555,7 +576,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
             </div>
           </>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
