@@ -8,7 +8,7 @@ import { useIsSsr } from '../../utils/ssr';
 
 import { SideBarMenu } from './SideBarMenu';
 import { WalletEnvSelectionModal } from './WalletEnvSelectionModal';
-import { useAccounts } from './hooks/multiProtocol';
+// import { useAccounts } from './hooks/multiProtocol';
 
 interface Props {
   isSideBarOpen?: boolean;
@@ -18,10 +18,10 @@ interface Props {
 export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   const [showEnvSelectModal, setShowEnvSelectModal] = useState(false);
 
-  const { readyAccounts } = useAccounts();
+  // const { readyAccounts } = useAccounts();
   const isSsr = useIsSsr();
 
-  const numReady = readyAccounts.length;
+  // const numReady = readyAccounts.length;
   // const color = 'navBarButton';
 
   if (isSsr) {
@@ -90,13 +90,13 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
         isSideBarOpen={isSideBarOpen}
         setIsSideBarOpen={setIsSideBarOpen}
       />
-      {numReady > 0 && (
-        <SideBarMenu
-          onClose={() => setIsSideBarOpen(false)}
-          isOpen={isSideBarOpen}
-          onConnectWallet={() => setShowEnvSelectModal(true)}
-        />
-      )}
+
+      <SideBarMenu
+        onClose={() => setIsSideBarOpen(false)}
+        isOpen={isSideBarOpen}
+        onConnectWallet={() => setShowEnvSelectModal(true)}
+      />
+     
     </div>
   );
 }

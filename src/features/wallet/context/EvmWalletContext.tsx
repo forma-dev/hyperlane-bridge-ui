@@ -75,7 +75,7 @@ const customTheme = merge(darkTheme(), {
     modalMobile: '0px',
   },
   shadows: {
-    dialog: '0 0 #0000, 0 0 #0000, 4px 6px 0px 0px #FFFFFF',
+    // dialog: '0 0 #0000, 0 0 #0000, 4px 6px 0px 0px #FFFFFF',
   },
   fonts: {
     body: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
