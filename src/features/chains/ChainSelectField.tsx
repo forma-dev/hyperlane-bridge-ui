@@ -177,7 +177,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                 {
                   (cosmosChainIds.includes(chainId) && cosmosAddress)
                     ?
-                    <span className="text-white font-medium text-base leading-5 ml-2">
+                    <span className="text-white font-medium text-xs leading-5 ml-2">
                       {formatAddress(cosmosAddress)}
                     </span>
                     : 
