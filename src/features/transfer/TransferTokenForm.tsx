@@ -21,7 +21,7 @@ import { getChainDisplayName, tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
-import { useIsApproveRequired } from '../tokens/approval';
+// import { useIsApproveRequired } from '../tokens/approval';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import {
   getAccountAddressAndPubKey,
@@ -480,23 +480,23 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
 
 function ReviewDetails({ visible }: { visible: boolean }) {
   const { values } = useFormikContext<TransferFormValues>();
-  const { amount, destination, tokenIndex } = values;
-  const originToken = getTokenByIndex(tokenIndex);
-  const originTokenSymbol = originToken?.symbol || '';
-  const connection = originToken?.getConnectionForChain(destination);
-  const destinationToken = connection?.token;
-  const isNft = originToken?.isNft();
+  // const { tokenIndex } = values;
+  // const originToken = getTokenByIndex(tokenIndex);
+  // const originTokenSymbol = originToken?.symbol || '';
+  // const connection = originToken?.getConnectionForChain(destination);
+  // const destinationToken = connection?.token;
+  // const isNft = originToken?.isNft();
 
-  const amountWei = isNft ? amount.toString() : toWei(amount, originToken?.decimals);
+  // const amountWei = isNft ? amount.toString() : toWei(amount, originToken?.decimals);
 
-  const { isLoading: isApproveLoading, isApproveRequired } = useIsApproveRequired(
-    originToken,
-    amountWei,
-    visible,
-  );
-  const { isLoading: isQuoteLoading, fees } = useFeeQuotes(values, visible);
+  // const { isLoading: isApproveLoading, isApproveRequired } = useIsApproveRequired(
+  //   originToken,
+  //   amountWei,
+  //   visible,
+  // );
+  const { fees } = useFeeQuotes(values, visible);
 
-  const isLoading = isApproveLoading || isQuoteLoading;
+  // const isLoading = isApproveLoading || isQuoteLoading;
 
   return (
     <div
