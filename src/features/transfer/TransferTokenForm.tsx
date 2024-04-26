@@ -240,6 +240,11 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>("");
 
+  const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRecipientValue(event.target.value);
+  };
+
+
   useEffect(() => {
     if (['celestia', 'stride'].includes(values.destination)) {
       if(cosmosAddress)
@@ -258,6 +263,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
+    console.log(recipientValue)
   }, [values, cosmosAddress, evmAddress]);
 
   return (
@@ -287,6 +293,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
           onBlur={(e: any) => {
             e.target.style.borderColor = '#FFFFFF66';
           }}
+          onChange={handleRecipientChange}
           value={recipientValue}
         />
         {!isReview && <SelfButton disabled={isReview} />}
