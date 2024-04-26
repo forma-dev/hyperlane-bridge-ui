@@ -326,18 +326,18 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   );
 }
 
-function TimeTransfer({ label, time }:
-{
-  label: string;
-  time?: string | null;
-}) {
-  return (
-    <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
-      {`${label}:`}
-      <span className="text-primary font-medium">{`${time}`} minute</span>
-    </div>
-  );
-}
+// function TimeTransfer({ label, time }:
+// {
+//   label: string;
+//   time?: string | null;
+// }) {
+//   return (
+//     <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
+//       {`${label}:`}
+//       <span className="text-primary font-medium">{`${time}`} minute</span>
+//     </div>
+//   );
+// }
 
 function ButtonSection({
   isReview,
