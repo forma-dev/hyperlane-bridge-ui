@@ -505,7 +505,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       } overflow-hidden transition-all`}
     >
       {fees?.localQuote && fees.localQuote.amount > 0n && (
-        <p className="flex">
+        <p className="flex justify-between">
           <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Local Gas (est.)</span>
           <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.localQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
             fees.localQuote.token.symbol || ''
