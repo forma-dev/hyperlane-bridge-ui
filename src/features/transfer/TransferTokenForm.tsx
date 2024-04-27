@@ -400,7 +400,7 @@ function ButtonSection({
         type="button"
         color="button"
         onClick={triggerTransactionsHandler}
-        classes="flex-3 px-3 py-8 max-h-16"
+        classes="flex-3 px-3 py-8 max-h-16 font-bold"
       >
         {`Send to ${getChainDisplayName(values.destination)}`}
       </SolidButton>
