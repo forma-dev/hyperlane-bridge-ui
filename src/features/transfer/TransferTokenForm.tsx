@@ -264,7 +264,6 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-    console.log(recipientValue)
   }, [values, cosmosAddress, evmAddress]);
 
   return (
