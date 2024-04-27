@@ -13,9 +13,10 @@ interface Props {
   chainName: ChainName;
   text: string;
   classes?: string;
+  isValidating: boolean
 }
 
-export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, classes }: Props) {
+export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, classes, isValidating }: Props) {
   const protocol = tryGetChainProtocol(chainName) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
   const connectFn = connectFns[protocol];
@@ -29,7 +30,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
   const firstError = `${Object.values(errors)[0]}` || 'Unknown error';
 
   const color = hasError ? 'red' : 'button';
-  const content = hasError ? firstError : isAccountReady ? text : 'CONNECT WALLET';
+  const content = hasError && isValidating ? firstError : isAccountReady ? text : 'CONNECT WALLET';
   const type = isAccountReady ? 'submit' : 'button';
   const onClick = isAccountReady ? undefined : connectFn;
 
