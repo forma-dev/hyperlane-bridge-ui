@@ -268,7 +268,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   }, [values, cosmosAddress, evmAddress]);
 
   return (
-    <div className="mt-4">
+    <div>
       <div className="flex justify-between pr-1">
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
