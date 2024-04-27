@@ -6,10 +6,10 @@ import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
 
-import { ChainSelectListModal } from './ChainSelectModal';
-import { getChainDisplayName, formatAddress } from './utils';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
+import { ChainSelectListModal } from './ChainSelectModal';
+import { formatAddress, getChainDisplayName } from './utils';
 type Props = {
   name: string;
   label: string;
@@ -30,8 +30,16 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const { accounts } = useAccounts();
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
-  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
-  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
+  
+  let account:any = "";
+  if (cosmosChainIds.includes(chainId)) {
+    account = accounts[ProtocolType.Cosmos].addresses.find(
+      address => address.chainName === chainId
+    );
+  }
+  if (evmChainIds.includes(chainId)) {
+    account = accounts[ProtocolType.Ethereum].addresses[0];
+  }
 
   const handleChange = (newChainId: ChainName) => {
     helpers.setValue(newChainId);
@@ -40,9 +48,10 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     setFieldValue('amount', '');
     setFieldValue('tokenIndex', 0);
     setChainId(newChainId);
+
     if (onChange) onChange(newChainId);
   };
-
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -175,18 +184,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                   {getChainDisplayName(field.value, true)}
                 </span>
                 {
-                  (cosmosChainIds.includes(chainId) && cosmosAddress)
+                   ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
+                   (evmChainIds.includes(chainId) && evmNumReady > 0))
                     ?
                     <span className="text-white font-medium text-xs leading-5 ml-2">
-                      {formatAddress(cosmosAddress)}
+                      {formatAddress(account?.address || "")}
                     </span>
-                    : 
-                      (evmChainIds.includes(chainId) && evmAddress) 
-                      ?
-                      <span className="text-white font-medium text-xs leading-4 ml-2">
-                        {formatAddress(evmAddress)}
-                      </span>
-                      : <></>
+                    : <></>
                 }
               </div>
               
