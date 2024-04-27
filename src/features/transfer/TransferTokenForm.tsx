@@ -246,17 +246,18 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
 
 
   useEffect(() => {
+    let account:any = null;
+    // Check if the selected chain is in cosmosChainIds
     if (['celestia', 'stride'].includes(values.destination)) {
-      if(cosmosAddress)
-        setRecipientValue(cosmosAddress);
-      else 
-        setRecipientValue("");
-    } else if (['sketchpad'].includes(values.destination)) {
-      if(evmAddress)
-        setRecipientValue(evmAddress);
-      else 
-        setRecipientValue("");
-    } 
+      account = accounts[ProtocolType.Cosmos].addresses.find(
+        address => address.chainName === values.destination
+      );
+    }
+    if (['sketchpad'].includes(values.destination)) {
+      account = accounts[ProtocolType.Ethereum].addresses[0];
+    }
+    setRecipientValue(account?.address || "")
+
 
     if (['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
@@ -508,7 +509,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
   return (
     <div
       className={`${
-        visible ? 'max-h-screen duration-1000 ease-in' : 'max-h-0 duration-500'
+        visible ? 'max-h-screen duration-1000 ease-in' : 'hidden max-h-0 duration-500'
       } overflow-hidden transition-all`}
     >
       {fees?.localQuote && fees.localQuote.amount > 0n && (
