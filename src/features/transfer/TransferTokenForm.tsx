@@ -381,7 +381,6 @@ function ButtonSection({
           chainName={values.origin}
           text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
           classes="py-3 px-8 w-full"
-          isValidating={isValidating}
         />
     );
   }
