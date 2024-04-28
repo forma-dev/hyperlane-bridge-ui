@@ -17,7 +17,7 @@ import PolygonIcon from '../../images/icons/polygon.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
-import { getChainDisplayName, tryGetChainProtocol } from '../chains/utils';
+import { tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
@@ -296,7 +296,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
           onChange={handleRecipientChange}
           value={recipientValue}
         />
-        {!isReview && <SelfButton disabled={isReview} />}
+        {!isReview && <SelfButton disabled={isReview} setRecipientValue={setRecipientValue}/>}
       </div>
     </div>
   );
@@ -443,7 +443,7 @@ function ButtonSection({
 //   );
 // }
 
-function SelfButton({ disabled }: { disabled?: boolean }) {
+function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRecipientValue?: any }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
@@ -456,6 +456,7 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
     if (disabled) return;
     if (address) {
       setFieldValue('recipient', address);
+      setRecipientValue && setRecipientValue(address);
     }
     else {
       connectFn();
