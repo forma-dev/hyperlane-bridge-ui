@@ -401,9 +401,9 @@ function ButtonSection({
         type="button"
         color="button"
         onClick={triggerTransactionsHandler}
-        classes="flex-3 px-3 py-8 text-sm max-h-16 font-bold uppercase"
+        classes="flex-1 px-3 py-8 text-sm max-h-16 font-bold uppercase"
       >
-        {`SEND TO ${getChainDisplayName(values.destination)}`}
+        {transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
       </SolidButton>
     </div>
   );

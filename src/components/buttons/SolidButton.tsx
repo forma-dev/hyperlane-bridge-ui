@@ -31,6 +31,7 @@ export function SolidButton(
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
     style = {
+      border: '1px solid #FFFFFF',
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   } else if (color === 'navBarButton') {
@@ -59,7 +60,7 @@ export function SolidButton(
   } else if (color === 'black') {
     baseColors = 'bg-black text-secondary';
     style = {
-      border: '2px solid #FFFFFF',
+      border: '1px solid #FFFFFF',
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   }
