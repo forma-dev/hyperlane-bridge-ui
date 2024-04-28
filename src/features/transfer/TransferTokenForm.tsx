@@ -233,9 +233,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   useRecipientBalanceWatcher(values.recipient, balance);
 
   const { accounts } = useAccounts();
-  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
-  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
-
+  
   const defaultPlaceholder = "0x123456...";
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>("");
@@ -256,6 +254,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     if (['sketchpad'].includes(values.destination)) {
       account = accounts[ProtocolType.Ethereum].addresses[0];
     }
+
     setRecipientValue(account?.address || "")
 
 
@@ -264,7 +263,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [values, cosmosAddress, evmAddress]);
+  }, [values, accounts]);
 
   return (
     <div>
@@ -381,6 +380,7 @@ function ButtonSection({
           chainName={values.origin}
           text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
           classes="py-3 px-8 w-full"
+          isValidating={isValidating}
         />
     );
   }
