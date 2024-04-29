@@ -233,7 +233,9 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   useRecipientBalanceWatcher(values.recipient, balance);
 
   const { accounts } = useAccounts();
-  
+  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
+  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
+
   const defaultPlaceholder = "0x123456...";
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>("");
@@ -263,7 +265,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [values, accounts]);
+  }, [values, cosmosAddress, evmAddress]);
 
   return (
     <div>
