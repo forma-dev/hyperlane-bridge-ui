@@ -1,5 +1,6 @@
 import { useFormikContext } from 'formik';
 import { useCallback } from 'react';
+import { useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
@@ -17,6 +18,9 @@ interface Props {
 }
 
 export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, classes, isValidating=false }: Props) {
+  // Flag for if form is in input vs review mode
+  const [isReview, setIsReview] = useState(false);
+
   const protocol = tryGetChainProtocol(chainName) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
   const connectFn = connectFns[protocol];
@@ -29,15 +33,25 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
   const hasError = Object.keys(touched).length > 0 && Object.keys(errors).length > 0;
   const firstError = `${Object.values(errors)[0]}` || 'Unknown error';
 
-  const color = hasError && isValidating ? 'red' : 'button';
-  const content = hasError && isValidating ? firstError : isAccountReady ? text : 'CONNECT WALLET';
+  const color = hasError && (isValidating || isReview) ? 'red' : 'button';
+  const content = hasError && (isValidating || isReview) ? firstError : isAccountReady ? text : 'CONNECT WALLET';
   const type = isAccountReady ? 'submit' : 'button';
-  const onClick = isAccountReady ? undefined : connectFn;
+  
+  const onClick = () => {
+    if (!isReview) {
+      setIsReview(true); 
+    } else if (isAccountReady) {
+      // Perform action when the form is reviewed and account is ready
+    } else {
+      connectFn(); // Connect wallet when the form is reviewed but account is not ready
+    }
+  };
 
   // Automatically clear error state after a timeout
   const clearErrors = useCallback(() => {
     setErrors({});
     setTouched({});
+    setIsReview(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setErrors, setTouched, errors, touched]);
 
