@@ -213,7 +213,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         ((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
           (evmChainIds.includes(chainId) && evmNumReady === 0))
           &&
-          <button onClick={onClickEnv()} className="w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center cursor-pointer">
+          <button onClick={onClickEnv()} className="w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center cursor-pointer hover:bg-[#FFFFFFCC]">
             <span className="w-full font-plex font-bold text-sm leading-6 px-2 py-4">CONNECT</span>
           </button>
         }
@@ -222,7 +222,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
           (evmChainIds.includes(chainId) && evmNumReady > 0))
             &&
-            <button onClick={onDisconnectEnv()} className="w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid bg-form p-2 h-[48px] flex items-center justify-center cursor-pointer">
+            <button onClick={onDisconnectEnv()} className="w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid bg-form p-2 h-[48px] flex items-center justify-center cursor-pointer hover:bg-[#FFFFFF1A]">
               <span className="w-full font-plex font-bold text-sm leading-6 text-white">DISCONNECT</span>
             </button>
         }
