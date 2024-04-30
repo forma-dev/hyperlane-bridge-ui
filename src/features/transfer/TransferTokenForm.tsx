@@ -274,7 +274,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
         </label>
-        <TokenBalance label="REMOTE BALANCE" balance={balance} />
+        <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true}/>
       </div>
       <div className="relative w-full">
         <TextField
@@ -328,13 +328,13 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   return (
     <div className="text-[10px] font-semibold leading-5 text-secondary">
       {label}:
-      <button onClick={onClick}>
+      <button disabled={disabled} onClick={onClick}>
       {isLoading ? (
         <div className="flex items-center">
           <SmallSpinner />
         </div>
       ) : (
-        <span className="underline ml-1.5">{value}</span>
+        <span className={disabled ? '' : 'underline ml-1.5'}>{value}</span>
       )}
       </button>
     </div>
