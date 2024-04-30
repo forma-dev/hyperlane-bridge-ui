@@ -483,7 +483,7 @@ function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRe
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      {address ? 'SELF' : 'CONNECT'}
+      {address ? 'SELF' : ''}
     </button>
   );
 }
