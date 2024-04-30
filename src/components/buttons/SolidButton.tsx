@@ -25,13 +25,13 @@ export function SolidButton(
   const color = _color ?? 'blue';
 
   const base = 'flex items-center justify-center transition-all duration-500';
-  let baseColors, onHover, onActive, style;
+  let baseColors, border, onHover, onActive, style;
 
   if (color === 'button') {
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
+    border="border-[1px] border-solid border-white";
     style = {
-      border: '1px solid #FFFFFF',
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   } else if (color === 'navBarButton') {
@@ -59,14 +59,14 @@ export function SolidButton(
     onActive = 'active:bg-gray-300';
   } else if (color === 'black') {
     baseColors = 'bg-black text-secondary';
+    border="border-[1px] border-solid border-white";
     style = {
-      border: '1px solid #FFFFFF',
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
   const weight = bold ? 'font-semibold' : '';
-  const allClasses = `${base} ${baseColors} ${onHover} ${onDisabled} ${onActive} ${weight} ${classes}`;
+  const allClasses = `${base} ${baseColors} ${border} ${onHover} ${onDisabled} ${onActive} ${weight} ${classes}`;
 
   return (
     <button
