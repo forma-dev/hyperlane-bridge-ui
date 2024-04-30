@@ -199,7 +199,7 @@ function AmountSection({
             name="amount"
             placeholder="0.00"
             classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
-                      hover:border-white hover:border-[1px]
+                      hover:border-white
                       hover:placeholder-white font-plex text-secondary 
                       leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
             type="number"
@@ -283,7 +283,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
             boxShadow: '0 0 #0000'
           }}
           classes={`w-full border-[1px] border-solid border-[#8C8D8F]
-          hover:border-white hover:border-[1px] shadow-none
+          hover:border-white shadow-none
           hover:placeholder-white font-plex text-secondary 
           leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
           disabled={isReview}
