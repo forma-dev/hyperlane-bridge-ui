@@ -171,7 +171,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         <button
           type="button"
           name={field.name}
-          className={`mt-1.5 w-9/12 border-[1.5px] border-solid border-[#8C8D8F] h-[48px] ${
+          className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
             disabled || isLocked ? styles.disabled : styles.enabled
           }`}
           onClick={onClick}
