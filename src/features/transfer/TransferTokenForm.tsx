@@ -196,6 +196,7 @@ function AmountSection({
       ) : (
         <div className="relative w-fullh-[48px] flex items-center">
           <TextField
+            id="amount-withdraw"
             name="amount"
             placeholder="0.00"
             classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
@@ -317,6 +318,12 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
     const decimalsAmount = maxAmount.getDecimalFormattedAmount();
     const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
     setFieldValue('amount', roundedAmount);
+
+    // Set the color of the input field to #FFFFFF
+    const inputField = document.getElementById('amount-withdraw'); // Assuming id of the input field is 'amount-input'
+    if (inputField) {
+      inputField.style.color = '#FFFFFF';
+    }
   };
   return (
     <div className="text-[10px] font-semibold leading-5 text-secondary">
