@@ -310,7 +310,7 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
-  const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
+  const { fetchMaxAmount } = useFetchMaxAmount();
     // console.log(balance, value)
   const onClick = async () => {
     if (!balance || isNullish(tokenIndex) || disabled) return;
