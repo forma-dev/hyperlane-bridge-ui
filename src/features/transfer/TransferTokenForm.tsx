@@ -311,12 +311,12 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
   const { fetchMaxAmount } = useFetchMaxAmount();
-    // console.log(balance, value)
+
   const onClick = async () => {
     if (!balance || isNullish(tokenIndex) || disabled) return;
     const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
     if (isNullish(maxAmount)) return;
-    // console.log(maxAmount)
+
     const decimalsAmount = maxAmount.getDecimalFormattedAmount();
     const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
     setFieldValue('amount', roundedAmount);
