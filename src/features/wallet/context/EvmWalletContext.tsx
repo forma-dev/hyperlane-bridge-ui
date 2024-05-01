@@ -1,13 +1,13 @@
 import { RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
-  argentWallet,
-  coinbaseWallet,
+  // argentWallet,
+  // coinbaseWallet,
   injectedWallet, // ledgerWallet,
   metaMaskWallet,
-  omniWallet,
-  rainbowWallet,
-  trustWallet,
+  // omniWallet,
+  // rainbowWallet,
+  // trustWallet,
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { PropsWithChildren, useMemo } from 'react';
@@ -43,16 +43,16 @@ const connectors = connectorsForWallets([
       // ledgerWallet(connectorConfig),
     ],
   },
-  {
-    groupName: 'More',
-    wallets: [
-      coinbaseWallet(connectorConfig),
-      omniWallet(connectorConfig),
-      rainbowWallet(connectorConfig),
-      trustWallet(connectorConfig),
-      argentWallet(connectorConfig),
-    ],
-  },
+  // {
+  //   groupName: 'More',
+  //   wallets: [
+  //     coinbaseWallet(connectorConfig),
+  //     omniWallet(connectorConfig),
+  //     rainbowWallet(connectorConfig),
+  //     trustWallet(connectorConfig),
+  //     argentWallet(connectorConfig),
+  //   ],
+  // },
 ]);
 
 const wagmiConfig = createConfig({
