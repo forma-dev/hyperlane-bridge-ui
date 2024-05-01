@@ -36,14 +36,17 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
   
   const amount = parseFloat(values.amount);
 
-  const color = hasError && (isValidating || isReview) ? 'red' : 'button';
+  let color;
   let content;
   if (amount === 0) {
       content = "Invalid amount";
+      color = 'red'
   } else {
       content = hasError && (isValidating || isReview) ? firstError : isAccountReady ? text : 'CONNECT WALLET';
+      color = hasError && (isValidating || isReview) ? 'red' : 'button';
   }
   const type = isAccountReady ? 'submit' : 'button';
+  
   
   const onClick = () => {
     if (!isReview) {
