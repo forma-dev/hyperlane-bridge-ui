@@ -183,6 +183,8 @@ function AmountSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { balance } = useOriginBalance(values);
 
+  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
+
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
@@ -200,22 +202,18 @@ function AmountSection({
             name="amount"
             placeholder="0.00"
             classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
-                      hover:border-white
-                      hover:placeholder-white font-plex text-secondary 
-                      leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
+                      hover:border-white hover:placeholder-white hover:text-white 
+                      font-plex text-secondary 
+                      leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}
+                      ${amountFieldFocused ? 'border-white placeholder-white text-white' : 'border-[#FFFFFF66] text-white'}`}
             type="number"
             step="any"
             disabled={isReview}
             style={{
               fontSize: '40px',
             }}
-            onFocus={(e: any) => {
-              e.target.style.color = '#FFFFFF';
-              e.target.style.borderColor = '#FFFFFF';
-            }}
-            onBlur={(e: any) => {
-              e.target.style.borderColor = '#FFFFFF66';
-            }}
+            onFocus={() => setAmountFieldFocused(true)} 
+            onBlur={() => setAmountFieldFocused(false)} 
           />
           {/* <MaxButton disabled={isReview} balance={balance} /> */}
           <TokenSection setIsNft={setIsNft} isReview={isReview} />
