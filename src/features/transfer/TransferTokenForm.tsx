@@ -330,7 +330,7 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   return (
     <div className="text-[10px] font-semibold leading-5 text-secondary">
       {label}:
-      <button disabled={disabled} onClick={onClick}>
+      <button type="button" disabled={disabled} onClick={onClick}>
         <span className={disabled ? '' : 'underline ml-1.5'}>{value}</span>
       </button>
     </div>
@@ -482,6 +482,7 @@ function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRe
 
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
