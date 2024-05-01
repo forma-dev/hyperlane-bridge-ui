@@ -242,6 +242,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
+    setFieldValue('recipient', event.target.value);
   };
 
 
@@ -268,7 +269,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [values, cosmosAddress, evmAddress]);
+  }, [cosmosAddress, evmAddress]);
 
   return (
     <div>
