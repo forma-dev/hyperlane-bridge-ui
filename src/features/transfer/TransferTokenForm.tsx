@@ -229,7 +229,7 @@ function AmountSection({
 }
 
 function RecipientSection({ isReview }: { isReview: boolean }) {
-  const { values } = useFormikContext<TransferFormValues>();
+  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
@@ -258,7 +258,10 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       account = accounts[ProtocolType.Ethereum].addresses[0];
     }
 
-    setRecipientValue(account?.address || "")
+    if (account?.address) {
+      setFieldValue('recipient', account?.address);
+      setRecipientValue(account?.address);
+    }
 
 
     if (['celestia', 'stride'].includes(values.destination)) {
@@ -310,11 +313,12 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
   const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
-
+    // console.log(balance, value)
   const onClick = async () => {
     if (!balance || isNullish(tokenIndex) || disabled) return;
     const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
     if (isNullish(maxAmount)) return;
+    // console.log(maxAmount)
     const decimalsAmount = maxAmount.getDecimalFormattedAmount();
     const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
     setFieldValue('amount', roundedAmount);
