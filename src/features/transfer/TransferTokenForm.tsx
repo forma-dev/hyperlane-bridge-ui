@@ -238,7 +238,8 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const defaultPlaceholder = "0x123456...";
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>("");
-
+  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
+  
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
   };
@@ -285,17 +286,13 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
             boxShadow: '0 0 #0000'
           }}
           classes={`w-full border-[1px] border-solid border-[#8C8D8F]
-          hover:border-white shadow-none
-          hover:placeholder-white font-plex text-secondary 
-          leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
+            hover:border-white shadow-none
+            hover:placeholder-white font-plex text-secondary 
+            leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}
+            ${amountFieldFocused ? 'border-white placeholder-white text-white' : 'border-[#FFFFFF66] text-white'}`}
           disabled={isReview}
-          onFocus={(e: any) => {
-            e.target.style.color = '#FFFFFF';
-            e.target.style.borderColor = '#FFFFFF';
-          }}
-          onBlur={(e: any) => {
-            e.target.style.borderColor = '#FFFFFF66';
-          }}
+          onFocus={() => setAmountFieldFocused(true)} 
+          onBlur={() => setAmountFieldFocused(false)} 
           onChange={handleRecipientChange}
           value={recipientValue}
         />
