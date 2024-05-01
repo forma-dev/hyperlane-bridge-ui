@@ -333,13 +333,7 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
     <div className="text-[10px] font-semibold leading-5 text-secondary">
       {label}:
       <button disabled={disabled} onClick={onClick}>
-      {isLoading ? (
-        <div className="flex items-center">
-          <SmallSpinner />
-        </div>
-      ) : (
         <span className={disabled ? '' : 'underline ml-1.5'}>{value}</span>
-      )}
       </button>
     </div>
   );
