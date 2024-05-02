@@ -88,7 +88,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
             />
             {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
 
-            <RecipientSection isReview={isReview} transferType={transferType}/>
+            <RecipientSection isReview={isReview}/>
             <ReviewDetails visible={isReview} />
             <ButtonSection
               isReview={isReview}
@@ -226,7 +226,7 @@ function AmountSection({
   );
 }
 
-function RecipientSection({ isReview, transferType }: { isReview: boolean, transferType: string }) {
+function RecipientSection({ isReview }: { isReview: boolean }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
@@ -269,7 +269,7 @@ function RecipientSection({ isReview, transferType }: { isReview: boolean, trans
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [cosmosAddress, evmAddress, transferType]);
+  }, [cosmosAddress, evmAddress, values.destination]);
 
   return (
     <div>
