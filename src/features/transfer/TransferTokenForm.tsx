@@ -88,7 +88,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
             />
             {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
 
-            <RecipientSection isReview={isReview} />
+            <RecipientSection isReview={isReview} transferType={transferType}/>
             <ReviewDetails visible={isReview} />
             <ButtonSection
               isReview={isReview}
@@ -226,7 +226,7 @@ function AmountSection({
   );
 }
 
-function RecipientSection({ isReview }: { isReview: boolean }) {
+function RecipientSection({ isReview, transferType }: { isReview: boolean, transferType: string }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
@@ -269,7 +269,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [cosmosAddress, evmAddress]);
+  }, [cosmosAddress, evmAddress, transferType]);
 
   return (
     <div>
@@ -329,7 +329,7 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
     <div className="text-[10px] font-semibold leading-5 text-secondary">
       {label}:
       <button type="button" disabled={disabled} onClick={onClick}>
-        <span className={disabled ? '' : 'underline ml-1.5'}>{value}</span>
+        <span className={disabled ? '' : 'underline ml-1.5 hover:text-primary'}>{value}</span>
       </button>
     </div>
   );
