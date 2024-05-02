@@ -43,7 +43,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
       color = 'red'
   } else {
       content = hasError && (isValidating || isReview) ? firstError : isAccountReady ? text : 'CONNECT WALLET';
-      color = hasError && (isValidating || isReview) ? 'red' : 'button';
+      color = hasError && (isValidating || isReview) ? 'red' : isAccountReady ? 'button' : 'disabled';
   }
   const type = isAccountReady ? 'submit' : 'button';
   
