@@ -514,7 +514,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
   return (
     <div
       className={`${
-        visible ? 'max-h-screen duration-1000 ease-in' : 'hidden max-h-0 duration-500'
+        visible ? 'max-h-screen duration-1000 ease-in' : 'max-h-0 duration-500'
       } overflow-hidden transition-all`}
     >
       {fees?.localQuote && fees.localQuote.amount > 0n && (
