@@ -126,5 +126,5 @@ function TokenButton({
 const styles = {
   base: 'text-secondary px-3.5 py-2 flex items-center justify-center outline-none transition-colors duration-500 absolute right-0.5 top-2 bottom-0.5 px-2',
   enabled: 'bg-black',
-  disabled: 'bg-form cursor-default',
+  disabled: 'bg-disabled cursor-default pointer-events-none',
 };

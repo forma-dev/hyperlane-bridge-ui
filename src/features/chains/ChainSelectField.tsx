@@ -180,14 +180,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             <div className="flex items-center">
               <ChainLogo chainName={field.value} size={32} />
               <div className="flex flex-col justify-center items-start">
-                <span className="text-white font-medium text-base leading-5 ml-2">
+                <span className={`font-medium text-base leading-5 ml-2 ${disabled || isLocked ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
                   {getChainDisplayName(field.value, true)}
                 </span>
                 {
                    ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
                    (evmChainIds.includes(chainId) && evmNumReady > 0))
                     ?
-                    <span className="text-white font-medium text-xs leading-5 ml-2">
+                    <span className={`font-medium text-xs leading-5 ml-2 ${disabled || isLocked ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
                       {formatAddress(account?.address || "")}
                     </span>
                     : <></>
@@ -213,8 +213,12 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         ((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
           (evmChainIds.includes(chainId) && evmNumReady === 0))
           &&
-          <button type="button" onClick={onClickEnv()} className="w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center cursor-pointer hover:bg-[#FFFFFFCC]">
-            <span className="w-full font-plex font-bold text-sm leading-6 px-2 py-4">CONNECT</span>
+          <button disabled={disabled || isLocked}type="button" onClick={onClickEnv()} className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
+            disabled || isLocked ? styles.disabled : styles.enabled
+          }`}>
+            <span className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
+                disabled || isLocked ? 'text-disabled' : 'text-white'
+                }`}>CONNECT</span>
           </button>
         }
         
@@ -222,8 +226,12 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
           (evmChainIds.includes(chainId) && evmNumReady > 0))
             &&
-            <button type="button" onClick={onDisconnectEnv()} className="w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid bg-form p-2 h-[48px] flex items-center justify-center cursor-pointer hover:bg-[#FFFFFF1A]">
-              <span className="w-full font-plex font-bold text-sm leading-6 text-white">DISCONNECT</span>
+            <button disabled={disabled || isLocked} type="button" onClick={onDisconnectEnv()} className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
+              disabled || isLocked ? styles.disabled : styles.enabled
+            }`}>
+              <span className={`w-full font-plex font-bold text-sm leading-6  ${
+                disabled || isLocked ? 'text-disabled' : 'text-white'
+                }`}>DISCONNECT</span>
             </button>
         }
         
@@ -241,6 +249,6 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
 const styles = {
   base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
-  enabled: 'hover:border-white hover:border-[1px] bg-black',
-  disabled: 'cursor-default bg-form',
+  enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
+  disabled: 'cursor-default bg-disabled pointer-events-none',
 };

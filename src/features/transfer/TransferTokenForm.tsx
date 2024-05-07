@@ -203,9 +203,9 @@ function AmountSection({
             placeholder="0.00"
             classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
                       hover:border-white hover:placeholder-white hover:text-white 
-                      font-plex text-secondary 
-                      leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}
-                      ${amountFieldFocused ? 'border-white placeholder-white text-white' : 'border-[#FFFFFF66] text-white'}`}
+                      font-plex 
+                      leading-5 font-medium ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}
+                      ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}`}
             type="number"
             step="any"
             disabled={isReview}
@@ -289,8 +289,9 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
           classes={`w-full border-[1px] border-solid border-[#8C8D8F]
             hover:border-white shadow-none
             hover:placeholder-white font-plex text-secondary 
-            leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}
-            ${amountFieldFocused ? 'border-white placeholder-white text-white' : 'border-[#FFFFFF66] text-white'}`}
+            leading-5 font-medium 
+            ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}
+            ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}
           disabled={isReview}
           onFocus={() => setAmountFieldFocused(true)} 
           onBlur={() => setAmountFieldFocused(false)} 
@@ -485,7 +486,7 @@ function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRe
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      {address ? 'SELF' : ''}
+      {address && !disabled ? 'SELF' : ''}
     </button>
   );
 }
