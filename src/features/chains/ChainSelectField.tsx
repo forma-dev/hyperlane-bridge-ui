@@ -172,7 +172,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           type="button"
           name={field.name}
           className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
-            disabled || isLocked ? styles.disabled : styles.enabled
+            disabled ? styles.disabled : styles.enabled
           }`}
           onClick={onClick}
         >
@@ -180,14 +180,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             <div className="flex items-center">
               <ChainLogo chainName={field.value} size={32} />
               <div className="flex flex-col justify-center items-start">
-                <span className={`font-medium text-base leading-5 ml-2 ${disabled || isLocked ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
+                <span className={`font-medium text-base leading-5 ml-2 ${disabled ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
                   {getChainDisplayName(field.value, true)}
                 </span>
                 {
                    ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
                    (evmChainIds.includes(chainId) && evmNumReady > 0))
                     ?
-                    <span className={`font-medium text-xs leading-5 ml-2 ${disabled || isLocked ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
+                    <span className={`font-medium text-xs leading-5 ml-2 ${disabled ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
                       {formatAddress(account?.address || "")}
                     </span>
                     : <></>
@@ -213,11 +213,11 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         ((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
           (evmChainIds.includes(chainId) && evmNumReady === 0))
           &&
-          <button disabled={disabled || isLocked}type="button" onClick={onClickEnv()} className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
-            disabled || isLocked ? styles.disabled : styles.enabled
+          <button disabled={disabled} type="button" onClick={onClickEnv()} className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
+            disabled ? styles.disabled : styles.enabled
           }`}>
             <span className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
-                disabled || isLocked ? 'text-disabled' : 'text-white'
+                disabled ? 'text-disabled' : 'text-black'
                 }`}>CONNECT</span>
           </button>
         }
@@ -226,11 +226,11 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
           (evmChainIds.includes(chainId) && evmNumReady > 0))
             &&
-            <button disabled={disabled || isLocked} type="button" onClick={onDisconnectEnv()} className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
-              disabled || isLocked ? styles.disabled : styles.enabled
+            <button disabled={disabled} type="button" onClick={onDisconnectEnv()} className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
+              disabled ? styles.disabled : styles.enabled
             }`}>
               <span className={`w-full font-plex font-bold text-sm leading-6  ${
-                disabled || isLocked ? 'text-disabled' : 'text-white'
+                disabled ? 'text-disabled' : 'text-white'
                 }`}>DISCONNECT</span>
             </button>
         }
