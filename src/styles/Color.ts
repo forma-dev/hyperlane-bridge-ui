@@ -15,7 +15,7 @@ export enum Color {
   primaryText = '#FFFFFF',
   secondaryText = '#8C8D8F',
   disabledText = '#828485',
-  cardColor = '#0E0E0E',
+  cardColor = '#000000',
   disabledColor = '#1F1F1F',
 }
 
