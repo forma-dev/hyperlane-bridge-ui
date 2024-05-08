@@ -115,7 +115,7 @@ module.exports = {
       },
       backgroundColor: {
         'button': '#FF6B6B',
-        'form': '#0E0E0E',
+        'form': '#000000',
         'sideBar': '#0E0E0E',
         'hoverForm': '#1E1E1E',
         'toast': '#1E1E1E',
