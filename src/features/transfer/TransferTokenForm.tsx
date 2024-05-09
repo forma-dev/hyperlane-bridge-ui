@@ -37,12 +37,10 @@ import { useRecipientBalanceWatcher } from './useBalanceWatcher';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useTokenTransfer } from './useTokenTransfer';
 
-export function TransferTokenForm({ transferType }: { transferType: string }) {
+export function TransferTokenForm({ transferType, isReview, setIsReview }: { transferType: string, isReview: boolean, setIsReview: any }) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
 
-  // Flag for if form is in input vs review mode
-  const [isReview, setIsReview] = useState(false);
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
