@@ -260,7 +260,10 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       setFieldValue('recipient', account?.address);
       setRecipientValue(account?.address);
     }
-
+    else {
+      setFieldValue('recipient', "");
+      setRecipientValue("");
+    }
 
     if (['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
