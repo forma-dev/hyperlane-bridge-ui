@@ -173,6 +173,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           name={field.name}
           className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
             disabled ? styles.disabled : styles.enabled
+          } ${
+            isLocked ? styles.locked : ""
           }`}
           onClick={onClick}
         >
@@ -251,4 +253,5 @@ const styles = {
   base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
   enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
   disabled: 'cursor-default bg-disabled pointer-events-none',
+  locked: 'cursor-default pointer-events-none'
 };
