@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
@@ -6,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
 
-import { SmallSpinner } from '../../components/animation/SmallSpinner';
+// import { SmallSpinner } from '../../components/animation/SmallSpinner';
 import { ConnectAwareSubmitButton } from '../../components/buttons/ConnectAwareSubmitButton';
 import { SolidButton } from '../../components/buttons/SolidButton';
 import { ChevronIcon } from '../../components/icons/Chevron';
@@ -16,11 +17,11 @@ import PolygonIcon from '../../images/icons/polygon.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
-import { getChainDisplayName, tryGetChainProtocol } from '../chains/utils';
+import { tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
-import { useIsApproveRequired } from '../tokens/approval';
+// import { useIsApproveRequired } from '../tokens/approval';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import {
   getAccountAddressAndPubKey,
@@ -36,12 +37,10 @@ import { useRecipientBalanceWatcher } from './useBalanceWatcher';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useTokenTransfer } from './useTokenTransfer';
 
-export function TransferTokenForm({ transferType }: { transferType: string }) {
+export function TransferTokenForm({ transferType, isReview, setIsReview }: { transferType: string, isReview: boolean, setIsReview: any }) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
 
-  // Flag for if form is in input vs review mode
-  const [isReview, setIsReview] = useState(false);
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
@@ -64,7 +63,7 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
         <Form className="items-stretch w-full">
           <div
             className="px-10 py-4 gap-y-6 flex flex-col"
-            style={{ borderBottom: '2px solid #FFFFFF', borderTop: '1px solid #202025' }}
+            style={{ borderBottom: '0.5px solid #FFFFFF', borderTop: '0.5px solid #FFFFFF' }}
           >
             <ChainSelectSection
               isReview={isReview}
@@ -85,9 +84,9 @@ export function TransferTokenForm({ transferType }: { transferType: string }) {
               type="to"
               transferType={transferType}
             />
-            <TimeTransfer label="Time to Transfer" time="<1" />
+            {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
 
-            <RecipientSection isReview={isReview} />
+            <RecipientSection isReview={isReview}/>
             <ReviewDetails visible={isReview} />
             <ButtonSection
               isReview={isReview}
@@ -182,6 +181,8 @@ function AmountSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { balance } = useOriginBalance(values);
 
+  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
+
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
@@ -195,83 +196,110 @@ function AmountSection({
       ) : (
         <div className="relative w-fullh-[48px] flex items-center">
           <TextField
+            id="amount-withdraw"
             name="amount"
             placeholder="0.00"
-            classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
-                      hover:shadow-white hover:border-white 
-                      hover:placeholder-white font-plex text-secondary 
-                      leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
+            classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
+                      hover:border-white hover:placeholder-white hover:text-white 
+                      font-plex 
+                      leading-5 font-medium ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}
+                      ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}`}
             type="number"
             step="any"
             disabled={isReview}
             style={{
               fontSize: '40px',
             }}
-            onFocus={(e: any) => {
-              e.target.style.color = '#FFFFFF';
-              e.target.style.borderColor = '#FFFFFF';
-              e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
-            }}
-            onBlur={(e: any) => {
-              e.target.style.borderColor = '#FFFFFF66';
-              e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
-            }}
+            onFocus={() => setAmountFieldFocused(true)} 
+            onBlur={() => setAmountFieldFocused(false)} 
           />
           {/* <MaxButton disabled={isReview} balance={balance} /> */}
           <TokenSection setIsNft={setIsNft} isReview={isReview} />
         </div>
       )}
-      <div className="pt-4 text-right">
-        <TokenBalance label="Balance" balance={balance} disabled={isReview} />
+      <div className="pt-1 text-right">
+        <TokenBalance label="BALANCE" balance={balance} disabled={isReview} />
       </div>
     </div>
   );
 }
 
 function RecipientSection({ isReview }: { isReview: boolean }) {
-  const { values } = useFormikContext<TransferFormValues>();
+  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
+  const { accounts } = useAccounts();
+  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
+  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
+
   const defaultPlaceholder = "0x123456...";
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
+  const [recipientValue, setRecipientValue] = useState<string>("");
+  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
+  
+  const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRecipientValue(event.target.value);
+    setFieldValue('recipient', event.target.value);
+  };
+
 
   useEffect(() => {
+    let account:any = null;
+    // Check if the selected chain is in cosmosChainIds
+    if (['celestia', 'stride'].includes(values.destination)) {
+      account = accounts[ProtocolType.Cosmos].addresses.find(
+        address => address.chainName === values.destination
+      );
+    }
+    if (['sketchpad'].includes(values.destination)) {
+      account = accounts[ProtocolType.Ethereum].addresses[0];
+    }
+
+    if (account?.address) {
+      setFieldValue('recipient', account?.address);
+      setRecipientValue(account?.address);
+    }
+    else {
+      setFieldValue('recipient', "");
+      setRecipientValue("");
+    }
+
     if (['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [values]);
+  }, [cosmosAddress, evmAddress, values.destination]);
 
   return (
-    <div className="mt-4">
+    <div>
       <div className="flex justify-between pr-1">
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
         </label>
-        <TokenBalance label="Remote balance" balance={balance} />
+        <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true}/>
       </div>
       <div className="relative w-full">
         <TextField
           name="recipient"
           placeholder={placeholder}
-          classes={`w-full border-[1.5px] border-solid border-[#FFFFFF66] shadow-dropdown 
-          hover:shadow-white hover:border-white 
-          hover:placeholder-white font-plex text-secondary 
-          leading-5 font-medium ${isReview ? 'bg-form' : 'bg-black'}`}
+          style={{
+            boxShadow: '0 0 #0000'
+          }}
+          classes={`w-full border-[1px] border-solid border-[#8C8D8F]
+            hover:border-white shadow-none
+            hover:placeholder-white font-plex text-secondary 
+            leading-5 font-medium 
+            ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}
+            ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}
           disabled={isReview}
-          onFocus={(e: any) => {
-            e.target.style.color = '#FFFFFF';
-            e.target.style.borderColor = '#FFFFFF';
-            e.target.style.boxShadow = '2px 4px 0px 0px #FFFFFF';
-          }}
-          onBlur={(e: any) => {
-            e.target.style.borderColor = '#FFFFFF66';
-            e.target.style.boxShadow = '2px 4px 0px 0px rgba(255,255,255,0.4)';
-          }}
+          onFocus={() => setAmountFieldFocused(true)} 
+          onBlur={() => setAmountFieldFocused(false)} 
+          onChange={handleRecipientChange}
+          value={recipientValue}
         />
-        {!isReview && <SelfButton disabled={isReview} />}
+        {!isReview && <SelfButton disabled={isReview} setRecipientValue={setRecipientValue}/>}
       </div>
     </div>
   );
@@ -282,44 +310,45 @@ function TokenBalance({ label, balance, disabled }: { label: string; balance?: T
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
-  const { fetchMaxAmount, isLoading } = useFetchMaxAmount();
+  const { fetchMaxAmount } = useFetchMaxAmount();
 
   const onClick = async () => {
     if (!balance || isNullish(tokenIndex) || disabled) return;
     const maxAmount = await fetchMaxAmount({ balance, origin, destination, accounts });
     if (isNullish(maxAmount)) return;
+
     const decimalsAmount = maxAmount.getDecimalFormattedAmount();
     const roundedAmount = new BigNumber(decimalsAmount).toFixed(4, BigNumber.ROUND_FLOOR);
     setFieldValue('amount', roundedAmount);
+
+    // Set the color of the input field to #FFFFFF
+    const inputField = document.getElementById('amount-withdraw'); // Assuming id of the input field is 'amount-input'
+    if (inputField) {
+      inputField.style.color = '#FFFFFF';
+    }
   };
   return (
     <div className="text-[10px] font-semibold leading-5 text-secondary">
       {label}:
-      <button onClick={onClick}>
-      {isLoading ? (
-        <div className="flex items-center">
-          <SmallSpinner />
-        </div>
-      ) : (
-        <span className="underline ml-1.5">{value}</span>
-      )}
+      <button type="button" disabled={disabled} onClick={onClick}>
+        <span className={disabled ? '' : 'underline ml-1.5 hover:text-primary'}>{value}</span>
       </button>
     </div>
   );
 }
 
-function TimeTransfer({ label, time }:
-{
-  label: string;
-  time?: string | null;
-}) {
-  return (
-    <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
-      {`${label}:`}
-      <span className="text-primary font-medium">{`${time}`} minute</span>
-    </div>
-  );
-}
+// function TimeTransfer({ label, time }:
+// {
+//   label: string;
+//   time?: string | null;
+// }) {
+//   return (
+//     <div className="flex justify-between text-xs font-normal leading-4 text-secondary">
+//       {`${label}:`}
+//       <span className="text-primary font-medium">{`${time}`} minute</span>
+//     </div>
+//   );
+// }
 
 function ButtonSection({
   isReview,
@@ -356,12 +385,13 @@ function ButtonSection({
           chainName={values.origin}
           text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
           classes="py-3 px-8 w-full"
+          isValidating={isValidating}
         />
     );
   }
 
   return (
-    <div className="mt-4 flex items-center justify-between space-x-4">
+    <div className="flex items-center justify-between space-x-4">
       <SolidButton
         type="button"
         color="black"
@@ -375,9 +405,9 @@ function ButtonSection({
         type="button"
         color="button"
         onClick={triggerTransactionsHandler}
-        classes="flex-3 px-3 py-8 max-h-16"
+        classes="flex-1 px-3 py-8 text-sm max-h-16 font-bold uppercase"
       >
-        {`Send to ${getChainDisplayName(values.destination)}`}
+        {transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
       </SolidButton>
     </div>
   );
@@ -417,7 +447,7 @@ function ButtonSection({
 //   );
 // }
 
-function SelfButton({ disabled }: { disabled?: boolean }) {
+function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRecipientValue?: any }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
@@ -430,6 +460,7 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
     if (disabled) return;
     if (address) {
       setFieldValue('recipient', address);
+      setRecipientValue && setRecipientValue(address);
     }
     else {
       connectFn();
@@ -451,34 +482,35 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      {address ? 'SELF' : 'CONNECT'}
+      {address && !disabled ? 'SELF' : ''}
     </button>
   );
 }
 
 function ReviewDetails({ visible }: { visible: boolean }) {
   const { values } = useFormikContext<TransferFormValues>();
-  const { amount, destination, tokenIndex } = values;
-  const originToken = getTokenByIndex(tokenIndex);
-  const originTokenSymbol = originToken?.symbol || '';
-  const connection = originToken?.getConnectionForChain(destination);
-  const destinationToken = connection?.token;
-  const isNft = originToken?.isNft();
+  // const { tokenIndex } = values;
+  // const originToken = getTokenByIndex(tokenIndex);
+  // const originTokenSymbol = originToken?.symbol || '';
+  // const connection = originToken?.getConnectionForChain(destination);
+  // const destinationToken = connection?.token;
+  // const isNft = originToken?.isNft();
 
-  const amountWei = isNft ? amount.toString() : toWei(amount, originToken?.decimals);
+  // const amountWei = isNft ? amount.toString() : toWei(amount, originToken?.decimals);
 
-  const { isLoading: isApproveLoading, isApproveRequired } = useIsApproveRequired(
-    originToken,
-    amountWei,
-    visible,
-  );
-  const { isLoading: isQuoteLoading, fees } = useFeeQuotes(values, visible);
+  // const { isLoading: isApproveLoading, isApproveRequired } = useIsApproveRequired(
+  //   originToken,
+  //   amountWei,
+  //   visible,
+  // );
+  const { fees } = useFeeQuotes(values, visible);
 
-  const isLoading = isApproveLoading || isQuoteLoading;
+  // const isLoading = isApproveLoading || isQuoteLoading;
 
   return (
     <div
@@ -486,7 +518,27 @@ function ReviewDetails({ visible }: { visible: boolean }) {
         visible ? 'max-h-screen duration-1000 ease-in' : 'max-h-0 duration-500'
       } overflow-hidden transition-all`}
     >
-      <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
+      {fees?.localQuote && fees.localQuote.amount > 0n && (
+        <p className="flex justify-between">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Local Gas (est.)</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.localQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
+            fees.localQuote.token.symbol || ''
+          }`}</span>
+        </p>
+      )}
+      {fees?.interchainQuote && fees.interchainQuote.amount > 0n && (
+        <p className="flex justify-between">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Interchain Gas</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.interchainQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
+            fees.interchainQuote.token.symbol || ''
+          }`}</span>
+        </p>
+      )}
+      <p className="flex justify-between">
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Time to Transfer</span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`<1 Minute`}</span>
+      </p>
+      {/* <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
       <div className="mt-1.5 px-2.5 py-2 space-y-2 border border-gray-400 bg-black text-gray-400 text-sm break-all">
         {isLoading ? (
           <div className="py-6 flex items-center justify-center">
@@ -538,7 +590,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
             </div>
           </>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

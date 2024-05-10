@@ -7,8 +7,7 @@ interface Props {
 export function Card({ className, children }: PropsWithChildren<Props>) {
   return (
     <div
-      className={`bg-form overflow-auto max-w-full w-100 relative ${className}`}
-      style={{ border: '2px solid #FFFFFF', boxShadow: '4px 6px 0px 0px #FFFFFF' }}
+      className={`bg-form overflow-auto max-w-full w-100 relative border-[0.5px] border-solid border-white ${className}`}
     >
       {children}
     </div>

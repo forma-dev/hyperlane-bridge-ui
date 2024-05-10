@@ -7,8 +7,12 @@ import { TransferTokenTab } from './TransferTokenTab';
 
 export function TransferTokenCard() {
   const [activeTab, setActiveTab] = useState<string>('deposit');
+  // Flag for if form is in input vs review mode
+  const [isReview, setIsReview] = useState(false);
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    setIsReview(false);
   };
 
   return (
@@ -26,7 +30,7 @@ export function TransferTokenCard() {
             transferType="withdraw"
           />
         </div>
-        <TransferTokenForm transferType={activeTab} />
+        <TransferTokenForm transferType={activeTab} isReview={isReview} setIsReview={setIsReview}/>
       </>
     </Card>
   );

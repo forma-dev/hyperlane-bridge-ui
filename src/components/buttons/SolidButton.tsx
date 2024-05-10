@@ -2,7 +2,7 @@ import { PropsWithChildren, ReactElement } from 'react';
 
 interface ButtonProps {
   type?: 'submit' | 'reset' | 'button';
-  color?: 'white' | 'blue' | 'green' | 'red' | 'gray' | 'button' | 'black' | 'navBarButton'; // defaults to blue
+  color?: 'white' | 'blue' | 'green' | 'red' | 'gray' | 'button' | 'black' | 'navBarButton' | 'disabled'; // defaults to blue
   bold?: boolean;
   classes?: string;
   icon?: ReactElement;
@@ -25,17 +25,18 @@ export function SolidButton(
   const color = _color ?? 'blue';
 
   const base = 'flex items-center justify-center transition-all duration-500';
-  let baseColors, onHover, onActive, style;
+  let baseColors, border, onHover, onActive, style;
 
   if (color === 'button') {
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
+    border="border-[1px] border-solid border-white";
     style = {
-      boxShadow: '4px 6px 0px 0px #FFFFFF',
+      boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   } else if (color === 'navBarButton') {
     baseColors = 'bg-button text-white';
-    style = { boxShadow: '4px 6px 0px 0px #FFFFFF', width: '188px', height: '40px' };
+    style = { boxShadow: '2px 3px 0px 0px #FFFFFF', width: '188px', height: '40px' };
   } else if (color === 'blue') {
     baseColors = 'bg-blue-500 text-white';
     onHover = 'hover:bg-blue-600';
@@ -58,14 +59,20 @@ export function SolidButton(
     onActive = 'active:bg-gray-300';
   } else if (color === 'black') {
     baseColors = 'bg-black text-secondary';
+    border="border-[1px] border-solid border-white";
     style = {
-      border: '2px solid #FFFFFF',
-      boxShadow: '4px 6px 0px 0px #FFFFFF',
+      boxShadow: '2px 3px 0px 0px #FFFFFF',
+    };
+  } else if (color === 'disabled') {
+    baseColors = 'bg-black text-secondary cursor-auto opacity-40';
+    border="border-[1px] border-solid border-white";
+    style = {
+      boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
   const weight = bold ? 'font-semibold' : '';
-  const allClasses = `${base} ${baseColors} ${onHover} ${onDisabled} ${onActive} ${weight} ${classes}`;
+  const allClasses = `${base} ${baseColors} ${border} ${onHover} ${onDisabled} ${onActive} ${weight} ${classes}`;
 
   return (
     <button

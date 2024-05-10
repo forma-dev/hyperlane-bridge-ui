@@ -43,3 +43,14 @@ export function tryGetChainProtocol(chain: ChainNameOrId) {
 export function getChainProtocol(chain: ChainNameOrId) {
   return getChainMetadata(chain).protocol;
 }
+
+export function formatAddress(address:string): string {
+  if (!address || typeof address !== 'string') {
+    return '';
+  }
+
+  const prefix = address.slice(0, 8); // First 8 characters
+  const suffix = address.slice(-4); // Last 4 characters
+
+  return `${prefix}...${suffix}`;
+}

@@ -53,7 +53,6 @@ export function Modal({
                   padding || ''
                 } text-left transition-all 
                 border-2 border-solid border-white
-                shadow-[4px_6px_0px_0px_#FFFFFF]
                 `}
               >
                 {title ? (

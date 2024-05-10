@@ -115,15 +115,17 @@ module.exports = {
       },
       backgroundColor: {
         'button': '#FF6B6B',
-        'form': '#0E0E0E',
+        'form': '#000000',
         'sideBar': '#0E0E0E',
         'hoverForm': '#1E1E1E',
         'toast': '#1E1E1E',
+        'disabled': '#1F1F1F',
       },
       textColor: {
         primary: '#FFFFFF',
         secondary: '#8C8D8F',
         error: '#FF6B6B',
+        disabled: '#828485'
       },
       boxShadow: {
         dropdown: '2px 4px 0px 0px rgba(255,255,255,0.4)',
