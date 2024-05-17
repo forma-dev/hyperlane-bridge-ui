@@ -70,7 +70,6 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       env = ProtocolType.Ethereum;
     }
 
-    close();
     const disconnectFn = disconnectFns[env];
     if (disconnectFn) disconnectFn();
   };
@@ -134,7 +133,6 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       }
     }
 
-    close();
     const connectFn = connectFns[env];
     if (connectFn) connectFn();
   };
