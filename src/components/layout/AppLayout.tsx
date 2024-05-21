@@ -5,6 +5,7 @@ import { APP_NAME } from '../../consts/app';
 import { Color } from '../../styles/Color';
 import { Footer } from '../nav/Footer';
 import { Header } from '../nav/Header';
+import Script from 'next/script'
 
 export function AppLayout({ children }: PropsWithChildren) {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -22,6 +23,19 @@ export function AppLayout({ children }: PropsWithChildren) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{APP_NAME}</title>
       </Head>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-QGW4FD8V0V"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-QGW4FD8V0V');
+        `}
+      </Script>
       <div
         style={{ backgroundColor: Color.background }}
         id="app-content"
