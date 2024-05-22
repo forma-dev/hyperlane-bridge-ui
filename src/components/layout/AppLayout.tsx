@@ -28,8 +28,9 @@ export function AppLayout({ children }: PropsWithChildren) {
         id="app-content"
         className="h-full min-h-screen w-full min-w-screen font-plex"
       >
+        <Banner/>
         <div className="max-w-screen-xl mx-auto flex flex-col justify-between min-h-screen px-4">
-          <Banner/>
+          
           <Header isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
           <main
             className={`w-full flex-1 pb-36 pt-20 flex items-center justify-center ${

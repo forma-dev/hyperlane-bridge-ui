@@ -4,20 +4,19 @@ import ArrowRightIcon from '../../images/icons/arrow-right.svg';
 
 export function Banner() {
   return (
-    <a
-      href="https://forma-devnet-modularspring.onrender.com/"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <div className="bg-[#D9D9D9] flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
+      <div className="bg-[#D9D9D9] py-2 flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
-          <p className="text-black font-semibold text-xl flex gap-2">
-              [Modularium] is live <Image className="ml-2 brightness-0" src={ArrowRightIcon} width={24} height={24} alt="" />
-          </p>
+          <a
+            href="https://forma-devnet-modularspring.onrender.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <p className="text-black font-semibold text-l flex gap-2 hover:underline">
+                [Modularium] is live <Image className="ml-2 brightness-0" src={ArrowRightIcon} width={24} height={24} alt="" />
+            </p>
+          </a>
         </div>
       </div>
-    </a>
-      
   );
 }
 
