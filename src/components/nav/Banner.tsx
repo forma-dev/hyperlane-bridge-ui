@@ -1,13 +1,13 @@
 import Image from 'next/image';
 import ArrowRightIcon from '../../images/icons/arrow-right.svg';
 
-
 export function Banner() {
+  const modularspringUrl = process.env.NEXT_PUBLIC_API_URL;
   return (
       <div className="bg-[#D9D9D9] py-2 flex gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
           <a
-            href="https://forma-devnet-modularspring.onrender.com/"
+            href={modularspringUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
