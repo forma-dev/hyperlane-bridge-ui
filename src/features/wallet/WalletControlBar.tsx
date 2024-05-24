@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
 // import { shortenAddress } from '@hyperlane-xyz/utils';
-
 // import { SolidButton } from '../../components/buttons/SolidButton';
 // import { Identicon } from '../../components/icons/Identicon';
 import { useIsSsr } from '../../utils/ssr';
 
 import { SideBarMenu } from './SideBarMenu';
 import { WalletEnvSelectionModal } from './WalletEnvSelectionModal';
+
 // import { useAccounts } from './hooks/multiProtocol';
 
 interface Props {
@@ -32,10 +32,7 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
   return (
     <div className="relative">
       <div className="relative">
-        <button
-            className="burger"
-            onClick={() => setIsSideBarOpen(true)}
-        ></button>
+        <button className="burger" onClick={() => setIsSideBarOpen(true)}></button>
 
         {/* {numReady === 0 && (
           <SolidButton
@@ -96,7 +93,6 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
         isOpen={isSideBarOpen}
         onConnectWallet={() => setShowEnvSelectModal(true)}
       />
-     
     </div>
   );
 }

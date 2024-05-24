@@ -5,8 +5,7 @@ interface TabProps {
 }
 
 export function TransferTokenTab({ activeTab, handleTabChange, transferType }: TabProps) {
-  const formattedTransferType =
-    transferType.toUpperCase();
+  const formattedTransferType = transferType.toUpperCase();
   // Define classes based on the condition
   const textClasses = activeTab === transferType ? 'text-primary' : 'text-secondary';
 
@@ -21,4 +20,4 @@ export function TransferTokenTab({ activeTab, handleTabChange, transferType }: T
       </div>
     </button>
   );
-};
+}

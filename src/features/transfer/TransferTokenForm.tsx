@@ -37,7 +37,15 @@ import { useRecipientBalanceWatcher } from './useBalanceWatcher';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useTokenTransfer } from './useTokenTransfer';
 
-export function TransferTokenForm({ transferType, isReview, setIsReview }: { transferType: string, isReview: boolean, setIsReview: any }) {
+export function TransferTokenForm({
+  transferType,
+  isReview,
+  setIsReview,
+}: {
+  transferType: string;
+  isReview: boolean;
+  setIsReview: any;
+}) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
 
@@ -65,13 +73,14 @@ export function TransferTokenForm({ transferType, isReview, setIsReview }: { tra
             className="px-10 py-4 gap-y-6 flex flex-col"
             style={{ borderBottom: '0.5px solid #FFFFFF', borderTop: '0.5px solid #FFFFFF' }}
           >
-            <ChainSelectSection
-              isReview={isReview}
-              type="from"
-              transferType={transferType}
-            />
+            <ChainSelectSection isReview={isReview} type="from" transferType={transferType} />
             <div className="flex justify-between">
-              <AmountSection isNft={isNft} setIsNft={setIsNft} isReview={isReview} transferType={transferType} />
+              <AmountSection
+                isNft={isNft}
+                setIsNft={setIsNft}
+                isReview={isReview}
+                transferType={transferType}
+              />
             </div>
           </div>
           <div className="relative left-0 right-0 flex justify-center overflow-hidden z-1">
@@ -79,14 +88,10 @@ export function TransferTokenForm({ transferType, isReview, setIsReview }: { tra
           </div>
 
           <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
-            <ChainSelectSection
-              isReview={isReview}
-              type="to"
-              transferType={transferType}
-            />
+            <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
             {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
 
-            <RecipientSection isReview={isReview}/>
+            <RecipientSection isReview={isReview} />
             <ReviewDetails visible={isReview} />
             <ButtonSection
               isReview={isReview}
@@ -127,14 +132,18 @@ export function TransferTokenForm({ transferType, isReview, setIsReview }: { tra
 //   );
 // }
 
-function ChainSelectSection({ isReview, type, transferType }: {
+function ChainSelectSection({
+  isReview,
+  type,
+  transferType,
+}: {
   isReview: boolean;
   type: string;
   transferType: string;
 }) {
   let chains = useMemo(() => getWarpCore().getTokenChains(), []);
   if (type === 'from' && transferType === 'deposit') {
-    chains = chains.filter(chain => !['forma', 'sketchpad'].includes(chain));
+    chains = chains.filter((chain) => !['forma', 'sketchpad'].includes(chain));
   }
 
   if (type === 'to' && transferType === 'withdraw') {
@@ -145,9 +154,21 @@ function ChainSelectSection({ isReview, type, transferType }: {
   return (
     <div className="flex items-center justify-start space-x-7 sm:space-x-10">
       {type === 'from' ? (
-        <ChainSelectField name="origin" label="From" chains={chains} disabled={isReview} transferType={transferType} />
+        <ChainSelectField
+          name="origin"
+          label="From"
+          chains={chains}
+          disabled={isReview}
+          transferType={transferType}
+        />
       ) : (
-        <ChainSelectField name="destination" label="To" chains={chains} disabled={isReview} transferType={transferType} />
+        <ChainSelectField
+          name="destination"
+          label="To"
+          chains={chains}
+          disabled={isReview}
+          transferType={transferType}
+        />
       )}
     </div>
   );
@@ -202,16 +223,22 @@ function AmountSection({
             classes={`w-full border-[1px] border-solid border-[#8C8D8F] 
                       hover:border-white hover:placeholder-white hover:text-white 
                       font-plex 
-                      leading-5 font-medium ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}
-                      ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}`}
+                      leading-5 font-medium ${
+                        isReview
+                          ? 'bg-disabled text-disabled cursor-default pointer-events-none'
+                          : 'bg-black text-white'
+                      }
+                      ${
+                        amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'
+                      }`}
             type="number"
             step="any"
             disabled={isReview}
             style={{
               fontSize: '40px',
             }}
-            onFocus={() => setAmountFieldFocused(true)} 
-            onBlur={() => setAmountFieldFocused(false)} 
+            onFocus={() => setAmountFieldFocused(true)}
+            onBlur={() => setAmountFieldFocused(false)}
           />
           {/* <MaxButton disabled={isReview} balance={balance} /> */}
           <TokenSection setIsNft={setIsNft} isReview={isReview} />
@@ -233,23 +260,22 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
   const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
 
-  const defaultPlaceholder = "0x123456...";
+  const defaultPlaceholder = '0x123456...';
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
-  const [recipientValue, setRecipientValue] = useState<string>("");
+  const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
-  
+
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
     setFieldValue('recipient', event.target.value);
   };
 
-
   useEffect(() => {
-    let account:any = null;
+    let account: any = null;
     // Check if the selected chain is in cosmosChainIds
     if (['celestia', 'stride'].includes(values.destination)) {
       account = accounts[ProtocolType.Cosmos].addresses.find(
-        address => address.chainName === values.destination
+        (address) => address.chainName === values.destination,
       );
     }
     if (['forma', 'sketchpad'].includes(values.destination)) {
@@ -259,10 +285,9 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     if (account?.address) {
       setFieldValue('recipient', account?.address);
       setRecipientValue(account?.address);
-    }
-    else {
-      setFieldValue('recipient', "");
-      setRecipientValue("");
+    } else {
+      setFieldValue('recipient', '');
+      setRecipientValue('');
     }
 
     if (['celestia', 'stride'].includes(values.destination)) {
@@ -278,34 +303,46 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
           Recipient Address
         </label>
-        <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true}/>
+        <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true} />
       </div>
       <div className="relative w-full">
         <TextField
           name="recipient"
           placeholder={placeholder}
           style={{
-            boxShadow: '0 0 #0000'
+            boxShadow: '0 0 #0000',
           }}
           classes={`w-full border-[1px] border-solid border-[#8C8D8F]
             hover:border-white shadow-none
             hover:placeholder-white font-plex text-secondary 
             leading-5 font-medium 
             ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}
-            ${isReview ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}
+            ${
+              isReview
+                ? 'bg-disabled text-disabled cursor-default pointer-events-none'
+                : 'bg-black text-white'
+            }`}
           disabled={isReview}
-          onFocus={() => setAmountFieldFocused(true)} 
-          onBlur={() => setAmountFieldFocused(false)} 
+          onFocus={() => setAmountFieldFocused(true)}
+          onBlur={() => setAmountFieldFocused(false)}
           onChange={handleRecipientChange}
           value={recipientValue}
         />
-        {!isReview && <SelfButton disabled={isReview} setRecipientValue={setRecipientValue}/>}
+        {!isReview && <SelfButton disabled={isReview} setRecipientValue={setRecipientValue} />}
       </div>
     </div>
   );
 }
 
-function TokenBalance({ label, balance, disabled }: { label: string; balance?: TokenAmount | null, disabled?: boolean }) {
+function TokenBalance({
+  label,
+  balance,
+  disabled,
+}: {
+  label: string;
+  balance?: TokenAmount | null;
+  disabled?: boolean;
+}) {
   const value = balance?.getDecimalFormattedAmount().toFixed(4) || '0';
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { origin, destination, tokenIndex } = values;
@@ -381,12 +418,12 @@ function ButtonSection({
 
   if (!isReview) {
     return (
-        <ConnectAwareSubmitButton
-          chainName={values.origin}
-          text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
-          classes="py-3 px-8 w-full"
-          isValidating={isValidating}
-        />
+      <ConnectAwareSubmitButton
+        chainName={values.origin}
+        text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
+        classes="py-3 px-8 w-full"
+        isValidating={isValidating}
+      />
     );
   }
 
@@ -447,7 +484,13 @@ function ButtonSection({
 //   );
 // }
 
-function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRecipientValue?: any }) {
+function SelfButton({
+  disabled,
+  setRecipientValue,
+}: {
+  disabled?: boolean;
+  setRecipientValue?: any;
+}) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
@@ -461,16 +504,15 @@ function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean, setRe
     if (address) {
       setFieldValue('recipient', address);
       setRecipientValue && setRecipientValue(address);
-    }
-    else {
+    } else {
       connectFn();
       setIsConnecting(true);
     }
-      // toast.warn(
-      //   `No account found for for chain ${getChainDisplayName(
-      //     values.destination,
-      //   )}, is your wallet connected?`,
-      // );
+    // toast.warn(
+    //   `No account found for for chain ${getChainDisplayName(
+    //     values.destination,
+    //   )}, is your wallet connected?`,
+    // );
   };
 
   useEffect(() => {
@@ -520,23 +562,29 @@ function ReviewDetails({ visible }: { visible: boolean }) {
     >
       {fees?.localQuote && fees.localQuote.amount > 0n && (
         <p className="flex justify-between">
-          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Local Gas (est.)</span>
-          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.localQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
-            fees.localQuote.token.symbol || ''
-          }`}</span>
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">
+            Local Gas (est.)
+          </span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${
+            fees.localQuote.getDecimalFormattedAmount().toFixed(4) || '0'
+          } ${fees.localQuote.token.symbol || ''}`}</span>
         </p>
       )}
       {fees?.interchainQuote && fees.interchainQuote.amount > 0n && (
         <p className="flex justify-between">
-          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Interchain Gas</span>
-          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${fees.interchainQuote.getDecimalFormattedAmount().toFixed(4) || '0'} ${
-            fees.interchainQuote.token.symbol || ''
-          }`}</span>
+          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">
+            Interchain Gas
+          </span>
+          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`${
+            fees.interchainQuote.getDecimalFormattedAmount().toFixed(4) || '0'
+          } ${fees.interchainQuote.token.symbol || ''}`}</span>
         </p>
       )}
       <p className="flex justify-between">
-          <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">Time to Transfer</span>
-          <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`<1 Minute`}</span>
+        <span className="text-left text-[#8C8D8F] text-xs font-medium min-w-[7rem]">
+          Time to Transfer
+        </span>
+        <span className="text-right text-white text-xs font-medium min-w-[7rem]">{`<1 Minute`}</span>
       </p>
       {/* <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
       <div className="mt-1.5 px-2.5 py-2 space-y-2 border border-gray-400 bg-black text-gray-400 text-sm break-all">

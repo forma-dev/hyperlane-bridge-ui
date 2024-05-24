@@ -4,10 +4,10 @@ import { useCallback, useState } from 'react';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { tryGetChainProtocol } from '../../features/chains/utils';
+import { TransferFormValues } from '../../features/transfer/types';
 import { useAccountForChain, useConnectFns } from '../../features/wallet/hooks/multiProtocol';
 import { useTimeout } from '../../utils/timeout';
 
-import { TransferFormValues } from '../../features/transfer/types';
 import { SolidButton } from './SolidButton';
 
 interface Props {
@@ -17,11 +17,16 @@ interface Props {
   isValidating?: boolean;
 }
 
-export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, classes, isValidating=false }: Props) {
+export function ConnectAwareSubmitButton<FormValues = any>({
+  chainName,
+  text,
+  classes,
+  isValidating = false,
+}: Props) {
   const { values } = useFormikContext<TransferFormValues>();
   // Flag for if form is in input vs review mode
   const [isReview, setIsReview] = useState(false);
-  
+
   const protocol = tryGetChainProtocol(chainName) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
   const connectFn = connectFns[protocol];
@@ -33,24 +38,28 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
 
   const hasError = Object.keys(touched).length > 0 && Object.keys(errors).length > 0;
   const firstError = `${Object.values(errors)[0]}` || 'Unknown error';
-  
+
   const amount = parseFloat(values.amount);
 
   let color;
   let content;
   if (amount === 0) {
-      content = "Invalid amount";
-      color = 'red'
+    content = 'Invalid amount';
+    color = 'red';
   } else {
-      content = hasError && (isValidating || isReview) ? firstError : isAccountReady ? text : 'CONNECT WALLET';
-      color = hasError && (isValidating || isReview) ? 'red' : isAccountReady ? 'button' : 'disabled';
+    content =
+      hasError && (isValidating || isReview)
+        ? firstError
+        : isAccountReady
+        ? text
+        : 'CONNECT WALLET';
+    color = hasError && (isValidating || isReview) ? 'red' : isAccountReady ? 'button' : 'disabled';
   }
   const type = isAccountReady ? 'submit' : 'button';
-  
-  
+
   const onClick = () => {
     if (!isReview) {
-      setIsReview(true); 
+      setIsReview(true);
     } else if (isAccountReady) {
       // Perform action when the form is reviewed and account is ready
     } else {
@@ -67,7 +76,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({ chainName, text, cl
   }, [setErrors, setTouched, errors, touched]);
 
   useTimeout(clearErrors, 3500);
- 
+
   return (
     <SolidButton type={type} color={color} onClick={onClick} classes={classes}>
       <div className="ml-1.5 text-white text-sm leading-6 font-bold font-plex">{content}</div>

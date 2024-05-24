@@ -2,14 +2,16 @@ import { useField, useFormikContext } from 'formik';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
+import { ProtocolType } from '@hyperlane-xyz/utils';
+
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
-
-import { ProtocolType } from '@hyperlane-xyz/utils';
 import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
+
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
+
 type Props = {
   name: string;
   label: string;
@@ -19,22 +21,22 @@ type Props = {
   transferType: string;
 };
 
-const cosmosChainIds = ["stride", "celestia"];
-const evmChainIds = ["forma", "sketchpad"];
+const cosmosChainIds = ['stride', 'celestia'];
+const evmChainIds = ['forma', 'sketchpad'];
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
-  const [chainId, setChainId] = useState<string>("");
-  
+  const [chainId, setChainId] = useState<string>('');
+
   const { accounts } = useAccounts();
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
-  
-  let account:any = "";
+
+  let account: any = '';
   if (cosmosChainIds.includes(chainId)) {
     account = accounts[ProtocolType.Cosmos].addresses.find(
-      address => address.chainName === chainId
+      (address) => address.chainName === chainId,
     );
   }
   if (evmChainIds.includes(chainId)) {
@@ -51,7 +53,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
     if (onChange) onChange(newChainId);
   };
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -63,7 +65,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const disconnectFns = useDisconnectFns();
 
   const onDisconnectEnv = () => async () => {
-    let env:string = "";
+    let env: string = '';
     if (cosmosChainIds.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
@@ -75,7 +77,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   };
 
   const onClickEnv = () => async () => {
-    let env:string = "";
+    let env: string = '';
     if (cosmosChainIds.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
@@ -83,51 +85,59 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     }
 
     if (env == ProtocolType.Cosmos) {
-      if (process.env.NEXT_PUBLIC_NETWORK === "testnet" && window && (window as any).keplr) {
+      if (process.env.NEXT_PUBLIC_NETWORK === 'testnet' && window && (window as any).keplr) {
         const chains = await (window as any).keplr.getChainInfosWithoutEndpoints();
-        const hasStrideTestnet = chains.find(el => el.chainId === "stride-internal-1") ? true : false;
+        const hasStrideTestnet = chains.find((el) => el.chainId === 'stride-internal-1')
+          ? true
+          : false;
         if (!hasStrideTestnet) {
           await (window as any).keplr.experimentalSuggestChain({
-            chainId: "stride-internal-1",
-            chainName: "Stride (Testnet)",
-            rpc: "https://stride.testnet-1.stridenet.co",
-            rest: "https://stride.testnet-1.stridenet.co/api/",
+            chainId: 'stride-internal-1',
+            chainName: 'Stride (Testnet)',
+            rpc: 'https://stride.testnet-1.stridenet.co',
+            rest: 'https://stride.testnet-1.stridenet.co/api/',
             stakeCurrency: {
-              coinDenom: "STRD",
-              coinMinimalDenom: "ustrd",
+              coinDenom: 'STRD',
+              coinMinimalDenom: 'ustrd',
               coinDecimals: 6,
             },
             bip44: {
               coinType: 118,
             },
             bech32Config: {
-              bech32PrefixAccAddr: "stride",
-              bech32PrefixAccPub: "stridepub",
-              bech32PrefixValAddr: "stridevaloper",
-              bech32PrefixValPub: "stridevaloperpub",
-              bech32PrefixConsAddr: "stridevalcons",
-              bech32PrefixConsPub: "stridevalconspub"
+              bech32PrefixAccAddr: 'stride',
+              bech32PrefixAccPub: 'stridepub',
+              bech32PrefixValAddr: 'stridevaloper',
+              bech32PrefixValPub: 'stridevaloperpub',
+              bech32PrefixConsAddr: 'stridevalcons',
+              bech32PrefixConsPub: 'stridevalconspub',
             },
-            currencies: [{
-              coinDenom: "STRD",
-              coinMinimalDenom: "ustrd",
-              coinDecimals: 6,
-            }],
-            feeCurrencies: [{
-              coinDenom: "STRD",
-              coinMinimalDenom: "ustrd",
-              coinDecimals: 6,
-            },{
-                "coinDenom": "TIA",
-                "coinMinimalDenom": "ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793",
-                "coinDecimals": 6,
-                "coinGeckoId": "celestia",
-                "gasPriceStep": {
-                  "low": 0.01,
-                  "average": 0.01,
-                  "high": 0.01
-                }
-              }],
+            currencies: [
+              {
+                coinDenom: 'STRD',
+                coinMinimalDenom: 'ustrd',
+                coinDecimals: 6,
+              },
+            ],
+            feeCurrencies: [
+              {
+                coinDenom: 'STRD',
+                coinMinimalDenom: 'ustrd',
+                coinDecimals: 6,
+              },
+              {
+                coinDenom: 'TIA',
+                coinMinimalDenom:
+                  'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
+                coinDecimals: 6,
+                coinGeckoId: 'celestia',
+                gasPriceStep: {
+                  low: 0.01,
+                  average: 0.01,
+                  high: 0.01,
+                },
+              },
+            ],
           });
         }
       }
@@ -137,9 +147,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (connectFn) connectFn();
   };
 
-
   useEffect(() => {
-    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === "mainnet";
+    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
     if (
       (transferType == 'withdraw' && label == 'From') ||
       (transferType == 'deposit' && label == 'To')
@@ -172,29 +181,37 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           name={field.name}
           className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
             disabled ? styles.disabled : styles.enabled
-          } ${
-            isLocked ? styles.locked : ""
-          }`}
+          } ${isLocked ? styles.locked : ''}`}
           onClick={onClick}
         >
           <div className="flex items-center justify-between px-3">
             <div className="flex items-center">
               <ChainLogo chainName={field.value} size={32} />
               <div className="flex flex-col justify-center items-start">
-                <span className={`font-medium text-base leading-5 ml-2 ${disabled ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
+                <span
+                  className={`font-medium text-base leading-5 ml-2 ${
+                    disabled
+                      ? 'bg-disabled text-disabled cursor-default pointer-events-none'
+                      : 'bg-black text-white'
+                  }`}
+                >
                   {getChainDisplayName(field.value, true)}
                 </span>
-                {
-                   ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                   (evmChainIds.includes(chainId) && evmNumReady > 0))
-                    ?
-                    <span className={`font-medium text-xs leading-5 ml-2 ${disabled ? 'bg-disabled text-disabled cursor-default pointer-events-none' : 'bg-black text-white'}`}>
-                      {formatAddress(account?.address || "")}
-                    </span>
-                    : <></>
-                }
+                {(cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
+                (evmChainIds.includes(chainId) && evmNumReady > 0) ? (
+                  <span
+                    className={`font-medium text-xs leading-5 ml-2 ${
+                      disabled
+                        ? 'bg-disabled text-disabled cursor-default pointer-events-none'
+                        : 'bg-black text-white'
+                    }`}
+                  >
+                    {formatAddress(account?.address || '')}
+                  </span>
+                ) : (
+                  <></>
+                )}
               </div>
-              
             </div>
             <div>
               {!disabled && !isLocked && (
@@ -210,32 +227,45 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             </div>
           </div>
         </button>
-        {
-        ((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady === 0))
-          &&
-          <button disabled={disabled} type="button" onClick={onClickEnv()} className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
-            disabled ? styles.disabled : styles.enabled
-          }`}>
-            <span className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
-                disabled ? 'text-disabled' : 'text-black'
-                }`}>CONNECT</span>
-          </button>
-        }
-        
-        {
-          ((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady > 0))
-            &&
-            <button disabled={disabled} type="button" onClick={onDisconnectEnv()} className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
+        {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
+          (evmChainIds.includes(chainId) && evmNumReady === 0)) && (
+          <button
+            disabled={disabled}
+            type="button"
+            onClick={onClickEnv()}
+            className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
               disabled ? styles.disabled : styles.enabled
-            }`}>
-              <span className={`w-full font-plex font-bold text-sm leading-6  ${
+            }`}
+          >
+            <span
+              className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
+                disabled ? 'text-disabled' : 'text-black'
+              }`}
+            >
+              CONNECT
+            </span>
+          </button>
+        )}
+
+        {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
+          (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+          <button
+            disabled={disabled}
+            type="button"
+            onClick={onDisconnectEnv()}
+            className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
+              disabled ? styles.disabled : styles.enabled
+            }`}
+          >
+            <span
+              className={`w-full font-plex font-bold text-sm leading-6  ${
                 disabled ? 'text-disabled' : 'text-white'
-                }`}>DISCONNECT</span>
-            </button>
-        }
-        
+              }`}
+            >
+              DISCONNECT
+            </span>
+          </button>
+        )}
       </div>
 
       <ChainSelectListModal
@@ -252,5 +282,5 @@ const styles = {
   base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
   enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
   disabled: 'cursor-default bg-disabled pointer-events-none',
-  locked: 'cursor-default pointer-events-none'
+  locked: 'cursor-default pointer-events-none',
 };

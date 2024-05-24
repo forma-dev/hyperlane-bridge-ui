@@ -2,7 +2,16 @@ import { PropsWithChildren, ReactElement } from 'react';
 
 interface ButtonProps {
   type?: 'submit' | 'reset' | 'button';
-  color?: 'white' | 'blue' | 'green' | 'red' | 'gray' | 'button' | 'black' | 'navBarButton' | 'disabled'; // defaults to blue
+  color?:
+    | 'white'
+    | 'blue'
+    | 'green'
+    | 'red'
+    | 'gray'
+    | 'button'
+    | 'black'
+    | 'navBarButton'
+    | 'disabled'; // defaults to blue
   bold?: boolean;
   classes?: string;
   icon?: ReactElement;
@@ -30,7 +39,7 @@ export function SolidButton(
   if (color === 'button') {
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
-    border="border-[1px] border-solid border-white";
+    border = 'border-[1px] border-solid border-white';
     style = {
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
@@ -59,13 +68,13 @@ export function SolidButton(
     onActive = 'active:bg-gray-300';
   } else if (color === 'black') {
     baseColors = 'bg-black text-secondary';
-    border="border-[1px] border-solid border-white";
+    border = 'border-[1px] border-solid border-white';
     style = {
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
   } else if (color === 'disabled') {
     baseColors = 'bg-black text-secondary cursor-auto opacity-40';
-    border="border-[1px] border-solid border-white";
+    border = 'border-[1px] border-solid border-white';
     style = {
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };

@@ -4,19 +4,18 @@ import {
   // argentWallet,
   // coinbaseWallet,
   injectedWallet, // ledgerWallet,
-  metaMaskWallet,
-  // omniWallet,
+  metaMaskWallet, // omniWallet,
   // rainbowWallet,
   // trustWallet,
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
+import merge from 'lodash.merge';
 import { PropsWithChildren, useMemo } from 'react';
 import { WagmiConfig, configureChains, createConfig } from 'wagmi';
 import { publicProvider } from 'wagmi/providers/public';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
-import merge from 'lodash.merge';
 import { APP_NAME } from '../../../consts/app';
 import { config } from '../../../consts/config';
 import { getWarpCore } from '../../../context/context';

@@ -1,3 +1,5 @@
+import { BigNumber, PopulatedTransaction } from 'ethers';
+
 import {
   EvmHypSyntheticAdapter,
   IHypTokenAdapter,
@@ -5,18 +7,14 @@ import {
   TransferParams,
   TransferRemoteParams,
 } from '@hyperlane-xyz/sdk';
-import {
-  addressToByteHexString,
-  addressToBytes32
-} from '@hyperlane-xyz/utils';
-import { BigNumber, PopulatedTransaction } from 'ethers';
+import { addressToByteHexString, addressToBytes32 } from '@hyperlane-xyz/utils';
+
 import { HypNativeMinter__factory } from '../../../contracts/HypNativeMinter__factory';
 
 export class EvmHypNativeMinterAdapter
   extends EvmHypSyntheticAdapter
   implements IHypTokenAdapter<PopulatedTransaction>
 {
-
   constructor(
     public readonly chainName: ChainName,
     public readonly multiProvider: MultiProtocolProvider,
@@ -49,8 +47,7 @@ export class EvmHypNativeMinterAdapter
     recipient,
     interchainGas,
   }: TransferRemoteParams): Promise<PopulatedTransaction> {
-    if (!interchainGas)
-      interchainGas = await this.quoteTransferRemoteGas(destination);
+    if (!interchainGas) interchainGas = await this.quoteTransferRemoteGas(destination);
 
     if (BigInt(weiAmountOrId) < BigInt(1e12)) {
       weiAmountOrId = BigInt(1e12).toString();

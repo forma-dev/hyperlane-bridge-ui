@@ -1,12 +1,12 @@
 import Head from 'next/head';
+import Script from 'next/script';
 import { PropsWithChildren, useState } from 'react';
 
 import { APP_NAME } from '../../consts/app';
 import { Color } from '../../styles/Color';
+import { Banner } from '../nav/Banner';
 import { Footer } from '../nav/Footer';
 import { Header } from '../nav/Header';
-import { Banner } from '../nav/Banner';
-import Script from 'next/script'
 
 export function AppLayout({ children }: PropsWithChildren) {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -42,9 +42,8 @@ export function AppLayout({ children }: PropsWithChildren) {
         id="app-content"
         className="h-full min-h-screen w-full min-w-screen font-plex"
       >
-        <Banner/>
+        <Banner />
         <div className="max-w-screen-xl mx-auto flex flex-col justify-between min-h-screen px-4">
-          
           <Header isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
           <main
             className={`w-full flex-1 pb-36 pt-20 flex items-center justify-center ${

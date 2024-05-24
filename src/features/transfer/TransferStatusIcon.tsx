@@ -4,6 +4,7 @@ import { Spinner } from '../../components/animation/Spinner';
 import CheckmarkCircleIcon from '../../images/icons/checkmark-circle.svg';
 import EnvelopeHeartIcon from '../../images/icons/envelope-heart.svg';
 import ErrorCircleIcon from '../../images/icons/error-circle.svg';
+
 import { TransferStatus } from './types';
 
 export function TransferStatusIcon({ transferStatus }: { transferStatus: TransferStatus }) {

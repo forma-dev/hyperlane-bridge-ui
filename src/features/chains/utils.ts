@@ -44,7 +44,7 @@ export function getChainProtocol(chain: ChainNameOrId) {
   return getChainMetadata(chain).protocol;
 }
 
-export function formatAddress(address:string): string {
+export function formatAddress(address: string): string {
   if (!address || typeof address !== 'string') {
     return '';
   }

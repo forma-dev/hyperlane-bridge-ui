@@ -1,7 +1,7 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { GasPrice } from '@cosmjs/stargate';
 import { MainWalletBase } from '@cosmos-kit/core';
-import { wallets as mmWallets } from "@cosmos-kit/cosmos-extension-metamask";
+import { wallets as mmWallets } from '@cosmos-kit/cosmos-extension-metamask';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
@@ -30,7 +30,14 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
       <ChainProvider
         chains={chains}
         assetLists={assets}
-        wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets, ...mmWallets] as MainWalletBase[]}
+        wallets={
+          [
+            ...keplrWallets,
+            ...cosmostationWallets,
+            ...leapWallets,
+            ...mmWallets,
+          ] as MainWalletBase[]
+        }
         walletConnectOptions={{
           signClient: {
             projectId: config.walletConnectProjectId,
@@ -62,7 +69,7 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
             'connect-modal': {
               bg: { dark: '#000', light: '#000' },
             },
-          }
+          },
         }}
       >
         {children}

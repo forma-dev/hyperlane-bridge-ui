@@ -250,15 +250,15 @@ Menu Burger
   flex-shrink: 0;
   width: 2.5rem;
   height: 2.5rem;
-  padding: .5rem;
+  padding: 0.5rem;
   &:before,
   &:after {
-    content: "";
-    height: .1875rem;
-    margin: .1875rem auto;
+    content: '';
+    height: 0.1875rem;
+    margin: 0.1875rem auto;
     background: #202025;
-    border-radius: .125rem;
-    transition: width .2s, background .2s;
+    border-radius: 0.125rem;
+    transition: width 0.2s, background 0.2s;
   }
   &:before {
     width: 1.5rem;
@@ -271,7 +271,7 @@ Menu Burger
   &:hover {
     &:after {
       width: rem(24);
-    }  
+    }
   }
 }
 /*

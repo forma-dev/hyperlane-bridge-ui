@@ -30,7 +30,7 @@ export function TransferTokenCard() {
             transferType="withdraw"
           />
         </div>
-        <TransferTokenForm transferType={activeTab} isReview={isReview} setIsReview={setIsReview}/>
+        <TransferTokenForm transferType={activeTab} isReview={isReview} setIsReview={setIsReview} />
       </>
     </Card>
   );

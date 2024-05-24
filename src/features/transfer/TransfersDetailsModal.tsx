@@ -118,7 +118,7 @@ export function TransfersDetailsModal({
           <div className="flex items-center font-medium text-base leading-6">
             {isSent ? (
               <h3 className="text-[#35D07F] font-bold">SENT</h3>
-              ) : (
+            ) : (
               <h3 className="text-red-500 font-bold">FAILED</h3>
             )}
             <Image

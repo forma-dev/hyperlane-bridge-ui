@@ -129,7 +129,10 @@ export function SideBarMenu({
                 ))}
             </div>
             {sortedTransfers?.length > 0 && (
-              <button onClick={resetTransfers} className="flex flex-row items-center px-2.5 py-2 my-5 hover:bg-hoverForm transition-all duration-500">
+              <button
+                onClick={resetTransfers}
+                className="flex flex-row items-center px-2.5 py-2 my-5 hover:bg-hoverForm transition-all duration-500"
+              >
                 <Image className="mr-4 invert" src={ResetIcon} width={17} height={17} alt="" />
                 <span className="text-white text-sm font-normal">Reset transaction history</span>
               </button>
@@ -169,7 +172,9 @@ function AccountSummary({ address }: { account: AccountInfo; address: Address })
       </div>
       <div className="flex flex-col mx-3 items-start">
         {/* <div className="text-gray-800 text-sm font-normal">{account.connectorName || 'Wallet'}</div> */}
-        <div className="text-white font-medium leading-6 text-sm truncate w-64">{address ? address : 'Unknown'}</div>
+        <div className="text-white font-medium leading-6 text-sm truncate w-64">
+          {address ? address : 'Unknown'}
+        </div>
       </div>
     </button>
   );
@@ -199,7 +204,9 @@ function TransferSummary({
           <div className="flex flex-col">
             <div className="flex items items-baseline">
               <span className="text-white text-sm font-medium leading-6">{amount}</span>
-              <span className="text-white text-sm font-medium leading-6 ml-1">{token?.symbol || ''}</span>
+              <span className="text-white text-sm font-medium leading-6 ml-1">
+                {token?.symbol || ''}
+              </span>
             </div>
             <div className="mt-1 flex flex-row items-center">
               <span className="text-white text-sm font-medium leading-6 tracking-wide">
@@ -215,7 +222,11 @@ function TransferSummary({
       </div>
       <div className="flex w-6 h-6">
         {STATUSES_WITH_ICON.includes(status) ? (
-          <Image src={getIconByTransferStatus(status)} width={28} height={26} alt=""
+          <Image
+            src={getIconByTransferStatus(status)}
+            width={28}
+            height={26}
+            alt=""
             style={{
               filter:
                 'brightness(0) saturate(100%) invert(100%) sepia(3%) saturate(7474%) hue-rotate(232deg) brightness(105%) contrast(100%)',
