@@ -2,7 +2,13 @@ import Image from 'next/image';
 import ArrowRightIcon from '../../images/icons/arrow-right.svg';
 
 export function Banner() {
-  const modularspringUrl = process.env.NEXT_PUBLIC_API_URL;
+  const modularspringUrl = process.env.NEXT_PUBLIC_MODULAR_SPRING_URL;
+  const modularspringText = process.env.NEXT_PUBLIC_MODULAR_SPRING_TEXT || "[Modularium] is live";
+
+  if (!modularspringUrl) {
+    return null;
+  }
+
   return (
       <div className="bg-[#D9D9D9] py-2 flex gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
@@ -12,7 +18,8 @@ export function Banner() {
             rel="noopener noreferrer"
           >
             <p className="text-black font-semibold text-l flex gap-2 hover:underline">
-                [Modularium] is live <Image className="ml-2 brightness-0" src={ArrowRightIcon} width={24} height={24} alt="" />
+                {modularspringText} 
+                <Image className="ml-2 brightness-0" src={ArrowRightIcon} width={24} height={24} alt="" />
             </p>
           </a>
         </div>
