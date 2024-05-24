@@ -20,7 +20,7 @@ type Props = {
 };
 
 const cosmosChainIds = ["stride", "celestia"];
-const evmChainIds = ["sketchpad"];
+const evmChainIds = ["forma", "sketchpad"];
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
@@ -83,7 +83,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     }
 
     if (env == ProtocolType.Cosmos) {
-      if (window && (window as any).keplr) {
+      if (process.env.NEXT_PUBLIC_NETWORK === "testnet" && window && (window as any).keplr) {
         const chains = await (window as any).keplr.getChainInfosWithoutEndpoints();
         const hasStrideTestnet = chains.find(el => el.chainId === "stride-internal-1") ? true : false;
         if (!hasStrideTestnet) {
@@ -139,11 +139,12 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
 
   useEffect(() => {
+    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === "mainnet";
     if (
       (transferType == 'withdraw' && label == 'From') ||
       (transferType == 'deposit' && label == 'To')
     ) {
-      handleChange('sketchpad');
+      handleChange(isMainnet ? 'forma' : 'sketchpad');
       setIsLocked(true);
     } else {
       setIsLocked(false);

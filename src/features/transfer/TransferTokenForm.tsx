@@ -252,7 +252,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         address => address.chainName === values.destination
       );
     }
-    if (['sketchpad'].includes(values.destination)) {
+    if (['forma', 'sketchpad'].includes(values.destination)) {
       account = accounts[ProtocolType.Ethereum].addresses[0];
     }
 
