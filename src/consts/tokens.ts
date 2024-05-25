@@ -126,13 +126,13 @@ export const tokenConfigs: WarpCoreConfig = {
       {
         origin: isMainnet ? 'forma' : 'sketchpad',
         destination: 'stride',
-        amount: isMainnet ? 10000000000000000 : 2500000000000000,
+        amount: isMainnet ? 20000000000000000 : 2500000000000000,
         addressOrDenom: 'atia',
       },
       {
         origin: isMainnet ? 'forma' : 'sketchpad',
         destination: 'celestia',
-        amount: isMainnet ? 10000000000000000 : 2500000000000000,
+        amount: isMainnet ? 20000000000000000 : 2500000000000000,
         addressOrDenom: 'atia',
       },
     ],
