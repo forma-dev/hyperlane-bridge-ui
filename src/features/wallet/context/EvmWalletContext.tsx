@@ -1,13 +1,10 @@
-import { RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
+import { DisclaimerComponent, RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
   // argentWallet,
   // coinbaseWallet,
   injectedWallet, // ledgerWallet,
   metaMaskWallet, // omniWallet,
-  // rainbowWallet,
-  // trustWallet,
-  walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import merge from 'lodash.merge';
 import { PropsWithChildren, useMemo } from 'react';
@@ -38,7 +35,7 @@ const connectors = connectorsForWallets([
     wallets: [
       metaMaskWallet(connectorConfig),
       injectedWallet(connectorConfig),
-      walletConnectWallet(connectorConfig),
+      // walletConnectWallet(connectorConfig),
       // ledgerWallet(connectorConfig),
     ],
   },
@@ -81,6 +78,13 @@ const customTheme = merge(darkTheme(), {
   },
 } as Theme);
 
+
+const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
+  <Text>
+    We <strong>HIGHLY</strong> reccomend everyone use desktop and the metamask browser at the moment
+  </Text>
+);
+
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
   const initialChain = useMemo(() => {
     const tokens = getWarpCore().tokens;
@@ -94,6 +98,10 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
         theme={customTheme}
         initialChain={initialChain}
         modalSize="compact"
+        appInfo={{
+          appName: 'Forma Bridge',
+          disclaimer: Disclaimer,
+        }}
       >
         {children}
       </RainbowKitProvider>
