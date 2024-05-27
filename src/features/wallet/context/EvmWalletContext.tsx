@@ -79,7 +79,7 @@ const customTheme = merge(darkTheme(), {
 } as Theme);
 
 
-const Disclaimer: DisclaimerComponent = ({ Text, Link }) => (
+const Disclaimer: DisclaimerComponent = ({ Text }) => (
   <Text>
     We <strong>HIGHLY</strong> reccomend everyone use desktop and the metamask browser at the moment
   </Text>
