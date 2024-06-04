@@ -16,13 +16,13 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
     chainId: 984122,
     domainId: 984122,
     protocol: ProtocolType.Ethereum,
-    isTestnet: true,
+    isTestnet: false,
     rpcUrls: [{ http: 'https://rpc.forma.art' }],
     nativeToken: {
       name: 'Tia',
       symbol: 'TIA',
       decimals: 18,
-      denom: 'atia',
+      denom: '0x832d26B6904BA7539248Db4D58614251FD63dC05',
     },
     blockExplorers: [
       {
@@ -36,6 +36,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
   stride: isMainnet
     ? {
         protocol: ProtocolType.Cosmos,
+        isTestnet: false,
         domainId: 745,
         chainId: 'stride-1',
         name: 'stride',
@@ -59,6 +60,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       }
     : {
         protocol: ProtocolType.Cosmos,
+        isTestnet: true,
         domainId: 1651,
         chainId: 'stride-internal-1',
         name: 'stride',
@@ -83,6 +85,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
   celestia: isMainnet
     ? {
         protocol: ProtocolType.Cosmos,
+        isTestnet: false,
         domainId: 123456789, // TODO not a real domain id
         chainId: 'celestia',
         name: 'celestia',
@@ -114,6 +117,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       }
     : {
         protocol: ProtocolType.Cosmos,
+        isTestnet: true,
         domainId: 123456789, // TODO not a real domain id
         chainId: 'mocha-4',
         name: 'celestia',
@@ -157,7 +161,7 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       name: 'Tia',
       symbol: 'TIA',
       decimals: 18,
-      denom: 'atia',
+      denom: '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
     },
     blockExplorers: [
       {
