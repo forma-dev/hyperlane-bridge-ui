@@ -1,10 +1,15 @@
 import { DisclaimerComponent, RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
-  // argentWallet,
-  // coinbaseWallet,
-  injectedWallet, // ledgerWallet,
-  metaMaskWallet, // omniWallet,
+  argentWallet,
+  coinbaseWallet,
+  injectedWallet, 
+  walletConnectWallet,
+  ledgerWallet, // ledgerWallet,
+  metaMaskWallet, 
+  omniWallet, // omniWallet,
+  rainbowWallet,
+  trustWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import merge from 'lodash.merge';
 import { PropsWithChildren, useMemo } from 'react';
@@ -35,20 +40,20 @@ const connectors = connectorsForWallets([
     wallets: [
       metaMaskWallet(connectorConfig),
       injectedWallet(connectorConfig),
-      // walletConnectWallet(connectorConfig),
-      // ledgerWallet(connectorConfig),
+      walletConnectWallet(connectorConfig),
+      ledgerWallet(connectorConfig),
     ],
   },
-  // {
-  //   groupName: 'More',
-  //   wallets: [
-  //     coinbaseWallet(connectorConfig),
-  //     omniWallet(connectorConfig),
-  //     rainbowWallet(connectorConfig),
-  //     trustWallet(connectorConfig),
-  //     argentWallet(connectorConfig),
-  //   ],
-  // },
+  {
+    groupName: 'More',
+    wallets: [
+      coinbaseWallet(connectorConfig),
+      omniWallet(connectorConfig),
+      rainbowWallet(connectorConfig),
+      trustWallet(connectorConfig),
+      argentWallet(connectorConfig),
+    ],
+  },
 ]);
 
 const wagmiConfig = createConfig({
