@@ -1,10 +1,10 @@
 import { DisclaimerComponent, RainbowKitProvider, Theme, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
-  argentWallet,
+  // argentWallet,
   coinbaseWallet,
   injectedWallet, 
-  walletConnectWallet,
+  // walletConnectWallet,
   ledgerWallet, // ledgerWallet,
   metaMaskWallet, 
   omniWallet, // omniWallet,
@@ -40,7 +40,7 @@ const connectors = connectorsForWallets([
     wallets: [
       metaMaskWallet(connectorConfig),
       injectedWallet(connectorConfig),
-      walletConnectWallet(connectorConfig),
+      // walletConnectWallet(connectorConfig),
       ledgerWallet(connectorConfig),
     ],
   },
@@ -51,7 +51,7 @@ const connectors = connectorsForWallets([
       omniWallet(connectorConfig),
       rainbowWallet(connectorConfig),
       trustWallet(connectorConfig),
-      argentWallet(connectorConfig),
+      // argentWallet(connectorConfig),
     ],
   },
 ]);
