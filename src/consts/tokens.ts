@@ -27,7 +27,7 @@ export const tokenConfigs: WarpCoreConfig = {
           intermediateChainName: 'stride',
           intermediateRouterAddress: isMainnet
             ? 'stride1h4rhlwcmdwnnd99agxm3gp7uqkr4vcjd73m4586hcuklh3vdtldqgqmjxc'
-            : 'stride185rzjf3h7vx9fkw4m20hnehf4985fshky6nxdm7ft0eeylwyxewspqfker',
+            : 'stride1ej9893p4stg5lyrksaxhtk7ystvy9vp66dlagyvtzycuagjlxkdsxcly6h',
           intermediateIbcDenom: isMainnet
             ? 'ibc/BF3B4F53F3694B66E13C23107C84B6485BD2B96296BB7EC680EA77BBA75B4801'
             : 'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
@@ -52,7 +52,7 @@ export const tokenConfigs: WarpCoreConfig = {
       decimals: 6,
       addressOrDenom: isMainnet
         ? 'stride1h4rhlwcmdwnnd99agxm3gp7uqkr4vcjd73m4586hcuklh3vdtldqgqmjxc'
-        : 'stride185rzjf3h7vx9fkw4m20hnehf4985fshky6nxdm7ft0eeylwyxewspqfker',
+        : 'stride1ej9893p4stg5lyrksaxhtk7ystvy9vp66dlagyvtzycuagjlxkdsxcly6h',
       collateralAddressOrDenom: isMainnet
         ? 'ibc/BF3B4F53F3694B66E13C23107C84B6485BD2B96296BB7EC680EA77BBA75B4801'
         : 'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
@@ -81,7 +81,7 @@ export const tokenConfigs: WarpCoreConfig = {
         {
           token: isMainnet
             ? 'cosmos|stride|stride1h4rhlwcmdwnnd99agxm3gp7uqkr4vcjd73m4586hcuklh3vdtldqgqmjxc'
-            : 'cosmos|stride|stride185rzjf3h7vx9fkw4m20hnehf4985fshky6nxdm7ft0eeylwyxewspqfker',
+            : 'cosmos|stride|stride1ej9893p4stg5lyrksaxhtk7ystvy9vp66dlagyvtzycuagjlxkdsxcly6h',
         },
       ],
     },
