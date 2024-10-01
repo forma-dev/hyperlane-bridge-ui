@@ -1,7 +1,8 @@
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { getNetwork, sendTransaction, switchNetwork, waitForTransaction } from '@wagmi/core';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useCallback, useMemo } from 'react';
-import { useAccount, useDisconnect, useNetwork } from 'wagmi';
+import { TransactionReceipt as ViemTransactionReceipt } from 'viem';
+import { useAccount, useConfig, useSendTransaction, useSwitchChain } from 'wagmi';
+import { getPublicClient, waitForTransactionReceipt } from 'wagmi/actions';
 
 import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hyperlane-xyz/sdk';
 import { ProtocolType, assert, sleep } from '@hyperlane-xyz/utils';
@@ -12,34 +13,46 @@ import { ethers5TxToWagmiTx } from '../utils';
 
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 
+//type that works with both Viem and Hyperlane SDK TransactionReceipt types
+type CompatibleTransactionReceipt = Omit<ViemTransactionReceipt, 'contractAddress'> & {
+  contractAddress: `0x${string}` | null;
+};
+
 export function useEvmAccount(): AccountInfo {
-  const { address, isConnected, connector } = useAccount();
-  const isReady = !!(address && isConnected && connector);
-  const connectorName = connector?.name;
+  const { address, isConnected } = useAccount();
+  const { user } = usePrivy();
+  const { wallets } = useWallets();
+  const isReady = !!(address && isConnected && user && wallets.length > 0);
+  
+  const connectorName = useMemo(() => {
+    if (wallets.length === 0) return undefined;
+    const ethWallet = wallets.find(wallet => wallet.chainId === '1'); //Ethereum mainnet
+    return ethWallet?.walletClientType;
+  }, [wallets]);
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
       addresses: address ? [{ address: `${address}` }] : [],
-      connectorName: connectorName,
-      isReady: isReady,
+      connectorName,
+      isReady,
     }),
     [address, connectorName, isReady],
   );
 }
 
 export function useEvmConnectFn(): () => void {
-  const { openConnectModal } = useConnectModal();
-  return useCallback(() => openConnectModal?.(), [openConnectModal]);
+  const { login } = usePrivy();
+  return useCallback(() => login(), [login]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
-  const { disconnectAsync } = useDisconnect();
-  return disconnectAsync;
+  const { logout } = usePrivy();
+  return useCallback(() => logout(), [logout]);
 }
 
 export function useEvmActiveChain(): ActiveChainInfo {
-  const { chain } = useNetwork();
+  const { chain } = useAccount();
   return useMemo<ActiveChainInfo>(
     () => ({
       chainDisplayName: chain?.name,
@@ -50,17 +63,17 @@ export function useEvmActiveChain(): ActiveChainInfo {
 }
 
 export function useEvmTransactionFns(): ChainTransactionFns {
-  const onSwitchNetwork = useCallback(async (chainName: ChainName) => {
+  const { switchChainAsync } = useSwitchChain();
+  const { sendTransactionAsync } = useSendTransaction();
+  const config = useConfig();
+
+  const onSwitchNetwork = useCallback(async (chainName: string) => {
     const chainId = getChainMetadata(chainName).chainId as number;
-    await switchNetwork({ chainId });
+    await switchChainAsync({ chainId });
     // Some wallets seem to require a brief pause after switch
     await sleep(2000);
-  }, []);
-  // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
-  // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
-  // may require two serial txs, the prepare hooks aren't useful and complicate hook architecture considerably.
-  // See https://github.com/hyperlane-xyz/hyperlane-warp-ui-template/issues/19
-  // See https://github.com/wagmi-dev/wagmi/discussions/1564
+  }, [switchChainAsync]);
+
   const onSendTx = useCallback(
     async ({
       tx,
@@ -68,37 +81,47 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       activeChainName,
     }: {
       tx: WarpTypedTransaction;
-      chainName: ChainName;
-      activeChainName?: ChainName;
+      chainName: string;
+      activeChainName?: string;
     }) => {
       if (tx.type !== ProviderType.EthersV5) throw new Error(`Unsupported tx type: ${tx.type}`);
 
-      // If the active chain is different from tx origin chain, try to switch network first
+      //if active chain is different from tx origin chain, try to switch network
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
 
-      // Since the network switching is not foolproof, we also force a network check here
+      //force a network check here
       const chainId = getChainMetadata(chainName).chainId as number;
       logger.debug('Checking wallet current chain');
-      const latestNetwork = await getNetwork();
+      const publicClient = getPublicClient(config);
+      if (!publicClient) {
+        throw new Error('Failed to get public client');
+      }
+      const latestChainId = await publicClient.getChainId();
       assert(
-        latestNetwork.chain?.id === chainId,
+        latestChainId === chainId,
         `Wallet not on chain ${chainName} (ChainMismatchError)`,
       );
 
       logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
-      const { hash } = await sendTransaction({
+      const hash = await sendTransactionAsync({
         chainId,
         ...wagmiTx,
       });
-      const confirm = (): Promise<TypedTransactionReceipt> =>
-        waitForTransaction({ chainId, hash, confirmations: 1 }).then((r) => ({
+      const confirm = async (): Promise<TypedTransactionReceipt> => {
+        const receipt = await waitForTransactionReceipt(config, { hash });
+        const compatibleReceipt: CompatibleTransactionReceipt = {
+          ...receipt,
+          contractAddress: receipt.contractAddress ?? null,
+        };
+        return {
           type: ProviderType.Viem,
-          receipt: r,
-        }));
+          receipt: compatibleReceipt,
+        };
+      };
       return { hash, confirm };
     },
-    [onSwitchNetwork],
+    [onSwitchNetwork, sendTransactionAsync, config],
   );
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };
