@@ -1,6 +1,6 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useCallback, useMemo } from 'react';
-import { TransactionReceipt as ViemTransactionReceipt } from 'viem';
+import { TransactionReceipt as ViemTransactionReceipt, parseEther } from 'viem';
 import { useAccount, useConfig, useSendTransaction, useSwitchChain } from 'wagmi';
 import { getPublicClient, waitForTransactionReceipt } from 'wagmi/actions';
 
@@ -9,7 +9,6 @@ import { ProtocolType, assert, sleep } from '@hyperlane-xyz/utils';
 
 import { logger } from '../../../utils/logger';
 import { getChainMetadata, tryGetChainMetadata } from '../../chains/utils';
-import { ethers5TxToWagmiTx } from '../utils';
 
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 
@@ -103,11 +102,24 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       );
 
       logger.debug(`Sending tx on chain ${chainName}`);
-      const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
+      const viemTx = {
+        to: tx.transaction.to as `0x${string}`,
+        value: tx.transaction.value ? parseEther(tx.transaction.value.toString()) : undefined,
+        data: tx.transaction.data as `0x${string}`,
+        nonce: tx.transaction.nonce !== undefined ? Number(tx.transaction.nonce) : undefined,
+        gas: tx.transaction.gasLimit ? BigInt(tx.transaction.gasLimit.toString()) : undefined,
+        gasPrice: tx.transaction.gasPrice ? BigInt(tx.transaction.gasPrice.toString()) : undefined,
+        maxFeePerGas: tx.transaction.maxFeePerGas ? BigInt(tx.transaction.maxFeePerGas.toString()) : undefined,
+        maxPriorityFeePerGas: tx.transaction.maxPriorityFeePerGas
+          ? BigInt(tx.transaction.maxPriorityFeePerGas.toString())
+          : undefined,
+      };
+
       const hash = await sendTransactionAsync({
         chainId,
-        ...wagmiTx,
+        ...viemTx,
       });
+
       const confirm = async (): Promise<TypedTransactionReceipt> => {
         const receipt = await waitForTransactionReceipt(config, { hash });
         const compatibleReceipt: CompatibleTransactionReceipt = {

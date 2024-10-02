@@ -32,9 +32,9 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <PrivyProvider
-          appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
+          appId={typeof window !== 'undefined' && window.location.hostname.endsWith('modularium.art') ? 'clyd28wj504pvrnubbcqjlpgl' : 'clxnlyg3300d5cfvojrsgoxgs'}
           config={{
-            loginMethods: ['email', 'wallet'],
+            loginMethods: ['email', 'sms', 'wallet'],
             appearance: {
               theme: 'dark',
               accentColor: Color.button,
