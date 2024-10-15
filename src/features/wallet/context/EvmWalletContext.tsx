@@ -28,11 +28,18 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
     return tryGetChainMetadata(firstEvmToken?.chainName)?.chainId as number;
   }, []);
 
+  const privyAppId = useMemo(() => {
+    if (typeof window !== 'undefined' && window.location.hostname.endsWith('modularium.art')) {
+      return process.env.NEXT_PUBLIC_PRIVY_APP_ID_PROD;
+    }
+    return process.env.NEXT_PUBLIC_PRIVY_APP_ID_DEV;
+  }, []);
+
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <PrivyProvider
-          appId={typeof window !== 'undefined' && window.location.hostname.endsWith('modularium.art') ? 'clyd28wj504pvrnubbcqjlpgl' : 'clxnlyg3300d5cfvojrsgoxgs'}
+          appId={privyAppId || ''}
           config={{
             loginMethods: ['email', 'sms', 'wallet'],
             appearance: {
@@ -42,6 +49,9 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
             },
             supportedChains: chains,
             defaultChain: chains.find(chain => chain.id === initialChain) || chains[0],
+            embeddedWallets: { 
+              createOnLogin: 'users-without-wallets'
+            },
           }}
         >
           {children}

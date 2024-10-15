@@ -1,13 +1,15 @@
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useField, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
+
+import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
-import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
@@ -25,11 +27,16 @@ const cosmosChainIds = ['stride', 'celestia'];
 const evmChainIds = ['forma', 'sketchpad'];
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
+  const { authenticated, user, login, logout } = usePrivy();
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
   const [chainId, setChainId] = useState<string>('');
 
   const { accounts } = useAccounts();
+  const { wallets } = useWallets();
+  const connectFns = useConnectFns();
+  const disconnectFns = useDisconnectFns();
+
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
@@ -38,9 +45,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     account = accounts[ProtocolType.Cosmos].addresses.find(
       (address) => address.chainName === chainId,
     );
-  }
-  if (evmChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Ethereum].addresses[0];
+  } else if (evmChainIds.includes(chainId) && authenticated && user?.wallet) {
+    account = { address: user.wallet.address };
   }
 
   const handleChange = (newChainId: ChainName) => {
@@ -61,91 +67,45 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (!disabled && !isLocked) setIsModalOpen(true);
   };
 
-  const connectFns = useConnectFns();
-  const disconnectFns = useDisconnectFns();
+  const hasEmbeddedWallet = wallets.some(wallet => wallet.walletClientType === 'privy');
 
-  const onDisconnectEnv = () => async () => {
-    let env: string = '';
+  const onClickEnv = useCallback(() => {
     if (cosmosChainIds.includes(chainId)) {
-      env = ProtocolType.Cosmos;
-    } else {
-      env = ProtocolType.Ethereum;
-    }
-
-    const disconnectFn = disconnectFns[env];
-    if (disconnectFn) disconnectFn();
-  };
-
-  const onClickEnv = () => async () => {
-    let env: string = '';
-    if (cosmosChainIds.includes(chainId)) {
-      env = ProtocolType.Cosmos;
-    } else {
-      env = ProtocolType.Ethereum;
-    }
-
-    if (env == ProtocolType.Cosmos) {
-      if (process.env.NEXT_PUBLIC_NETWORK === 'testnet' && window && (window as any).keplr) {
-        const chains = await (window as any).keplr.getChainInfosWithoutEndpoints();
-        const hasStrideTestnet = chains.find((el) => el.chainId === 'stride-internal-1')
-          ? true
-          : false;
-        if (!hasStrideTestnet) {
-          await (window as any).keplr.experimentalSuggestChain({
-            chainId: 'stride-internal-1',
-            chainName: 'Stride (Testnet)',
-            rpc: 'https://stride.testnet-1.stridenet.co',
-            rest: 'https://stride.testnet-1.stridenet.co/api/',
-            stakeCurrency: {
-              coinDenom: 'STRD',
-              coinMinimalDenom: 'ustrd',
-              coinDecimals: 6,
-            },
-            bip44: {
-              coinType: 118,
-            },
-            bech32Config: {
-              bech32PrefixAccAddr: 'stride',
-              bech32PrefixAccPub: 'stridepub',
-              bech32PrefixValAddr: 'stridevaloper',
-              bech32PrefixValPub: 'stridevaloperpub',
-              bech32PrefixConsAddr: 'stridevalcons',
-              bech32PrefixConsPub: 'stridevalconspub',
-            },
-            currencies: [
-              {
-                coinDenom: 'STRD',
-                coinMinimalDenom: 'ustrd',
-                coinDecimals: 6,
-              },
-            ],
-            feeCurrencies: [
-              {
-                coinDenom: 'STRD',
-                coinMinimalDenom: 'ustrd',
-                coinDecimals: 6,
-              },
-              {
-                coinDenom: 'TIA',
-                coinMinimalDenom:
-                  'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
-                coinDecimals: 6,
-                coinGeckoId: 'celestia',
-                gasPriceStep: {
-                  low: 0.01,
-                  average: 0.01,
-                  high: 0.01,
-                },
-              },
-            ],
-          });
-        }
+      // Existing Cosmos connection logic...
+      const connectFn = connectFns[ProtocolType.Cosmos];
+      if (connectFn) {
+        connectFn();
       }
+    } else {
+      // Use Privy's login for EVM chains
+      login();
     }
+  }, [chainId, connectFns, login]);
 
-    const connectFn = connectFns[env];
-    if (connectFn) connectFn();
-  };
+  const onDisconnectEnv = useCallback(() => {
+    if (cosmosChainIds.includes(chainId)) {
+      const disconnectFn = disconnectFns[ProtocolType.Cosmos];
+      if (disconnectFn) {
+        disconnectFn();
+      }
+    } else {
+      // Use Privy's logout for EVM chains
+      logout();
+    }
+  }, [chainId, disconnectFns, logout]);
+
+  // Effect to track authentication changes
+  useEffect(() => {
+    if (authenticated) {
+      console.log('User authenticated:', user);
+      // You can perform actions here when the user becomes authenticated
+      // For example, you might want to check for embedded wallets or update the UI
+    } else {
+      console.log('User not authenticated');
+      // You can perform actions here when the user becomes unauthenticated
+      // For example, you might want to reset some state or update the UI
+    }
+  }, [authenticated, user]);
 
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
@@ -198,7 +158,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                   {getChainDisplayName(field.value, true)}
                 </span>
                 {(cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                (evmChainIds.includes(chainId) && evmNumReady > 0) ? (
+                (evmChainIds.includes(chainId) && authenticated && user?.wallet) ? (
                   <span
                     className={`font-medium text-xs leading-5 ml-2 ${
                       disabled
@@ -228,11 +188,11 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           </div>
         </button>
         {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady === 0)) && (
+          (evmChainIds.includes(chainId) && !authenticated)) && (
           <button
             disabled={disabled}
             type="button"
-            onClick={onClickEnv()}
+            onClick={onClickEnv}
             className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
               disabled ? styles.disabled : styles.enabled
             }`}
@@ -248,11 +208,11 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         )}
 
         {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+          (evmChainIds.includes(chainId) && authenticated)) && (
           <button
             disabled={disabled}
             type="button"
-            onClick={onDisconnectEnv()}
+            onClick={onDisconnectEnv}
             className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
               disabled ? styles.disabled : styles.enabled
             }`}

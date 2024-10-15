@@ -18,36 +18,45 @@ type CompatibleTransactionReceipt = Omit<ViemTransactionReceipt, 'contractAddres
 };
 
 export function useEvmAccount(): AccountInfo {
-  const { address, isConnected } = useAccount();
-  const { user } = usePrivy();
+  const { user, authenticated } = usePrivy();
   const { wallets } = useWallets();
-  const isReady = !!(address && isConnected && user && wallets.length > 0);
   
-  const connectorName = useMemo(() => {
-    if (wallets.length === 0) return undefined;
-    const ethWallet = wallets.find(wallet => wallet.chainId === '1'); //Ethereum mainnet
-    return ethWallet?.walletClientType;
-  }, [wallets]);
-
-  return useMemo<AccountInfo>(
-    () => ({
-      protocol: ProtocolType.Ethereum,
-      addresses: address ? [{ address: `${address}` }] : [],
-      connectorName,
-      isReady,
-    }),
-    [address, connectorName, isReady],
-  );
+  const isReady = authenticated && wallets.length > 0;
+  
+  return useMemo<AccountInfo>(() => ({
+    protocol: ProtocolType.Ethereum,
+    addresses: wallets.map(wallet => ({ address: wallet.address })),
+    connectorName: 'Privy',
+    isReady,
+  }), [wallets, authenticated]);
 }
 
-export function useEvmConnectFn(): () => void {
-  const { login } = usePrivy();
-  return useCallback(() => login(), [login]);
+export function useEvmConnectFn(): () => Promise<void> {
+  const { login, createWallet } = usePrivy();
+  return useCallback(async () => {
+    try {
+      await login();
+      // Check if the user has an embedded wallet, if not, create one
+      const { wallets } = useWallets();
+      if (!wallets.some(wallet => wallet.walletClientType === 'privy')) {
+        await createWallet();
+      }
+    } catch (error) {
+      console.error('Failed to login or create wallet with Privy:', error);
+    }
+  }, [login, createWallet]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
   const { logout } = usePrivy();
-  return useCallback(() => logout(), [logout]);
+
+  return useCallback(async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Failed to logout with Privy:', error);
+    }
+  }, [logout]);
 }
 
 export function useEvmActiveChain(): ActiveChainInfo {
