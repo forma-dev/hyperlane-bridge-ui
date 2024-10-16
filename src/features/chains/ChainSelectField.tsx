@@ -1,16 +1,12 @@
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { ProtocolType } from '@hyperlane-xyz/utils';
+import { usePrivy } from '@privy-io/react-auth';
 import { useField, useFormikContext } from 'formik';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
-
-import { ProtocolType } from '@hyperlane-xyz/utils';
-
-import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
-
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
-
+import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
 
@@ -33,12 +29,10 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const [chainId, setChainId] = useState<string>('');
 
   const { accounts } = useAccounts();
-  const { wallets } = useWallets();
   const connectFns = useConnectFns();
   const disconnectFns = useDisconnectFns();
 
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
-  const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
   let account: any = '';
   if (cosmosChainIds.includes(chainId)) {
@@ -51,7 +45,6 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const handleChange = (newChainId: ChainName) => {
     helpers.setValue(newChainId);
-    // Reset other fields on chain change
     setFieldValue('recipient', '');
     setFieldValue('amount', '');
     setFieldValue('tokenIndex', 0);
@@ -67,17 +60,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (!disabled && !isLocked) setIsModalOpen(true);
   };
 
-  const hasEmbeddedWallet = wallets.some(wallet => wallet.walletClientType === 'privy');
-
   const onClickEnv = useCallback(() => {
     if (cosmosChainIds.includes(chainId)) {
-      // Existing Cosmos connection logic...
       const connectFn = connectFns[ProtocolType.Cosmos];
       if (connectFn) {
         connectFn();
       }
     } else {
-      // Use Privy's login for EVM chains
       login();
     }
   }, [chainId, connectFns, login]);
@@ -89,23 +78,9 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         disconnectFn();
       }
     } else {
-      // Use Privy's logout for EVM chains
       logout();
     }
   }, [chainId, disconnectFns, logout]);
-
-  // Effect to track authentication changes
-  useEffect(() => {
-    if (authenticated) {
-      console.log('User authenticated:', user);
-      // You can perform actions here when the user becomes authenticated
-      // For example, you might want to check for embedded wallets or update the UI
-    } else {
-      console.log('User not authenticated');
-      // You can perform actions here when the user becomes unauthenticated
-      // For example, you might want to reset some state or update the UI
-    }
-  }, [authenticated, user]);
 
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
