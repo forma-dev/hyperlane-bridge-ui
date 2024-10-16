@@ -148,3 +148,4 @@ export function useEvmTransactionFns(): ChainTransactionFns {
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };
 }
+

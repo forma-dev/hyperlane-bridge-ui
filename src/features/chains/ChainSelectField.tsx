@@ -101,7 +101,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (transferType == 'deposit' && label == 'From') {
       handleChange('celestia');
     }
-  }, [transferType, label]);
+  }, [transferType, label, handleChange]);
 
   return (
     <div className="flex flex-col items-start w-full">
