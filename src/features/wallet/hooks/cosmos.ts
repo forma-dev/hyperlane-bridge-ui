@@ -78,19 +78,49 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
 
       logger.debug(`Sending tx on chain ${chainName}`);
+      logger.debug(`Using RPC URL for ${chainName}:`, chainContext.getRpcEndpoint());
+      logger.debug('Transaction details:', JSON.stringify(tx, null, 2));
+
       const { getSigningCosmWasmClient, getSigningStargateClient } = chainContext;
       let result: ExecuteResult | DeliverTxResponse;
-      let txDetails: IndexedTx | null;
-      if (tx.type === ProviderType.CosmJsWasm) {
-        const client = await getSigningCosmWasmClient();
-        result = await client.executeMultiple(chainContext.address, [tx.transaction], 'auto');
-        txDetails = await client.getTx(result.transactionHash);
-      } else if (tx.type === ProviderType.CosmJs) {
-        const client = await getSigningStargateClient();
-        result = await client.signAndBroadcast(chainContext.address, [tx.transaction], 'auto');
-        txDetails = await client.getTx(result.transactionHash);
-      } else {
-        throw new Error(`Invalid cosmos provider type ${tx.type}`);
+      let txDetails: IndexedTx | null = null;
+
+      try {
+        if (tx.type === ProviderType.CosmJsWasm) {
+          const client = await getSigningCosmWasmClient();
+          // We can't directly access the RPC URL, so we'll log what we can
+          logger.debug('Using CosmWasm client for transaction');
+          result = await client.executeMultiple(chainContext.address, [tx.transaction], 'auto');
+        } else if (tx.type === ProviderType.CosmJs) {
+          const client = await getSigningStargateClient();
+          // We can't directly access the RPC URL, so we'll log what we can
+          logger.debug('Using Stargate client for transaction');
+          result = await client.signAndBroadcast(chainContext.address, [tx.transaction], 'auto');
+        } else {
+          throw new Error(`Invalid cosmos provider type ${tx.type}`);
+        }
+        
+        logger.debug('Transaction result:', JSON.stringify(result, null, 2));
+        
+        // Attempt to get transaction details
+        try {
+          if (tx.type === ProviderType.CosmJsWasm) {
+            const client = await getSigningCosmWasmClient();
+            txDetails = await client.getTx(result.transactionHash);
+          } else if (tx.type === ProviderType.CosmJs) {
+            const client = await getSigningStargateClient();
+            txDetails = await client.getTx(result.transactionHash);
+          }
+        } catch (detailsError) {
+          logger.warn('Failed to retrieve transaction details:', detailsError);
+          // We'll proceed without txDetails
+        }
+      } catch (error: unknown) {
+        logger.error('Transaction failed:', error);
+        if (error instanceof Error && error.message.includes('transaction indexing is disabled')) {
+          logger.warn('Transaction indexing is disabled on the RPC node. Unable to retrieve transaction details.');
+        }
+        throw error;
       }
 
       const confirm = async (): Promise<TypedTransactionReceipt> => {

@@ -3272,7 +3272,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperlane-xyz/sdk@npm:^3.8.1":
+"@hyperlane-xyz/sdk@npm:3.8.1":
   version: 3.8.1
   resolution: "@hyperlane-xyz/sdk@npm:3.8.1"
   dependencies:
@@ -3329,7 +3329,7 @@ __metadata:
     "@emotion/react": "npm:^11.11.1"
     "@emotion/styled": "npm:^11.11.0"
     "@headlessui/react": "npm:^1.7.14"
-    "@hyperlane-xyz/sdk": "npm:^3.8.1"
+    "@hyperlane-xyz/sdk": "npm:3.8.1"
     "@hyperlane-xyz/utils": "npm:^3.8.1"
     "@hyperlane-xyz/widgets": "npm:^3.8.0"
     "@metamask/jazzicon": "https://github.com/jmrossy/jazzicon#7a8df28974b4e81129bfbe3cab76308b889032a6"

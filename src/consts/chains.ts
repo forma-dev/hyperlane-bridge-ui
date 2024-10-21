@@ -1,13 +1,14 @@
-import { ChainMap, ChainMetadata, ExplorerFamily } from '@hyperlane-xyz/sdk';
+import { ChainMap, ChainMetadata, ExplorerFamily, RpcConsensusType } from '@hyperlane-xyz/sdk';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
 
-// A map of chain names to ChainMetadata
-// Chains can be defined here, in chains.json, or in chains.yaml
-// Chains already in the SDK need not be included here unless you want to override some fields
-// Schema here: https://github.com/hyperlane-xyz/hyperlane-monorepo/blob/main/typescript/sdk/src/metadata/chainMetadataTypes.ts
-export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
+type ExtendedChainMetadata = ChainMetadata & {
+  rpcConsensusType?: RpcConsensusType;
+  mailbox?: Address;
+};
+
+export const chains: ChainMap<ExtendedChainMetadata> = {
   forma: {
     name: 'forma',
     displayName: 'Forma',
@@ -98,9 +99,18 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
           decimals: 6,
           denom: 'utia',
         },
+        rpcConsensusType: RpcConsensusType.Single,
         grpcUrls: [{ http: 'https://public-celestia-grpc.numia.xyz' }],
         restUrls: [{ http: 'https://public-celestia-lcd.numia.xyz' }],
-        rpcUrls: [{ http: 'https://public-celestia-rpc.numia.xyz' }],
+        rpcUrls: [
+          { 
+            http: 'https://public-celestia-rpc.numia.xyz',
+            retry: {
+              maxRequests: 5,
+              baseRetryMs: 1000,
+            },
+          }
+        ],
         blockExplorers: [
           {
             name: 'MintScan',

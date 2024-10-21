@@ -91,7 +91,12 @@ export function getCosmosKitConfig(): { chains: CosmosChain[]; assets: AssetList
       ],
     };
   });
-
+  
+  chains.forEach(chain => {
+    const originalRpc = chain.apis.rpc[0].address;
+    chain.apis.rpc[0].address = originalRpc;
+    console.debug(`CosmosKit using RPC for ${chain.chain_name}:`, originalRpc);
+  });
   return { chains, assets };
 }
 
