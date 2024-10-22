@@ -70,6 +70,9 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
             };
           },
         }}
+        endpointOptions={{
+          isLazy: true,
+        }}
         modalTheme={{
           defaultTheme: 'dark',
           overrides: {
