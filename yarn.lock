@@ -3455,7 +3455,7 @@ __metadata:
     "@hyperlane-xyz/widgets": "npm:^3.8.0"
     "@metamask/jazzicon": "https://github.com/jmrossy/jazzicon#7a8df28974b4e81129bfbe3cab76308b889032a6"
     "@next/bundle-analyzer": "npm:^14.0.4"
-    "@privy-io/react-auth": "npm:^1.88.2"
+    "@privy-io/react-auth": "npm:^1.92.1"
     "@privy-io/wagmi": "npm:^0.2.12"
     "@privy-io/wagmi-connector": "npm:^0.1.13"
     "@sentry/nextjs": "npm:^7.0.0"
@@ -5111,18 +5111,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@privy-io/api-base@npm:1.3.1, @privy-io/api-base@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "@privy-io/api-base@npm:1.3.1"
+"@privy-io/api-base@npm:1.3.2, @privy-io/api-base@npm:^1.3.2":
+  version: 1.3.2
+  resolution: "@privy-io/api-base@npm:1.3.2"
   dependencies:
     zod: "npm:^3.21.4"
-  checksum: 7c0b4661073b422bc6492f02b3c7ef103052e06174396f3c01cc6bb465e02fe421aaa40c926e995bfe7acb87bb00ff43c37660c7e93908b91a28d271047ae7d8
+  checksum: f27d4272c7100500088ba18febf0921adcc5718cec7b6274d6496c46f4a7e52f96b122220f1afea9c94061439604f8d49153857576ec4449fa62e6f8c9b844c4
   languageName: node
   linkType: hard
 
-"@privy-io/js-sdk-core@npm:0.28.5":
-  version: 0.28.5
-  resolution: "@privy-io/js-sdk-core@npm:0.28.5"
+"@privy-io/js-sdk-core@npm:0.29.2":
+  version: 0.29.2
+  resolution: "@privy-io/js-sdk-core@npm:0.29.2"
   dependencies:
     "@ethersproject/abstract-signer": "npm:^5.7.0"
     "@ethersproject/bignumber": "npm:^5.7.0"
@@ -5130,8 +5130,8 @@ __metadata:
     "@ethersproject/providers": "npm:^5.7.2"
     "@ethersproject/transactions": "npm:^5.7.0"
     "@ethersproject/units": "npm:^5.7.0"
-    "@privy-io/api-base": "npm:^1.3.1"
-    "@privy-io/public-api": "npm:2.10.4"
+    "@privy-io/api-base": "npm:^1.3.2"
+    "@privy-io/public-api": "npm:2.11.2"
     eventemitter3: "npm:^5.0.1"
     fetch-retry: "npm:^5.0.6"
     jose: "npm:^4.15.5"
@@ -5139,26 +5139,26 @@ __metadata:
     libphonenumber-js: "npm:^1.10.44"
     set-cookie-parser: "npm:^2.6.0"
     uuid: "npm:>=8 <10"
-  checksum: fe5485e854d01aec4dded3dacc7cb15b0a9bdb12662551f0a957a564ac8713e74accc878c5e2636fd724b11846b6edcdf6a1196ef98dc400de95e879e452b8b6
+  checksum: 6fd6b0c6799bdb71d3ac8ea27b0c408aec7742119c6d396a67efb54407283e61e41055d93f3098760d9acbc7e1e5ce4689bdea37caf22a2316c0c1e7813d6110
   languageName: node
   linkType: hard
 
-"@privy-io/public-api@npm:2.10.4":
-  version: 2.10.4
-  resolution: "@privy-io/public-api@npm:2.10.4"
+"@privy-io/public-api@npm:2.11.2":
+  version: 2.11.2
+  resolution: "@privy-io/public-api@npm:2.11.2"
   dependencies:
-    "@privy-io/api-base": "npm:1.3.1"
+    "@privy-io/api-base": "npm:1.3.2"
     bs58: "npm:^5.0.0"
     ethers: "npm:^5.7.2"
     libphonenumber-js: "npm:^1.10.31"
     zod: "npm:^3.22.4"
-  checksum: 95e46383712bfc59818ce35e000e249c7fec48e6f3d6cf491220ae07716e4de3fca3b772a88a69789d9d9b8b81e48e773213a6f8d2b379a8d12e5e412f4c97bd
+  checksum: e12751c2ceaf9de70a04229d5fd4e4e89813b00ec2d624bc17dd9589b8399b8fe694227b9f07a1d4c095fbc5da0534cb7d6fd3edcfd2b9033d70475fc0456d23
   languageName: node
   linkType: hard
 
-"@privy-io/react-auth@npm:^1.88.2":
-  version: 1.88.2
-  resolution: "@privy-io/react-auth@npm:1.88.2"
+"@privy-io/react-auth@npm:^1.92.1":
+  version: 1.92.1
+  resolution: "@privy-io/react-auth@npm:1.92.1"
   dependencies:
     "@coinbase/wallet-sdk": "npm:4.0.3"
     "@ethersproject/abstract-signer": "npm:^5.7.0"
@@ -5176,7 +5176,7 @@ __metadata:
     "@heroicons/react": "npm:^2.1.1"
     "@marsidev/react-turnstile": "npm:^0.4.1"
     "@metamask/eth-sig-util": "npm:^6.0.0"
-    "@privy-io/js-sdk-core": "npm:0.28.5"
+    "@privy-io/js-sdk-core": "npm:0.29.2"
     "@simplewebauthn/browser": "npm:^9.0.1"
     "@solana/wallet-adapter-base": "npm:^0.9.23"
     "@solana/wallet-standard-wallet-adapter-base": "npm:^1.1.2"
@@ -5195,7 +5195,7 @@ __metadata:
     md5: "npm:^2.3.0"
     mipd: "npm:^0.0.7"
     ofetch: "npm:^1.3.4"
-    permissionless: "npm:^0.2.1"
+    permissionless: "npm:^0.2.10"
     pino-pretty: "npm:^10.0.0"
     qrcode: "npm:^1.5.1"
     react-device-detect: "npm:^2.2.2"
@@ -5208,9 +5208,13 @@ __metadata:
     web3-core: "npm:^1.8.0"
     web3-core-helpers: "npm:^1.8.0"
   peerDependencies:
+    "@solana/web3.js": ^1.95.3
     react: ^18
     react-dom: ^18
-  checksum: 9cafc9108baefc959808cc860b6e395311cb1cd947731c198b456537c24acc1099ae8a9088a7aef4567035d56a7384587024768b36e1ca84f0b50f912e5eb238
+  peerDependenciesMeta:
+    "@solana/web3.js":
+      optional: true
+  checksum: 1b8b9326f7f430a0474e4a903b47c0b439cfd1d3d14aad104611294cdd764312e7f8e4167237599a887695760aabc52041c3a35370c465d0c200eaf339d66a0a
   languageName: node
   linkType: hard
 
@@ -15019,12 +15023,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"permissionless@npm:^0.2.1":
-  version: 0.2.3
-  resolution: "permissionless@npm:0.2.3"
+"permissionless@npm:^0.2.10":
+  version: 0.2.10
+  resolution: "permissionless@npm:0.2.10"
   peerDependencies:
-    viem: ^2.20.0
-  checksum: ab62d6f00e11250bdf8b51f70832e94809af6303d0d666d29958dab134ab96afb682fe2ccd6df4d35a97eed336edb016d8f150a77736914b2ad0550771012875
+    viem: ^2.21.2
+  checksum: 1bfac20099a4fe42b72f26561cb7985ea9df56479a96472d623a7c3c4edd17da799dd8cc671d716434bd5c346ab658e94ff27257bda97504de102f16be8830fd
   languageName: node
   linkType: hard
 

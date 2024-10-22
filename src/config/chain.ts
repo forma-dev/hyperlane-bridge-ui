@@ -1,7 +1,10 @@
 import { defineChain } from 'viem';
 import { chainExplorerName, chainExplorerURL, chainId, chainMoniker, chainName, chainRPC } from "../consts/details";
 
-const rpcUrl = { http: [chainRPC], webSocket: [chainRPC.replace('https://', 'wss://')] };
+const rpcUrl = {
+  http: chainRPC ? [chainRPC] : [],
+  webSocket: chainRPC ? [chainRPC.replace('https://', 'wss://')] : []
+};
 
 export const forma = defineChain({
   id: chainId,

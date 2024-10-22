@@ -2,7 +2,7 @@
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
@@ -17,7 +17,6 @@ import PolygonIcon from '../../images/icons/polygon.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
-import { tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
@@ -26,8 +25,7 @@ import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import {
   getAccountAddressAndPubKey,
   useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
+  useAccounts
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -265,6 +263,8 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
+  const accountAddress = useAccountAddressForChain(values.destination);
+
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
     setFieldValue('recipient', event.target.value);
@@ -296,6 +296,13 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       setPlaceholder(defaultPlaceholder);
     }
   }, [cosmosAddress, evmAddress, values.destination]);
+
+  useEffect(() => {
+    if (accountAddress) {
+      setFieldValue('recipient', accountAddress);
+      setRecipientValue(accountAddress);
+    }
+  }, [accountAddress, setFieldValue]);
 
   return (
     <div>
@@ -484,43 +491,15 @@ function ButtonSection({
 //   );
 // }
 
-function SelfButton({
-  disabled,
-  setRecipientValue,
-}: {
-  disabled?: boolean;
-  setRecipientValue?: any;
-}) {
+function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean; setRecipientValue?: any }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
-  const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
-  const connectFns = useConnectFns();
-  const connectFn = connectFns[protocol];
+  const accountAddress = useAccountAddressForChain(values.destination);
 
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
-
-  const address = useAccountAddressForChain(values.destination);
-  const onClick = () => {
-    if (disabled) return;
-    if (address) {
-      setFieldValue('recipient', address);
-      setRecipientValue && setRecipientValue(address);
-    } else {
-      connectFn();
-      setIsConnecting(true);
-    }
-    // toast.warn(
-    //   `No account found for for chain ${getChainDisplayName(
-    //     values.destination,
-    //   )}, is your wallet connected?`,
-    // );
-  };
-
-  useEffect(() => {
-    if (address && isConnecting) {
-      setIsConnecting(false);
-      setFieldValue('recipient', address);
-    }
-  }, [address, isConnecting]);
+  const onClick = useCallback(() => {
+    if (disabled || !accountAddress) return;
+    setFieldValue('recipient', accountAddress);
+    setRecipientValue(accountAddress);
+  }, [disabled, accountAddress, setFieldValue, setRecipientValue]);
 
   return (
     <button
@@ -529,7 +508,7 @@ function SelfButton({
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      {address && !disabled ? 'SELF' : ''}
+      {accountAddress && !disabled ? 'SELF' : ''}
     </button>
   );
 }

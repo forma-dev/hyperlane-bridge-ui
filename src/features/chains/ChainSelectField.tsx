@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
-import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
+import { useAccountAddressForChain, useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
 
@@ -34,16 +34,9 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
 
-  let account: any = '';
-  if (cosmosChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Cosmos].addresses.find(
-      (address) => address.chainName === chainId,
-    );
-  } else if (evmChainIds.includes(chainId) && authenticated && user?.wallet) {
-    account = { address: user.wallet.address };
-  }
+  const accountAddress = useAccountAddressForChain(chainId);
 
-  const handleChange = (newChainId: ChainName) => {
+  const handleChange = useCallback((newChainId: ChainName) => {
     helpers.setValue(newChainId);
     setFieldValue('recipient', '');
     setFieldValue('amount', '');
@@ -51,7 +44,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     setChainId(newChainId);
 
     if (onChange) onChange(newChainId);
-  };
+  }, [helpers, setFieldValue, onChange]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -85,8 +78,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
     if (
-      (transferType == 'withdraw' && label == 'From') ||
-      (transferType == 'deposit' && label == 'To')
+      (transferType === 'withdraw' && label === 'From') ||
+      (transferType === 'deposit' && label === 'To')
     ) {
       handleChange(isMainnet ? 'forma' : 'sketchpad');
       setIsLocked(true);
@@ -94,11 +87,11 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       setIsLocked(false);
     }
 
-    if (transferType == 'withdraw' && label == 'To') {
+    if (transferType === 'withdraw' && label === 'To') {
       handleChange('stride');
     }
 
-    if (transferType == 'deposit' && label == 'From') {
+    if (transferType === 'deposit' && label === 'From') {
       handleChange('celestia');
     }
   }, [transferType, label, handleChange]);
@@ -141,7 +134,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                         : 'bg-black text-white'
                     }`}
                   >
-                    {formatAddress(account?.address || '')}
+                    {formatAddress(accountAddress || '')}
                   </span>
                 ) : (
                   <></>
