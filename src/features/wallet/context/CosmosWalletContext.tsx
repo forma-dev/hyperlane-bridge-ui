@@ -1,6 +1,3 @@
-//bug research
-
-
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { GasPrice } from '@cosmjs/stargate';
 import { MainWalletBase } from '@cosmos-kit/core';
