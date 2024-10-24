@@ -33,19 +33,16 @@ export function useEvmAccount(): AccountInfo {
 
 export function useEvmConnectFn(): () => Promise<void> {
   const { login, createWallet } = usePrivy();
-  const { wallets } = useWallets();
   
   return useCallback(async () => {
     try {
       await login();
-      // Check if the user has an embedded wallet, if not, create one
-      if (!wallets.some(wallet => wallet.walletClientType === 'privy')) {
-        await createWallet();
-      }
+      // The login method will handle both authentication and wallet creation if necessary
     } catch (error) {
-      console.error('Failed to login or create wallet with Privy:', error);
+      console.error('Failed to login with Privy:', error);
+      throw error; // Re-throw the error to be handled by the caller
     }
-  }, [login, createWallet, wallets]);
+  }, [login]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
@@ -148,4 +145,3 @@ export function useEvmTransactionFns(): ChainTransactionFns {
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };
 }
-

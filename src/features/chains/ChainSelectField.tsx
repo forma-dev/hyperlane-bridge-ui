@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import ChevronIcon from '../../images/icons/chevron-down.svg';
+import { logger } from '../../utils/logger'; // Assuming you have a logger utility
 import { TransferFormValues } from '../transfer/types';
 import { useAccountAddressForChain, useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 import { ChainSelectListModal } from './ChainSelectModal';
@@ -22,8 +23,8 @@ type Props = {
 const cosmosChainIds = ['stride', 'celestia'];
 const evmChainIds = ['forma', 'sketchpad'];
 
-export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
-  const { authenticated, user, login, logout } = usePrivy();
+export function ChainSelectField({ name, label, chains, onChange, disabled, transferType}: Props) {
+  const { authenticated, user, logout, connectOrCreateWallet } = usePrivy();
   const [field, , helpers] = useField<ChainName>(name);
   const { setFieldValue } = useFormikContext<TransferFormValues>();
   const [chainId, setChainId] = useState<string>('');
@@ -54,15 +55,27 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   };
 
   const onClickEnv = useCallback(() => {
+    logger.info(`onClickEnv called for chainId: ${chainId}`);
+
     if (cosmosChainIds.includes(chainId)) {
+      logger.info('Cosmos chain detected');
       const connectFn = connectFns[ProtocolType.Cosmos];
       if (connectFn) {
+        logger.info('Calling Cosmos connect function');
         connectFn();
+      } else {
+        logger.warn('Cosmos connect function not found');
       }
     } else {
-      login();
+      logger.info('Non-Cosmos chain detected, attempting to connect or create wallet');
+      try {
+        logger.info('Calling connectOrCreateWallet');
+        connectOrCreateWallet();
+      } catch (error) {
+        logger.error('Error in connectOrCreateWallet:', error);
+      }
     }
-  }, [chainId, connectFns, login]);
+  }, [chainId, connectFns, connectOrCreateWallet]);
 
   const onDisconnectEnv = useCallback(() => {
     if (cosmosChainIds.includes(chainId)) {
@@ -73,7 +86,9 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     } else {
       logout();
     }
-  }, [chainId, disconnectFns, logout]);
+    setFieldValue('recipient', '');
+    setFieldValue('forceUpdate', Date.now());
+  }, [chainId, disconnectFns, logout, setFieldValue]);
 
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';

@@ -2,7 +2,7 @@
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
@@ -254,55 +254,31 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
-  const { accounts } = useAccounts();
-  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
-  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
+  const accountAddress = useAccountAddressForChain(values.destination);
 
-  const defaultPlaceholder = '0x123456...';
-  const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
-  const accountAddress = useAccountAddressForChain(values.destination);
-
-  const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipientValue(event.target.value);
-    setFieldValue('recipient', event.target.value);
-  };
-
   useEffect(() => {
-    let account: any = null;
-    // Check if the selected chain is in cosmosChainIds
-    if (['celestia', 'stride'].includes(values.destination)) {
-      account = accounts[ProtocolType.Cosmos].addresses.find(
-        (address) => address.chainName === values.destination,
-      );
-    }
-    if (['forma', 'sketchpad'].includes(values.destination)) {
-      account = accounts[ProtocolType.Ethereum].addresses[0];
-    }
-
-    if (account?.address) {
-      setFieldValue('recipient', account?.address);
-      setRecipientValue(account?.address);
-    } else {
-      setFieldValue('recipient', '');
-      setRecipientValue('');
-    }
-
-    if (['celestia', 'stride'].includes(values.destination)) {
-      setPlaceholder(`${values.destination}1234...`);
-    } else {
-      setPlaceholder(defaultPlaceholder);
-    }
-  }, [cosmosAddress, evmAddress, values.destination]);
+    // Clear recipient when destination changes
+    setFieldValue('recipient', '');
+    setRecipientValue('');
+  }, [values.destination, setFieldValue]);
 
   useEffect(() => {
     if (accountAddress) {
       setFieldValue('recipient', accountAddress);
       setRecipientValue(accountAddress);
+    } else {
+      setFieldValue('recipient', '');
+      setRecipientValue('');
     }
   }, [accountAddress, setFieldValue]);
+
+  const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRecipientValue(event.target.value);
+    setFieldValue('recipient', event.target.value);
+  };
 
   return (
     <div>
@@ -315,7 +291,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       <div className="relative w-full">
         <TextField
           name="recipient"
-          placeholder={placeholder}
+          placeholder="0x123456..."
           style={{
             boxShadow: '0 0 #0000',
           }}
@@ -495,11 +471,11 @@ function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean; setRe
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const accountAddress = useAccountAddressForChain(values.destination);
 
-  const onClick = useCallback(() => {
+  const onClick = () => {
     if (disabled || !accountAddress) return;
     setFieldValue('recipient', accountAddress);
     setRecipientValue(accountAddress);
-  }, [disabled, accountAddress, setFieldValue, setRecipientValue]);
+  };
 
   return (
     <button
@@ -667,3 +643,4 @@ async function validateForm(
     return { form: errorMsg };
   }
 }
+

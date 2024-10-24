@@ -83,13 +83,13 @@ export function useAccountAddressForChain(chainName: ChainName): string | undefi
   const protocol = tryGetChainProtocol(chainName);
 
   if (protocol === ProtocolType.Ethereum && (chainName === 'forma' || chainName === 'sketchpad')) {
-    return user?.wallet?.address;
+    return user?.wallet?.address || undefined;
   }
 
   if (protocol) {
     const account = accounts[protocol];
     if (account.isReady) {
-      return account.addresses.find((a) => a.chainName === chainName)?.address;
+      return account.addresses.find((a) => a.chainName === chainName)?.address || undefined;
     }
   }
 

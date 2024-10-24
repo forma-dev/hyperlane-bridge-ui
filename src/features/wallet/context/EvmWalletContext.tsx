@@ -1,13 +1,11 @@
-import { ProtocolType } from '@hyperlane-xyz/utils';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PropsWithChildren, useMemo } from 'react';
 import { Chain } from 'viem/chains';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { getWarpCore } from '../../../context/context';
 import { Color } from '../../../styles/Color';
 import { getViemChainConfig } from '../../chains/metadata';
-import { tryGetChainMetadata } from '../../chains/utils';
+import { forma } from '..//..//..//config/chain';
 
 const queryClient = new QueryClient();
 
@@ -22,11 +20,11 @@ const wagmiConfig = createConfig({
 });
 
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
-  const initialChain = useMemo(() => {
-    const tokens = getWarpCore().tokens;
-    const firstEvmToken = tokens.filter((token) => token.protocol === ProtocolType.Ethereum)?.[0];
-    return tryGetChainMetadata(firstEvmToken?.chainName)?.chainId as number;
-  }, []);
+  // const initialChain = useMemo(() => {
+  //   const tokens = getWarpCore().tokens;
+  //   const firstEvmToken = tokens.filter((token) => token.protocol === ProtocolType.Ethereum)?.[0];
+  //   return tryGetChainMetadata(firstEvmToken?.chainName)?.chainId as number;
+  // }, []);
 
   const privyAppId = useMemo(() => {
     if (typeof window !== 'undefined' && window.location.hostname.endsWith('modularium.art')) {
@@ -46,12 +44,14 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
               theme: 'dark',
               accentColor: Color.button,
               showWalletLoginFirst: true,
+              walletList: ['metamask', 'wallet_connect', 'detected_wallets'],
+              logo: <></>,
             },
-            supportedChains: chains,
-            defaultChain: chains.find(chain => chain.id === initialChain) || chains[0],
             embeddedWallets: { 
-              createOnLogin: 'users-without-wallets'
+              createOnLogin: 'users-without-wallets',
             },
+            defaultChain: forma,
+            supportedChains: [forma],
           }}
         >
           {children}
@@ -60,3 +60,4 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
     </WagmiProvider>
   );
 }
+
