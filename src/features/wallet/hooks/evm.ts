@@ -32,17 +32,17 @@ export function useEvmAccount(): AccountInfo {
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { login, createWallet } = usePrivy();
+  const { connectOrCreateWallet } = usePrivy();
   
   return useCallback(async () => {
     try {
-      await login();
+      await connectOrCreateWallet();
       // The login method will handle both authentication and wallet creation if necessary
     } catch (error) {
       console.error('Failed to login with Privy:', error);
       throw error; // Re-throw the error to be handled by the caller
     }
-  }, [login]);
+  }, [connectOrCreateWallet]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
