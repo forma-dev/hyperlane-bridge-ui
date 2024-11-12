@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
   const privyAppId = useMemo(() => {
-    if (typeof window !== 'undefined' && window.location.hostname.endsWith('modularium.art')) {
+    if (typeof window !== 'undefined' && window.location.hostname.endsWith('bridge.forma.art')) {
       return process.env.NEXT_PUBLIC_PRIVY_APP_ID_PROD;
     }
     return process.env.NEXT_PUBLIC_PRIVY_APP_ID_DEV;
