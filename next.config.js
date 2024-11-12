@@ -91,7 +91,7 @@ const nextConfig = {
   },
 
   reactStrictMode: true,
-  swcMinify: false,
+  swcMinify: true,
 
   sentry: {
     hideSourceMaps: true,

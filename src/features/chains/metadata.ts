@@ -1,5 +1,5 @@
 import type { AssetList, Chain as CosmosChain } from '@chain-registry/types';
-import { Chain, defineChain } from 'viem';
+import { Chain } from 'viem';
 
 import { ChainName, chainMetadataToWagmiChain } from '@hyperlane-xyz/sdk';
 import { ProtocolType } from '@hyperlane-xyz/utils';
@@ -99,28 +99,4 @@ export function getCosmosChainNames(): ChainName[] {
   return Object.values(getWarpContext().chains)
     .filter((c) => c.protocol === ProtocolType.Cosmos)
     .map((c) => c.name);
-}
-
-export function getViemChainConfig(): Chain[] {
-  const chains = getWagmiChainConfig();
-  return chains.map((chain) =>
-    defineChain({
-      id: chain.id,
-      name: chain.name,
-      nativeCurrency: chain.nativeCurrency,
-      rpcUrls: {
-        default: { http: [chain.rpcUrls.default.http[0]] },
-        public: { http: [chain.rpcUrls.public.http[0]] },
-      },
-      blockExplorers: chain.blockExplorers
-        ? {
-            default: {
-              name: chain.blockExplorers.default.name,
-              url: chain.blockExplorers.default.url,
-            },
-          }
-        : undefined,
-      contracts: {},
-    }),
-  );
 }

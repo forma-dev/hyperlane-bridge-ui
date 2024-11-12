@@ -17,6 +17,7 @@ import PolygonIcon from '../../images/icons/polygon.svg';
 import { Color } from '../../styles/Color';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
+import { tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { TokenSelectField } from '../tokens/TokenSelectField';
@@ -26,6 +27,7 @@ import {
   getAccountAddressAndPubKey,
   useAccountAddressForChain,
   useAccounts,
+  useConnectFns,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -254,31 +256,46 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
 
-  const accountAddress = useAccountAddressForChain(values.destination);
+  const { accounts } = useAccounts();
+  const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
+  const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
 
+  const defaultPlaceholder = '0x123456...';
+  const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
-
-  useEffect(() => {
-    // Clear recipient when destination changes
-    setFieldValue('recipient', '');
-    setRecipientValue('');
-  }, [values.destination, setFieldValue]);
-
-  useEffect(() => {
-    if (accountAddress) {
-      setFieldValue('recipient', accountAddress);
-      setRecipientValue(accountAddress);
-    } else {
-      setFieldValue('recipient', '');
-      setRecipientValue('');
-    }
-  }, [accountAddress, setFieldValue]);
 
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
     setFieldValue('recipient', event.target.value);
   };
+
+  useEffect(() => {
+    let account: any = null;
+    // Check if the selected chain is in cosmosChainIds
+    if (['celestia', 'stride'].includes(values.destination)) {
+      account = accounts[ProtocolType.Cosmos].addresses.find(
+        (address) => address.chainName === values.destination,
+      );
+    }
+    if (['forma', 'sketchpad'].includes(values.destination)) {
+      account = accounts[ProtocolType.Ethereum].addresses[0];
+    }
+
+    if (account?.address) {
+      setFieldValue('recipient', account?.address);
+      setRecipientValue(account?.address);
+    } else {
+      setFieldValue('recipient', '');
+      setRecipientValue('');
+    }
+
+    if (['celestia', 'stride'].includes(values.destination)) {
+      setPlaceholder(`${values.destination}1234...`);
+    } else {
+      setPlaceholder(defaultPlaceholder);
+    }
+  }, [cosmosAddress, evmAddress, values.destination]);
 
   return (
     <div>
@@ -291,7 +308,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       <div className="relative w-full">
         <TextField
           name="recipient"
-          placeholder="0x123456..."
+          placeholder={placeholder}
           style={{
             boxShadow: '0 0 #0000',
           }}
@@ -475,13 +492,35 @@ function SelfButton({
   setRecipientValue?: any;
 }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
-  const accountAddress = useAccountAddressForChain(values.destination);
+  const protocol = tryGetChainProtocol(values.destination) || ProtocolType.Ethereum;
+  const connectFns = useConnectFns();
+  const connectFn = connectFns[protocol];
 
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+
+  const address = useAccountAddressForChain(values.destination);
   const onClick = () => {
-    if (disabled || !accountAddress) return;
-    setFieldValue('recipient', accountAddress);
-    setRecipientValue(accountAddress);
+    if (disabled) return;
+    if (address) {
+      setFieldValue('recipient', address);
+      setRecipientValue && setRecipientValue(address);
+    } else {
+      connectFn();
+      setIsConnecting(true);
+    }
+    // toast.warn(
+    //   `No account found for for chain ${getChainDisplayName(
+    //     values.destination,
+    //   )}, is your wallet connected?`,
+    // );
   };
+
+  useEffect(() => {
+    if (address && isConnecting) {
+      setIsConnecting(false);
+      setFieldValue('recipient', address);
+    }
+  }, [address, isConnecting]);
 
   return (
     <button
@@ -490,7 +529,7 @@ function SelfButton({
       disabled={disabled}
       className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
     >
-      {accountAddress && !disabled ? 'SELF' : ''}
+      {address && !disabled ? 'SELF' : ''}
     </button>
   );
 }
