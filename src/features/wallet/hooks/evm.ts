@@ -1,14 +1,15 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { getChainId, waitForTransactionReceipt } from '@wagmi/core';
 import { useCallback, useMemo } from 'react';
-import { TransactionReceipt as ViemTransactionReceipt, parseEther } from 'viem';
-import { useAccount, useConfig, useSendTransaction, useSwitchChain } from 'wagmi';
-import { getPublicClient, waitForTransactionReceipt } from 'wagmi/actions';
+import { TransactionReceipt as ViemTransactionReceipt, withTimeout } from 'viem';
+import { useAccount, useConfig, useDisconnect, useSendTransaction, useSwitchChain } from 'wagmi';
 
 import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hyperlane-xyz/sdk';
 import { ProtocolType, assert, sleep } from '@hyperlane-xyz/utils';
 
 import { logger } from '../../../utils/logger';
 import { getChainMetadata, tryGetChainMetadata } from '../../chains/utils';
+import { ethers5TxToWagmiTx } from '../utils';
 
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 
@@ -18,43 +19,77 @@ type CompatibleTransactionReceipt = Omit<ViemTransactionReceipt, 'contractAddres
 };
 
 export function useEvmAccount(): AccountInfo {
-  const { authenticated } = usePrivy();
-  const { wallets } = useWallets();
-  
-  const isReady = authenticated && wallets.length > 0;
-  
-  return useMemo<AccountInfo>(() => ({
-    protocol: ProtocolType.Ethereum,
-    addresses: wallets.map(wallet => ({ address: wallet.address })),
-    connectorName: 'Privy',
-    isReady,
-  }), [wallets, authenticated]);
+  const { ready, authenticated, user } = usePrivy();
+  console.log('user', user);
+  console.log('authenticated', authenticated);
+  console.log('ready', ready);
+
+  const { wallets, ready: walletsReady } = useWallets();
+  const { address: wagmiAddress, connector } = useAccount();
+  console.log('wallets', wallets);
+  console.log('walletsReady', walletsReady);
+
+  const isReady = ready && walletsReady && wallets.length > 0;
+  const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
+
+  return useMemo<AccountInfo>(
+    () => ({
+      protocol: ProtocolType.Ethereum,
+      addresses: activeWallet ? [{ address: activeWallet.address }] : [],
+      connectorName: connector?.name || 'Privy',
+      isReady,
+    }),
+    [activeWallet, isReady, connector],
+  );
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { login, createWallet } = usePrivy();
-  
-  return useCallback(async () => {
-    try {
-      await login();
-      // The login method will handle both authentication and wallet creation if necessary
-    } catch (error) {
-      console.error('Failed to login with Privy:', error);
-      throw error; // Re-throw the error to be handled by the caller
-    }
-  }, [login]);
-}
-
-export function useEvmDisconnectFn(): () => Promise<void> {
-  const { logout } = usePrivy();
+  const { connectOrCreateWallet, logout } = usePrivy();
 
   return useCallback(async () => {
     try {
       await logout();
+      connectOrCreateWallet();
+    } catch (error) {
+      console.error('Failed to login with Privy:', error);
+      throw error;
+    }
+  }, [connectOrCreateWallet]);
+}
+
+export function useEvmDisconnectFn(): () => Promise<void> {
+  const { logout } = usePrivy();
+  const { disconnect } = useDisconnect();
+  const { wallets } = useWallets();
+  const { address: wagmiAddress } = useAccount();
+  const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
+
+  return useCallback(async () => {
+    try {
+      if (activeWallet?.connectorType === 'embedded') {
+        await logout();
+      } else {
+        disconnect();
+        for (const wallet of wallets) {
+          wallet.disconnect();
+        }
+        if (typeof window.ethereum !== 'undefined') {
+          try {
+            await withTimeout(
+              () =>
+                window.ethereum.request({
+                  method: 'wallet_revokePermissions',
+                  params: [{ eth_accounts: {} }],
+                }),
+              { timeout: 100 },
+            );
+          } catch {} // eslint-disable-line no-empty
+        }
+      }
     } catch (error) {
       console.error('Failed to logout with Privy:', error);
     }
-  }, [logout]);
+  }, [activeWallet, wallets, disconnect, logout]);
 }
 
 export function useEvmActiveChain(): ActiveChainInfo {
@@ -73,13 +108,17 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const { sendTransactionAsync } = useSendTransaction();
   const config = useConfig();
 
-  const onSwitchNetwork = useCallback(async (chainName: string) => {
+  const onSwitchNetwork = useCallback(async (chainName: ChainName) => {
     const chainId = getChainMetadata(chainName).chainId as number;
     await switchChainAsync({ chainId });
     // Some wallets seem to require a brief pause after switch
     await sleep(2000);
-  }, [switchChainAsync]);
-
+  }, []);
+  // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
+  // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
+  // may require two serial txs, the prepare hooks aren't useful and complicate hook architecture considerably.
+  // See https://github.com/hyperlane-xyz/hyperlane-warp-ui-template/issues/19
+  // See https://github.com/wagmi-dev/wagmi/discussions/1564
   const onSendTx = useCallback(
     async ({
       tx,
@@ -87,60 +126,34 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       activeChainName,
     }: {
       tx: WarpTypedTransaction;
-      chainName: string;
-      activeChainName?: string;
+      chainName: ChainName;
+      activeChainName?: ChainName;
     }) => {
       if (tx.type !== ProviderType.EthersV5) throw new Error(`Unsupported tx type: ${tx.type}`);
 
-      //if active chain is different from tx origin chain, try to switch network
+      // If the active chain is different from tx origin chain, try to switch network first
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
 
-      //force a network check here
+      // Since the network switching is not foolproof, we also force a network check here
       const chainId = getChainMetadata(chainName).chainId as number;
       logger.debug('Checking wallet current chain');
-      const publicClient = getPublicClient(config);
-      if (!publicClient) {
-        throw new Error('Failed to get public client');
-      }
-      const latestChainId = await publicClient.getChainId();
-      assert(
-        latestChainId === chainId,
-        `Wallet not on chain ${chainName} (ChainMismatchError)`,
-      );
+      const latestChainId = getChainId(config);
+      assert(latestChainId === chainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
 
       logger.debug(`Sending tx on chain ${chainName}`);
-      const viemTx = {
-        to: tx.transaction.to as `0x${string}`,
-        value: tx.transaction.value ? parseEther(tx.transaction.value.toString()) : undefined,
-        data: tx.transaction.data as `0x${string}`,
-        nonce: tx.transaction.nonce !== undefined ? Number(tx.transaction.nonce) : undefined,
-        gas: tx.transaction.gasLimit ? BigInt(tx.transaction.gasLimit.toString()) : undefined,
-        gasPrice: tx.transaction.gasPrice ? BigInt(tx.transaction.gasPrice.toString()) : undefined,
-        maxFeePerGas: tx.transaction.maxFeePerGas ? BigInt(tx.transaction.maxFeePerGas.toString()) : undefined,
-        maxPriorityFeePerGas: tx.transaction.maxPriorityFeePerGas
-          ? BigInt(tx.transaction.maxPriorityFeePerGas.toString())
-          : undefined,
-      };
-
-      const hash = await sendTransactionAsync({
-        chainId,
-        ...viemTx,
-      });
+      const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
+      const hash = await sendTransactionAsync(wagmiTx);
 
       const confirm = async (): Promise<TypedTransactionReceipt> => {
         const receipt = await waitForTransactionReceipt(config, { hash });
-        const compatibleReceipt: CompatibleTransactionReceipt = {
-          ...receipt,
-          contractAddress: receipt.contractAddress ?? null,
-        };
         return {
           type: ProviderType.Viem,
-          receipt: compatibleReceipt,
+          receipt: receipt as CompatibleTransactionReceipt,
         };
       };
       return { hash, confirm };
     },
-    [onSwitchNetwork, sendTransactionAsync, config],
+    [onSwitchNetwork, sendTransactionAsync],
   );
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };

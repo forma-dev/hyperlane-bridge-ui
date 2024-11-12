@@ -281,3 +281,34 @@ Cosmos Wallet Connect
 .x1bv961 {
   width: 0;
 }
+
+/*
+Privy
+=====
+*/
+:root {
+  --privy-border-radius-sm: 0px !important;
+  --privy-border-radius-md: 0px !important;
+  --privy-border-radius-mdlg: 0px !important;
+  --privy-border-radius-lg: 0px !important;
+  --privy-border-radius-full: 0px !important;
+  --privy-color-background: #000000 !important;
+  --privy-color-foreground-2: #ffffff !important;
+  --privy-color-success-dark: #8be7b4 !important;
+  --privy-color-warn-light: #1e1e1e !important;
+  --privy-color-success-light: transparent !important;
+}
+
+#privy-modal-content {
+  border: 1px solid #fff;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+#privy-dialog-title {
+  font-size: 18px;
+}
+
+/* privy things we cannot customize but we try this */
+.gKmMLD {
+  border-radius: 0 !important;
+}

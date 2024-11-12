@@ -103,17 +103,24 @@ export function getCosmosChainNames(): ChainName[] {
 
 export function getViemChainConfig(): Chain[] {
   const chains = getWagmiChainConfig();
-  return chains.map(chain => defineChain({
-    id: chain.id,
-    name: chain.name,
-    nativeCurrency: chain.nativeCurrency,
-    rpcUrls: {
-      default: { http: [chain.rpcUrls.default.http[0]] },
-      public: { http: [chain.rpcUrls.public.http[0]] },
-    },
-    blockExplorers: chain.blockExplorers ? {
-      default: { name: chain.blockExplorers.default.name, url: chain.blockExplorers.default.url },
-    } : undefined,
-    contracts: {},
-  }));
+  return chains.map((chain) =>
+    defineChain({
+      id: chain.id,
+      name: chain.name,
+      nativeCurrency: chain.nativeCurrency,
+      rpcUrls: {
+        default: { http: [chain.rpcUrls.default.http[0]] },
+        public: { http: [chain.rpcUrls.public.http[0]] },
+      },
+      blockExplorers: chain.blockExplorers
+        ? {
+            default: {
+              name: chain.blockExplorers.default.name,
+              url: chain.blockExplorers.default.url,
+            },
+          }
+        : undefined,
+      contracts: {},
+    }),
+  );
 }

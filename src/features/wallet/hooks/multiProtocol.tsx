@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { toast } from 'react-toastify';
 
+import { ChainName } from '@hyperlane-xyz/sdk';
 import { HexString, ProtocolType } from '@hyperlane-xyz/utils';
 
 import { config } from '../../../consts/config';
 import { logger } from '../../../utils/logger';
 import { getChainProtocol, tryGetChainProtocol } from '../../chains/utils';
 
-import { ChainName } from '@hyperlane-xyz/sdk';
-import { usePrivy } from '@privy-io/react-auth';
 import {
   useCosmosAccount,
   useCosmosActiveChain,
@@ -77,23 +76,8 @@ export function useAccountForChain(chainName?: ChainName): AccountInfo | undefin
   return accounts?.[protocol];
 }
 
-export function useAccountAddressForChain(chainName: ChainName): string | undefined {
-  const { user } = usePrivy();
-  const { accounts } = useAccounts();
-  const protocol = tryGetChainProtocol(chainName);
-
-  if (protocol === ProtocolType.Ethereum && (chainName === 'forma' || chainName === 'sketchpad')) {
-    return user?.wallet?.address || undefined;
-  }
-
-  if (protocol) {
-    const account = accounts[protocol];
-    if (account.isReady) {
-      return account.addresses.find((a) => a.chainName === chainName)?.address || undefined;
-    }
-  }
-
-  return undefined;
+export function useAccountAddressForChain(chainName?: ChainName): Address | undefined {
+  return getAccountAddressForChain(chainName, useAccounts().accounts);
 }
 
 export function getAccountAddressForChain(

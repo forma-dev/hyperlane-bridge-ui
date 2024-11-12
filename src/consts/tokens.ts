@@ -128,16 +128,16 @@ export const tokenConfigs: WarpCoreConfig = {
         destination: 'stride',
         amount: isMainnet ? 20000000000000000 : 2500000000000000,
         addressOrDenom: isMainnet
-        ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
-        : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
+          ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
+          : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
       },
       {
         origin: isMainnet ? 'forma' : 'sketchpad',
         destination: 'celestia',
         amount: isMainnet ? 20000000000000000 : 2500000000000000,
         addressOrDenom: isMainnet
-        ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
-        : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
+          ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
+          : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
       },
     ],
   },

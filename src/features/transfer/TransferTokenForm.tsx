@@ -25,7 +25,7 @@ import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import {
   getAccountAddressAndPubKey,
   useAccountAddressForChain,
-  useAccounts
+  useAccounts,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -467,7 +467,13 @@ function ButtonSection({
 //   );
 // }
 
-function SelfButton({ disabled, setRecipientValue }: { disabled?: boolean; setRecipientValue?: any }) {
+function SelfButton({
+  disabled,
+  setRecipientValue,
+}: {
+  disabled?: boolean;
+  setRecipientValue?: any;
+}) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const accountAddress = useAccountAddressForChain(values.destination);
 
@@ -643,4 +649,3 @@ async function validateForm(
     return { form: errorMsg };
   }
 }
-
