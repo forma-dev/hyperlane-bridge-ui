@@ -19,16 +19,9 @@ type CompatibleTransactionReceipt = Omit<ViemTransactionReceipt, 'contractAddres
 };
 
 export function useEvmAccount(): AccountInfo {
-  const { ready, authenticated, user } = usePrivy();
-  console.log('user', user);
-  console.log('authenticated', authenticated);
-  console.log('ready', ready);
-
+  const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address: wagmiAddress, connector } = useAccount();
-  console.log('wallets', wallets);
-  console.log('walletsReady', walletsReady);
-
   const isReady = ready && walletsReady && wallets.length > 0;
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
 
@@ -44,17 +37,19 @@ export function useEvmAccount(): AccountInfo {
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { connectOrCreateWallet, logout } = usePrivy();
+  const { connectOrCreateWallet, logout, authenticated } = usePrivy();
 
   return useCallback(async () => {
     try {
-      await logout();
+      if (authenticated) {
+        await logout();
+      }
       connectOrCreateWallet();
     } catch (error) {
       console.error('Failed to login with Privy:', error);
       throw error;
     }
-  }, [connectOrCreateWallet]);
+  }, [connectOrCreateWallet, logout, authenticated]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
