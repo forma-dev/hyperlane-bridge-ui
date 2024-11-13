@@ -1,5 +1,5 @@
 import type { AssetList, Chain as CosmosChain } from '@chain-registry/types';
-import type { Chain as WagmiChain } from '@wagmi/core';
+import { Chain } from 'viem';
 
 import { ChainName, chainMetadataToWagmiChain } from '@hyperlane-xyz/sdk';
 import { ProtocolType } from '@hyperlane-xyz/utils';
@@ -7,7 +7,7 @@ import { ProtocolType } from '@hyperlane-xyz/utils';
 import { getWarpContext } from '../../context/context';
 
 // Metadata formatted for use in Wagmi config
-export function getWagmiChainConfig(): WagmiChain[] {
+export function getWagmiChainConfig(): Chain[] {
   const evmChains = Object.values(getWarpContext().chains).filter(
     (c) => !c.protocol || c.protocol === ProtocolType.Ethereum,
   );

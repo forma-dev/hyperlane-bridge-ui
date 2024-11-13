@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { toast } from 'react-toastify';
 
+import { ChainName } from '@hyperlane-xyz/sdk';
 import { HexString, ProtocolType } from '@hyperlane-xyz/utils';
 
 import { config } from '../../../consts/config';

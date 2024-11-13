@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { AppProps } from 'next/app';
 import { ToastContainer, Zoom, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,14 +13,6 @@ import '../styles/fonts.css';
 import '../styles/globals.css';
 import { useIsSsr } from '../utils/ssr';
 
-const reactQueryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
 export default function App({ Component, pageProps }: AppProps) {
   // Disable app SSR for now as it's not needed and
   // complicates graphql integration
@@ -35,11 +26,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <EvmWalletContext>
         <SolanaWalletContext>
           <CosmosWalletContext>
-            <QueryClientProvider client={reactQueryClient}>
-              <AppLayout>
-                <Component {...pageProps} />
-              </AppLayout>
-            </QueryClientProvider>
+            <AppLayout>
+              <Component {...pageProps} />
+            </AppLayout>
             <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
           </CosmosWalletContext>
         </SolanaWalletContext>
