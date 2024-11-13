@@ -1,5 +1,5 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { getChainId, waitForTransactionReceipt } from '@wagmi/core';
+import { getAccount, waitForTransactionReceipt } from '@wagmi/core';
 import { useCallback, useMemo } from 'react';
 import { TransactionReceipt as ViemTransactionReceipt, withTimeout } from 'viem';
 import { useAccount, useConfig, useDisconnect, useSendTransaction, useSwitchChain } from 'wagmi';
@@ -109,6 +109,7 @@ export function useEvmTransactionFns(): ChainTransactionFns {
     // Some wallets seem to require a brief pause after switch
     await sleep(2000);
   }, []);
+
   // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
   // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
   // may require two serial txs, the prepare hooks aren't useful and complicate hook architecture considerably.
@@ -127,13 +128,14 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       if (tx.type !== ProviderType.EthersV5) throw new Error(`Unsupported tx type: ${tx.type}`);
 
       // If the active chain is different from tx origin chain, try to switch network first
-      if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
+      if (activeChainName !== chainName) {
+        await onSwitchNetwork(chainName);
+      }
 
       // Since the network switching is not foolproof, we also force a network check here
-      const chainId = getChainMetadata(chainName).chainId as number;
-      logger.debug('Checking wallet current chain');
-      const latestChainId = getChainId(config);
-      assert(latestChainId === chainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
+      const expectedChainId = getChainMetadata(chainName).chainId as number;
+      const { chainId: connectedChainId } = getAccount(config);
+      assert(connectedChainId === expectedChainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
 
       logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
