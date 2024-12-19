@@ -15,7 +15,7 @@ export function TransferTokenCard() {
     setIsReview(false);
   };
 
-  const withdrawalEnabled = false;
+  const withdrawalEnabled = true;
 
   return (
     <Card className="w-100 relative">
