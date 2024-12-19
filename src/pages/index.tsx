@@ -5,14 +5,15 @@ import { RelayCard } from '../components/tip/RelayCard';
 import { TransferTokenCard } from '../features/transfer/TransferTokenCard';
 
 const Home: NextPage = () => {
-  const maintenance = true;
+  const maintenance = false;
+  const relayEnabled = false;
   return (
     <div className="pt-5 space-y-3">
       {maintenance ? (
         <MaintenanceCard />
       ) : (
         <>
-          <RelayCard />
+          {relayEnabled && <RelayCard />}
           <TransferTokenCard />
         </>
       )}

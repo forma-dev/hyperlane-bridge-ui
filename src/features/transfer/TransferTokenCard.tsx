@@ -15,6 +15,8 @@ export function TransferTokenCard() {
     setIsReview(false);
   };
 
+  const withdrawalEnabled = false;
+
   return (
     <Card className="w-100 relative">
       <>
@@ -24,11 +26,13 @@ export function TransferTokenCard() {
             handleTabChange={handleTabChange}
             transferType="deposit"
           />
-          <TransferTokenTab
-            activeTab={activeTab}
-            handleTabChange={handleTabChange}
-            transferType="withdraw"
-          />
+          {withdrawalEnabled && (
+            <TransferTokenTab
+              activeTab={activeTab}
+              handleTabChange={handleTabChange}
+              transferType="withdraw"
+            />
+          )}
         </div>
         <TransferTokenForm transferType={activeTab} isReview={isReview} setIsReview={setIsReview} />
       </>
