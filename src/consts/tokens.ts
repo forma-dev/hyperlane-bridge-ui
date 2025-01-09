@@ -112,7 +112,7 @@ export const tokenConfigs: WarpCoreConfig = {
       {
         origin: 'stride',
         destination: isMainnet ? 'forma' : 'sketchpad',
-        amount: isMainnet ? 50001 : 200,
+        amount: isMainnet ? 430001 : 200,
         addressOrDenom: isMainnet
           ? 'ibc/BF3B4F53F3694B66E13C23107C84B6485BD2B96296BB7EC680EA77BBA75B4801'
           : 'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
@@ -120,7 +120,7 @@ export const tokenConfigs: WarpCoreConfig = {
       {
         origin: 'celestia',
         destination: isMainnet ? 'forma' : 'sketchpad',
-        amount: isMainnet ? 50001 : 200,
+        amount: isMainnet ? 430001 : 200,
         addressOrDenom: 'utia',
       },
       {
