@@ -49,9 +49,9 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
           decimals: 6,
           denom: 'ustrd',
         },
-        grpcUrls: [{ http: 'https://stride-grpc.publicnode.com' }],
-        restUrls: [{ http: 'https://stride-rest.publicnode.com' }],
-        rpcUrls: [{ http: 'https://stride-rpc.publicnode.com' }],
+        grpcUrls: [{ http: 'https://stride.grpc.stakin-nodes.com' }],
+        restUrls: [{ http: 'https://stride.rest.stakin-nodes.com' }],
+        rpcUrls: [{ http: 'https://stride.rpc.stakin-nodes.com' }],
         blockExplorers: [],
         logoURI: '/logos/stride.png',
         transactionOverrides: {
