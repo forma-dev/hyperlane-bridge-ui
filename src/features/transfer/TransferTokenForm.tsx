@@ -34,6 +34,7 @@ import { AccountInfo } from '../wallet/hooks/types';
 import { useFetchMaxAmount } from './maxAmount';
 import { TransferFormValues } from './types';
 import { useRecipientBalanceWatcher } from './useBalanceWatcher';
+import { getCelestialsData } from './useCelestialsData';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useTokenTransfer } from './useTokenTransfer';
 
@@ -52,11 +53,27 @@ export function TransferTokenForm({
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
-  const validate = (values: TransferFormValues) => validateForm(values, accounts);
+  const validate = (values: TransferFormValues) => {
+    return validateForm(values, accounts);
+  };
 
-  const onSubmitForm = (values: TransferFormValues) => {
-    logger.debug('Reviewing transfer form values for:', values.origin, values.destination);
-    setIsReview(true);
+  const onSubmitForm = async (values: TransferFormValues) => {
+    try {
+        if (transferType === 'deposit') {
+            // Only attempt to resolve if it looks like a Celestial domain (contains a dot)
+            if (values.recipient.includes('.')) {
+                const celestialsData = await getCelestialsData(values.recipient);
+                
+                if (celestialsData?.address) {
+                    values.recipient = celestialsData.address;
+                }
+            }
+        }
+        
+        setIsReview(true);
+    } catch (error) {
+        // Handle error silently
+    }
   };
 
   return (
@@ -67,41 +84,43 @@ export function TransferTokenForm({
       validateOnChange={false}
       validateOnBlur={false}
     >
-      {({ isValidating }) => (
-        <Form className="items-stretch w-full">
-          <div
-            className="px-10 py-4 gap-y-6 flex flex-col"
-            style={{ borderBottom: '0.5px solid #FFFFFF', borderTop: '0.5px solid #FFFFFF' }}
-          >
-            <ChainSelectSection isReview={isReview} type="from" transferType={transferType} />
-            <div className="flex justify-between">
-              <AmountSection
-                isNft={isNft}
-                setIsNft={setIsNft}
+      {({ isValidating }) => {
+        return (
+          <Form className="items-stretch w-full">
+            <div
+              className="px-10 py-4 gap-y-6 flex flex-col"
+              style={{ borderBottom: '0.5px solid #FFFFFF', borderTop: '0.5px solid #FFFFFF' }}
+            >
+              <ChainSelectSection isReview={isReview} type="from" transferType={transferType} />
+              <div className="flex justify-between">
+                <AmountSection
+                  isNft={isNft}
+                  setIsNft={setIsNft}
+                  isReview={isReview}
+                  transferType={transferType}
+                />
+              </div>
+            </div>
+            <div className="relative left-0 right-0 flex justify-center overflow-hidden z-1">
+              <Image src={PolygonIcon} alt="" />
+            </div>
+
+            <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
+              <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
+              {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
+
+              <RecipientSection isReview={isReview} transferType={transferType} />
+              <ReviewDetails visible={isReview} />
+              <ButtonSection
                 isReview={isReview}
+                isValidating={isValidating}
+                setIsReview={setIsReview}
                 transferType={transferType}
               />
             </div>
-          </div>
-          <div className="relative left-0 right-0 flex justify-center overflow-hidden z-1">
-            <Image src={PolygonIcon} alt="" />
-          </div>
-
-          <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
-            <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
-            {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
-
-            <RecipientSection isReview={isReview} />
-            <ReviewDetails visible={isReview} />
-            <ButtonSection
-              isReview={isReview}
-              isValidating={isValidating}
-              setIsReview={setIsReview}
-              transferType={transferType}
-            />
-          </div>
-        </Form>
-      )}
+          </Form>
+        );
+      }}
     </Formik>
   );
 }
@@ -251,7 +270,7 @@ function AmountSection({
   );
 }
 
-function RecipientSection({ isReview }: { isReview: boolean }) {
+function RecipientSection({ isReview, transferType }: { isReview: boolean; transferType: string }) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
@@ -260,19 +279,19 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
   const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
 
-  const defaultPlaceholder = '0x123456...';
+  const defaultPlaceholder = '0x123...or enter a Celestial domain';
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipientValue(event.target.value);
-    setFieldValue('recipient', event.target.value);
+    const value = event.target.value;
+    setRecipientValue(value);
+    setFieldValue('recipient', value);
   };
 
   useEffect(() => {
     let account: any = null;
-    // Check if the selected chain is in cosmosChainIds
     if (['celestia', 'stride'].includes(values.destination)) {
       account = accounts[ProtocolType.Cosmos].addresses.find(
         (address) => address.chainName === values.destination,
@@ -290,12 +309,12 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       setRecipientValue('');
     }
 
-    if (['celestia', 'stride'].includes(values.destination)) {
+    if (transferType === 'deposit' && ['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [cosmosAddress, evmAddress, values.destination]);
+  }, [cosmosAddress, evmAddress, values.destination, transferType]);
 
   return (
     <div>
@@ -315,7 +334,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
           classes={`w-full border-[1px] border-solid border-[#8C8D8F]
             hover:border-white shadow-none
             hover:placeholder-white font-plex text-secondary 
-            leading-5 font-medium 
+            leading-5 font-medium placeholder:text-[11px] 
             ${amountFieldFocused ? 'border-white placeholder-white' : 'border-[#FFFFFF66]'}
             ${
               isReview
@@ -667,6 +686,21 @@ async function validateForm(
     const { origin, destination, tokenIndex, amount, recipient } = values;
     const token = getTokenByIndex(tokenIndex);
 
+    // Try to resolve Celestial domain if it looks like one
+    let resolvedRecipient = recipient;
+    if (recipient && recipient.includes('.')) {
+      try {
+        const resolvedData = await getCelestialsData(recipient);
+        if (resolvedData?.address) {
+          resolvedRecipient = resolvedData.address;
+        } else {
+          return { recipient: 'Invalid Celestial domain or no address found' };
+        }
+      } catch (error) {
+        return { recipient: 'Failed to resolve Celestial domain' };
+      }
+    }
+
     if (!token) return { token: 'Token is required' };
     const amountWei = toWei(amount, token.decimals);
     const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
@@ -674,7 +708,7 @@ async function validateForm(
     const result = await getWarpCore().validateTransfer({
       originTokenAmount: token.amount(amountWei),
       destination,
-      recipient,
+      recipient: resolvedRecipient,
       sender: address || '',
       senderPubKey: await senderPubKey,
     });
