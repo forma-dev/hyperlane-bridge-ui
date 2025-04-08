@@ -40,12 +40,9 @@ export function SolidButton(
     baseColors = 'bg-button text-white';
     onHover = 'hover:bg-[#FF9797]';
     border = 'border-[1px] border-solid border-white';
-    style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
-    };
   } else if (color === 'navBarButton') {
     baseColors = 'bg-button text-white';
-    style = { boxShadow: '2px 3px 0px 0px #FFFFFF', width: '188px', height: '40px' };
+    style = { width: '188px', height: '40px' };
   } else if (color === 'blue') {
     baseColors = 'bg-blue-500 text-white';
     onHover = 'hover:bg-blue-600';
@@ -69,15 +66,9 @@ export function SolidButton(
   } else if (color === 'black') {
     baseColors = 'bg-black text-secondary';
     border = 'border-[1px] border-solid border-white';
-    style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
-    };
   } else if (color === 'disabled') {
     baseColors = 'bg-black text-secondary cursor-auto opacity-40';
     border = 'border-[1px] border-solid border-white';
-    style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
-    };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
   const weight = bold ? 'font-semibold' : '';
