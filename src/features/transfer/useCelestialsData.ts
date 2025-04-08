@@ -70,45 +70,42 @@ export const useCelestialsData = (celestialId: string | null | undefined): {
 
 //for one-off lookups
 export const getCelestialsData = async (celestialId: string): Promise<CelestialsData> => {
-    try {
-        const response = await fetch(`https://api.celestials.id/api/celestials/id/${celestialId}`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch Celestial details');
-        }
-
-        const responseData = await response.json();
-        
-        // Handle the new response format with addresses array
-        if (responseData.addresses && responseData.addresses.length > 0) {
-            // Use the first address in the array
-            return {
-                address: responseData.addresses[0].address,
-                status: responseData.addresses[0].status,
-                imageUrl: responseData.celestial?.image_url || null
-            };
-        }
-        // Fallback to the old format
-        else if (responseData.celestial) {
-            return {
-                address: responseData.celestial.address,
-                status: responseData.celestial.status,
-                imageUrl: responseData.celestial.image_url || null
-            };
-        } else if (responseData.address) {
-            return {
-                address: responseData.address,
-                status: responseData.status,
-                imageUrl: responseData.image_url || null
-            };
-        }
-
-        return {
-            address: null,
-            status: null,
-            imageUrl: null
-        };
-    } catch (error) {
-        throw error;
+    const response = await fetch(`https://api.celestials.id/api/celestials/id/${celestialId}`);
+    
+    if (!response.ok) {
+        throw new Error('Failed to fetch Celestial details');
     }
+
+    const responseData = await response.json();
+    
+    // Handle the new response format with addresses array
+    if (responseData.addresses && responseData.addresses.length > 0) {
+        // Use the first address in the array
+        return {
+            address: responseData.addresses[0].address,
+            status: responseData.addresses[0].status,
+            imageUrl: responseData.celestial?.image_url || null
+        };
+    }
+    // Fallback to the old format
+    else if (responseData.celestial) {
+        return {
+            address: responseData.celestial.address,
+            status: responseData.celestial.status,
+            imageUrl: responseData.celestial.image_url || null
+        };
+    } else if (responseData.address) {
+        return {
+            address: responseData.address,
+            status: responseData.status || null,
+            imageUrl: responseData.image_url || null
+        };
+    }
+    
+    // If no valid data found
+    return {
+        address: null,
+        status: null,
+        imageUrl: null
+    };
 }; 
