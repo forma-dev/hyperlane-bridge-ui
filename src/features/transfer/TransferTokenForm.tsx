@@ -297,7 +297,7 @@ function RecipientSection({
   const cosmosAddress = accounts[ProtocolType.Cosmos].addresses[0]?.address;
   const evmAddress = accounts[ProtocolType.Ethereum].addresses[0]?.address;
 
-  const defaultPlaceholder = '0x123...or enter a Celestial domain';
+  const defaultPlaceholder = '0x123... or a Celestial ID';
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
