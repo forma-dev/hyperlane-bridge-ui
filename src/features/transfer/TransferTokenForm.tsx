@@ -49,6 +49,7 @@ export function TransferTokenForm({
 }) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
+  const [recipientValue, setRecipientValue] = useState<string>('');
 
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
@@ -60,12 +61,16 @@ export function TransferTokenForm({
   const onSubmitForm = async (values: TransferFormValues) => {
     try {
         if (transferType === 'deposit') {
+            console.log('Deposit button clicked for the first time');
             // Only attempt to resolve if it looks like a Celestial domain (contains a dot)
             if (values.recipient.includes('.')) {
                 const celestialsData = await getCelestialsData(values.recipient);
                 
                 if (celestialsData?.address) {
+                    console.log('celstials resolved, setting recipient to', celestialsData.address);
                     values.recipient = celestialsData.address;
+                    console.log('recipient set to', values.recipient);
+                    setRecipientValue(celestialsData.address);
                 }
             }
         }
@@ -107,9 +112,12 @@ export function TransferTokenForm({
 
             <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
               <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
-              {/* <TimeTransfer label="TIME TO TRANSFER" time="<1" /> */}
-
-              <RecipientSection isReview={isReview} transferType={transferType} />
+              <RecipientSection 
+                isReview={isReview} 
+                transferType={transferType} 
+                recipientValue={recipientValue}
+                setRecipientValue={setRecipientValue}
+              />
               <ReviewDetails visible={isReview} />
               <ButtonSection
                 isReview={isReview}
@@ -270,7 +278,17 @@ function AmountSection({
   );
 }
 
-function RecipientSection({ isReview, transferType }: { isReview: boolean; transferType: string }) {
+function RecipientSection({ 
+  isReview, 
+  transferType,
+  recipientValue,
+  setRecipientValue
+}: { 
+  isReview: boolean; 
+  transferType: string;
+  recipientValue: string;
+  setRecipientValue: (value: string) => void;
+}) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { balance } = useDestinationBalance(values);
   useRecipientBalanceWatcher(values.recipient, balance);
@@ -281,13 +299,17 @@ function RecipientSection({ isReview, transferType }: { isReview: boolean; trans
 
   const defaultPlaceholder = '0x123...or enter a Celestial domain';
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
-  const [recipientValue, setRecipientValue] = useState<string>('');
   const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
-  const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRecipientChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setRecipientValue(value);
     setFieldValue('recipient', value);
+
+    if (!value) {
+      setPlaceholder(defaultPlaceholder);
+      return;
+    }
   };
 
   useEffect(() => {
@@ -431,6 +453,7 @@ function ButtonSection({
   }));
 
   const triggerTransactionsHandler = async () => {
+    console.log('Deposit button clicked for the second time - confirming transaction');
     setTransferLoading(true);
     await triggerTransactions(values);
   };
