@@ -110,7 +110,7 @@ export function TransferTokenForm({
               <Image src={PolygonIcon} alt="" />
             </div>
 
-            <div className="px-10 pt-4 pb-8 gap-y-6 flex flex-col">
+            <div className="px-10 pt-4 pb-8 gap-y-3 flex flex-col">
               <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
               <RecipientSection 
                 isReview={isReview} 
@@ -342,9 +342,8 @@ function RecipientSection({
     <div>
       <div className="flex justify-between pr-1">
         <label htmlFor="recipient" className="block text-sm text-secondary leading-5 font-medium">
-          Recipient Address
+          Recipient Address (or Celestial ID)
         </label>
-        <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true} />
       </div>
       <div className="relative w-full">
         <TextField
@@ -369,6 +368,9 @@ function RecipientSection({
           onChange={handleRecipientChange}
           value={recipientValue}
         />
+        <div className="flex justify-end">
+          <TokenBalance label="REMOTE BALANCE" balance={balance} disabled={true} />
+        </div>
         {!isReview && <SelfButton disabled={isReview} setRecipientValue={setRecipientValue} />}
       </div>
     </div>
@@ -569,7 +571,7 @@ function SelfButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-2 bottom-0.5 px-2"
+      className="text-xs text-secondary hover:text-white bg-black absolute right-0.5 top-4 px-2 py-0.5"
     >
       {address && !disabled ? 'SELF' : ''}
     </button>
