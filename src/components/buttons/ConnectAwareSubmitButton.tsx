@@ -1,3 +1,4 @@
+import { ChainName } from '@hyperlane-xyz/sdk';
 import { useFormikContext } from 'formik';
 import { useCallback, useState } from 'react';
 
@@ -10,11 +11,14 @@ import { useTimeout } from '../../utils/timeout';
 
 import { SolidButton } from './SolidButton';
 
+type ButtonColor = 'white' | 'blue' | 'green' | 'red' | 'gray' | 'button' | 'black' | 'disabled';
+
 interface Props {
   chainName: ChainName;
   text: string;
   classes?: string;
   isValidating?: boolean;
+  color?: ButtonColor;
 }
 
 export function ConnectAwareSubmitButton<FormValues = any>({
@@ -22,6 +26,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({
   text,
   classes,
   isValidating = false,
+  color = 'blue',
 }: Props) {
   const { values } = useFormikContext<TransferFormValues>();
   // Flag for if form is in input vs review mode
@@ -32,7 +37,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({
   const connectFn = connectFns[protocol];
 
   const account = useAccountForChain(chainName);
-  const isAccountReady = account?.isReady;
+  const isAccountReady = !!account?.isReady;
 
   const { errors, setErrors, touched, setTouched } = useFormikContext<FormValues>();
 
@@ -41,19 +46,19 @@ export function ConnectAwareSubmitButton<FormValues = any>({
 
   const amount = parseFloat(values.amount);
 
-  let color;
+  let buttonColor: ButtonColor;
   let content;
   if (amount === 0) {
     content = 'Invalid amount';
-    color = 'red';
+    buttonColor = 'red';
   } else {
     content =
-      hasError && (isValidating || isReview)
+      !isAccountReady && !isValidating && !isReview
+        ? 'CONNECT WALLET'
+        : hasError && (isValidating || isReview)
         ? firstError
-        : isAccountReady
-        ? text
-        : 'CONNECT WALLET';
-    color = hasError && (isValidating || isReview) ? 'red' : isAccountReady ? 'button' : 'disabled';
+        : text;
+    buttonColor = hasError && (isValidating || isReview) ? 'red' : isAccountReady ? color : 'disabled';
   }
   const type = isAccountReady ? 'submit' : 'button';
 
@@ -78,8 +83,14 @@ export function ConnectAwareSubmitButton<FormValues = any>({
   useTimeout(clearErrors, 3500);
 
   return (
-    <SolidButton type={type} color={color} onClick={onClick} classes={classes}>
-      <div className="ml-1.5 text-white text-sm leading-6 font-bold font-plex">{content}</div>
+    <SolidButton
+      type={type}
+      color={buttonColor}
+      onClick={onClick}
+      classes={classes}
+      disabled={isValidating}
+    >
+      <div className="ml-1.5 text-sm leading-6 font-bold font-plex">{content}</div>
     </SolidButton>
   );
 }

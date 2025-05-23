@@ -47,7 +47,7 @@ export function Modal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className={`bg-black text-primary w-full ${
+                className={`bg-form text-[#000000] w-full ${
                   width || 'max-w-xs'
                 } md:min-h-[357px] mt-20 mr-2 max-h-[90vh] transform overflow-auto ${
                   padding || ''
@@ -58,7 +58,7 @@ export function Modal({
                 {title ? (
                   <Dialog.Title
                     as="h3"
-                    className="text text-primary font-bold text-lg leading-6 mt-6 ml-8"
+                    className="text text-[#000000] font-bold text-lg leading-6 mt-6 ml-8"
                   >
                     {title}
                   </Dialog.Title>

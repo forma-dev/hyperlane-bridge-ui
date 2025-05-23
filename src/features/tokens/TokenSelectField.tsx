@@ -93,7 +93,7 @@ function TokenButton({
       className={`${styles.base} ${disabled ? styles.disabled : styles.enabled}`}
       onClick={onClick}
       style={{
-        borderLeft: '2px solid #6E6E6E',
+        borderLeft: '0.5px solid #8C8D8F',
         borderRadius: 'none',
       }}
     >
@@ -101,7 +101,7 @@ function TokenButton({
         {token ? (
           <>
             <TokenIcon token={token} size={24} />
-            <span className={`text-primary ml-2 text-xl font-medium leading-5 ${!token?.symbol}`}>
+            <span className={`text-[#000000] ml-2 text-xl font-semibold leading-5 ${!token?.symbol}`}>
               {token?.symbol || ''}
             </span>
           </>
@@ -125,6 +125,6 @@ function TokenButton({
 
 const styles = {
   base: 'text-secondary px-3.5 py-2 flex items-center justify-center outline-none transition-colors duration-500 absolute right-0.5 top-2 bottom-0.5 px-2',
-  enabled: 'bg-black',
+  enabled: 'cursor-pointer bg-form hover:bg-[#BABABA] hover:border-white',
   disabled: 'cursor-default pointer-events-none',
 };

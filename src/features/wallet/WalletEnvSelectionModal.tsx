@@ -139,7 +139,7 @@ function EnvButton({
       className="w-full py-6 space-y-2.5 flex flex-col items-center border-2 border-white hover:bg-hoverForm"
     >
       {logo}
-      <div className="uppercase text-primary font-medium text-sm leading-5 tracking-wide">
+      <div className="uppercase text-[#000000] font-medium text-sm leading-5 tracking-wide">
         {children}
       </div>
       <div className="text-secondary font-normal text-sm leading-5">{`Connect to ${subTitle} compatible wallet`}</div>

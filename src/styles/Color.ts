@@ -1,6 +1,6 @@
 // Should match tailwind.config.js
 export enum Color {
-  primaryBlack = '#010101',
+  primaryBlack = '#EBEBEB',
   primaryWhite = '#FFFFFF',
   primaryGray = '#6B7280',
   lightGray = '#D0D4DB',
@@ -11,12 +11,12 @@ export enum Color {
   primaryMint = '#31D99C',
   button = '#FF6B6B',
   accent = '#FFC901',
-  background = '#000000',
-  primaryText = '#FFFFFF',
+  background = '#EBEBEB',
+  primaryText = '#000000',
   secondaryText = '#8C8D8F',
   disabledText = '#828485',
-  cardColor = '#000000',
-  disabledColor = '#1F1F1F',
+  cardColor = '#FFFFFF',
+  disabledColor = '#EBEBEB',
 }
 
 // Useful for cases when using class names isn't convenient

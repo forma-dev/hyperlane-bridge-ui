@@ -27,7 +27,7 @@ export function IconButton(props: PropsWithChildren<IconButtonProps>) {
     passThruProps,
   } = props;
 
-  const base = 'flex items-center justify-center transition-all';
+  const base = 'flex items-center justify-center transition-all rounded';
   const onHover = 'hover:opacity-70';
   const onDisabled = 'disabled:opacity-30 disabled:cursor-default';
   const onActive = 'active:opacity-60';

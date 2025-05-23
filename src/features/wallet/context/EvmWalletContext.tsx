@@ -6,7 +6,6 @@ import { PropsWithChildren, useMemo } from 'react';
 import { forma } from '../../../config/chain';
 import { wagmiConfig } from '../../../config/wagmi';
 import { config } from '../../../consts/config';
-import { Color } from '../../../styles/Color';
 
 const queryClient = new QueryClient();
 
@@ -25,12 +24,10 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
         walletConnectCloudProjectId: config.walletConnectProjectId,
         loginMethods: ['email', 'sms', 'wallet'],
         appearance: {
-          theme: 'dark',
-          accentColor: Color.button,
           showWalletLoginFirst: true,
           walletList: ['metamask', 'wallet_connect', 'detected_wallets'],
-          landingHeader: 'Connect a Wallet',
           logo: <></>,
+          accentColor: '#FF6F00'
         },
         embeddedWallets: {
           createOnLogin: 'users-without-wallets',

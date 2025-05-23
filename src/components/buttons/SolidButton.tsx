@@ -2,16 +2,7 @@ import { PropsWithChildren, ReactElement } from 'react';
 
 interface ButtonProps {
   type?: 'submit' | 'reset' | 'button';
-  color?:
-    | 'white'
-    | 'blue'
-    | 'green'
-    | 'red'
-    | 'gray'
-    | 'button'
-    | 'black'
-    | 'navBarButton'
-    | 'disabled'; // defaults to blue
+  color?: 'white' | 'blue' | 'green' | 'red' | 'gray' | 'button' | 'black' | 'disabled'; // defaults to blue
   bold?: boolean;
   classes?: string;
   icon?: ReactElement;
@@ -33,7 +24,7 @@ export function SolidButton(
   } = props;
   const color = _color ?? 'blue';
 
-  const base = 'flex items-center justify-center transition-all duration-500';
+  const base = 'flex items-center justify-center transition-all duration-500 rounded';
   let baseColors, border, onHover, onActive, style;
 
   if (color === 'button') {
@@ -43,9 +34,6 @@ export function SolidButton(
     style = {
       boxShadow: '2px 3px 0px 0px #FFFFFF',
     };
-  } else if (color === 'navBarButton') {
-    baseColors = 'bg-button text-white';
-    style = { boxShadow: '2px 3px 0px 0px #FFFFFF', width: '188px', height: '40px' };
   } else if (color === 'blue') {
     baseColors = 'bg-blue-500 text-white';
     onHover = 'hover:bg-blue-600';

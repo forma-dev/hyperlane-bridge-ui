@@ -9,7 +9,7 @@ module.exports = {
       sans: ['Neue Haas Grotesk', 'Helvetica', 'sans-serif'],
       serif: ['Garamond', 'serif'],
       mono: ['Courier New', 'monospace'],
-      plex: ['IBM Plex Mono'],
+      'plus-jakarta': ['Plus Jakarta Sans', 'sans-serif'],
     },
     screens: {
       xs: '480px',
@@ -95,7 +95,7 @@ module.exports = {
       borderRadius: {
         none: '0',
         sm: '0.25rem',
-        DEFAULT: '0.35rem',
+        DEFAULT: '5px',
         md: '0.45rem',
         lg: '0.55rem',
         full: '9999px',
@@ -115,14 +115,14 @@ module.exports = {
       },
       backgroundColor: {
         'button': '#FF6B6B',
-        'form': '#000000',
-        'sideBar': '#0E0E0E',
-        'hoverForm': '#1E1E1E',
-        'toast': '#1E1E1E',
-        'disabled': '#1F1F1F',
+        'form': '#FFFFFF',
+        'sideBar': '#EBEBEB',
+        'hoverForm': '#EBEBEB',
+        'toast': '#EBEBEB',
+        'disabled': '#EBEBEB',
       },
       textColor: {
-        primary: '#FFFFFF',
+        primary: '#000000',
         secondary: '#8C8D8F',
         error: '#FF6B6B',
         disabled: '#828485'

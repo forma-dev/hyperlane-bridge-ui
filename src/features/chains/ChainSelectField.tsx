@@ -171,7 +171,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   return (
     <div className="flex flex-col items-start w-full">
       <div className="flex justify-between pr-1">
-        <label htmlFor={name} className="block text-sm text-secondary leading-5 font-medium">
+        <label htmlFor={name} className="block text-sm text-[#595959] leading-5 font-medium">
           {label}
         </label>
       </div>
@@ -179,7 +179,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         <button
           type="button"
           name={field.name}
-          className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
+          className={`mt-1.5 w-9/12 border-[0.5px] border-solid border-[#8C8D8F] h-[48px] rounded-[5px] hover:border-[1px] hover:border-solid hover:border-[#000000] ${
             disabled ? styles.disabled : styles.enabled
           } ${isLocked ? styles.locked : ''}`}
           onClick={onClick}
@@ -189,10 +189,10 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
               <ChainLogo chainName={field.value} size={32} />
               <div className="flex flex-col justify-center items-start">
                 <span
-                  className={`font-medium text-base leading-5 ml-2 ${
+                  className={`font-semibold text-base leading-5 ml-2 ${
                     disabled
                       ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                      : 'bg-black text-white'
+                      : 'text-[#000000]'
                   }`}
                 >
                   {getChainDisplayName(field.value, true)}
@@ -203,7 +203,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                     className={`font-medium text-xs leading-5 ml-2 ${
                       disabled
                         ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                        : 'bg-black text-white'
+                        : 'text-[#000000]'
                     }`}
                   >
                     {formatAddress(account?.address || '')}
@@ -218,10 +218,10 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                 <Image
                   src={ChevronIcon}
                   className="text-secondary"
-                  width={12}
+                  width={16}
                   height={6}
                   alt=""
-                  style={{ filter: 'invert(1)' }}
+                  style={{ filter: 'invert(45%) sepia(96%) saturate(1432%) hue-rotate(1deg) brightness(103%) contrast(105%)' }}
                 />
               )}
             </div>
@@ -233,14 +233,12 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onClickEnv()}
-            className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
+            className={`w-4/12 border-b border-b-[#000000] h-[48px] !bg-[#FF6F00] text-[#000000] hover:!bg-[#FB9241] rounded-[5px] font-plus-jakarta text-[13px] ${
               disabled ? styles.disabled : styles.enabled
             }`}
           >
             <span
-              className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
-                disabled ? 'text-disabled' : 'text-black'
-              }`}
+              className="w-full font-bold text-sm leading-6"
             >
               CONNECT
             </span>
@@ -253,13 +251,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onDisconnectEnv()}
-            className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
+            className={`w-4/12 border border-[#8C8D8F] bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#DADADA] hover:border hover:border-[#000000] rounded-[5px] ${
               disabled ? styles.disabled : styles.enabled
             }`}
           >
             <span
-              className={`w-full font-plex font-bold text-sm leading-6  ${
-                disabled ? 'text-disabled' : 'text-white'
+              className={`w-full font-plex font-bold text-sm leading-6 ${
+                disabled ? 'text-disabled' : 'text-black'
               }`}
             >
               DISCONNECT
@@ -280,7 +278,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
 const styles = {
   base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
-  enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
+  enabled: 'cursor-pointer bg-form',
   disabled: 'cursor-default bg-disabled pointer-events-none',
   locked: 'cursor-default pointer-events-none',
 };

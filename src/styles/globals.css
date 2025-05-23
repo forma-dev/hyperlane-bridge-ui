@@ -76,7 +76,7 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* clears the ‘X’ from Internet Explorer */
+/* clears the 'X' from Internet Explorer */
 input[type='search']::-ms-clear {
   display: none;
   width: 0;
@@ -88,7 +88,7 @@ input[type='search']::-ms-reveal {
   height: 0;
 }
 
-/* clears the ‘X’ from Chrome */
+/* clears the 'X' from Chrome */
 input[type='search']::-webkit-search-decoration,
 input[type='search']::-webkit-search-cancel-button,
 input[type='search']::-webkit-search-results-button,
@@ -210,7 +210,7 @@ Toasts
   color: var(--toastify-text-color-dark) !important;
 }
 .Toastify__toast-body {
-  font-family: IBM Plex Mono;
+  font-family: 'Plus Jakarta Sans';
   font-size: 12px;
   font-weight: 400;
   line-height: 21px;
@@ -244,8 +244,7 @@ Menu Burger
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #fff;
-  filter: invert(1);
+  background: transparent;
   position: relative;
   flex-shrink: 0;
   width: 2.5rem;
@@ -256,7 +255,7 @@ Menu Burger
     content: '';
     height: 0.1875rem;
     margin: 0.1875rem auto;
-    background: #202025;
+    background: #000000;
     border-radius: 0.125rem;
     transition: width 0.2s, background 0.2s;
   }
@@ -274,6 +273,7 @@ Menu Burger
     }
   }
 }
+
 /*
 Cosmos Wallet Connect
 ======
@@ -287,28 +287,16 @@ Privy
 =====
 */
 :root {
-  --privy-border-radius-sm: 0px !important;
-  --privy-border-radius-md: 0px !important;
-  --privy-border-radius-mdlg: 0px !important;
-  --privy-border-radius-lg: 0px !important;
-  --privy-border-radius-full: 0px !important;
-  --privy-color-background: #000000 !important;
-  --privy-color-foreground-2: #ffffff !important;
-  --privy-color-success-dark: #8be7b4 !important;
-  --privy-color-warn-light: #1e1e1e !important;
-  --privy-color-success-light: transparent !important;
+  --privy-color-accent: #FF6F00 !important;
 }
 
-#privy-modal-content {
-  border: 1px solid #fff;
-  font-family: 'IBM Plex Mono', monospace;
+/* Only target retry/error buttons, not wallet connect buttons */
+#privy-dialog [class*="error"] button:hover,
+#privy-dialog [class*="retry"] button:hover {
+  background-color: #FB9241 !important;
 }
 
-#privy-dialog-title {
-  font-size: 18px;
-}
-
-/* privy things we cannot customize but we try this */
-.gKmMLD {
-  border-radius: 0 !important;
+/* Set tab border width */
+[class*="privy-dialog"] [role="tablist"] {
+  border-bottom-width: 0.5px !important;
 }
