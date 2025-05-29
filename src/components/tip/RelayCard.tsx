@@ -12,10 +12,10 @@ export function RelayCard() {
           href="https://relay.link/forma"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-black font-bold w-4/12 border-[0.5px] border-[#8C8D8F] border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#DADADA] cursor-pointer rounded-[5px]"
+          className="text-[13px] text-black font-bold w-4/12 border-[0.5px] border-[#8C8D8F] border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#DADADA] cursor-pointer rounded-[5px]"
         >
-          <span className="mr-1.5">USE RELAY</span>
-          <Image src={ArrowRight} width={16} alt="" />
+          <span className="mr-1.5">USE&nbsp;&nbsp;RELAY</span>
+          <Image src={ArrowRight} width={16} height={16} alt="" />
         </a>
       </div>
     </Card>

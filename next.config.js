@@ -10,16 +10,22 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 // Sometimes useful to disable this during development
 const ENABLE_CSP_HEADER = true;
-const FRAME_SRC_HOSTS = ['https://*.walletconnect.com', 'https://*.walletconnect.org','https://*.solflare.com'];
-const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
+const FRAME_SRC_HOSTS = [
+  'https://*.walletconnect.com',
+  'https://*.walletconnect.org',
+  'https://*.solflare.com',
+  'https://auth.privy.io'
+];
+const STYLE_SRC_HOSTS = ['https://*.googleapis.com'];
 const IMG_SRC_HOSTS = ['https://*.walletconnect.com'];
+const SCRIPT_SRC_HOSTS = ['https://tag.gtag.com'];
 const cspHeader = `
   default-src 'self';
-  script-src 'self'${isDev ? " 'unsafe-eval'" : ''};
+  script-src 'self' ${SCRIPT_SRC_HOSTS.join(' ')} 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline' ${STYLE_SRC_HOSTS.join(' ')};
   connect-src *;
   img-src 'self' blob: data: ${IMG_SRC_HOSTS.join(' ')};
-  font-src 'self' data:;
+  font-src 'self' data: https://fonts.gstatic.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

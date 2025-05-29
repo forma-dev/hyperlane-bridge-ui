@@ -101,12 +101,12 @@ function TokenButton({
         {token ? (
           <>
             <TokenIcon token={token} size={24} />
-            <span className={`text-[#000000] ml-2 text-xl font-semibold leading-5 ${!token?.symbol}`}>
+            <span className={`text-[#000000] ml-2 text-[13px] font-semibold leading-5 ${!token?.symbol}`}>
               {token?.symbol || ''}
             </span>
           </>
         ) : (
-          <span className={`text-secondary text-xl font-medium leading-5`}>Select</span>
+          <span className={`text-secondary text-[13px] font-medium leading-5`}>Select</span>
         )}
       </div>
       {!isAutomatic && (

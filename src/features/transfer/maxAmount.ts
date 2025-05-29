@@ -37,8 +37,11 @@ async function fetchMaxAmount({ accounts, balance, destination, origin }: FetchM
     return maxAmount;
   } catch (error) {
     logger.warn('Error fetching fee quotes for max amount', error);
-    const chainName = getChainMetadata(origin).displayName;
-    toast.warn(`Cannot simulate transfer, ${chainName} native balance may be insufficient.`);
+    // Don't show toasts during validation
+    if (!document.activeElement?.id?.includes('amount')) {
+      const chainName = getChainMetadata(origin).displayName;
+      toast.warn(`Cannot simulate transfer, ${chainName} native balance may be insufficient.`);
+    }
     return undefined;
   }
 }

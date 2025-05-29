@@ -11,7 +11,7 @@ import { WalletEnvSelectionModal } from './WalletEnvSelectionModal';
 
 interface Props {
   isSideBarOpen?: boolean;
-  setIsSideBarOpen: (isSideBarOpen: boolean) => void;
+  setIsSideBarOpen: (isOpen: boolean) => void;
 }
 
 export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
@@ -32,8 +32,6 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
     <div className="relative">
       <div className="relative">
         <button className="burger rounded" onClick={() => setIsSideBarOpen(true)}></button>
-
-        {/* Removed Connect Wallet button */}
       </div>
 
       <WalletEnvSelectionModal

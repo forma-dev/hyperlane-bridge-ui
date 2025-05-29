@@ -71,10 +71,11 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
           isLazy: true,
         }}
         modalTheme={{
-          defaultTheme: 'dark',
+          defaultTheme: 'light',
           overrides: {
             'connect-modal': {
-              bg: { dark: '#000', light: '#000' },
+              bg: { dark: '#FFFFFF', light: '#FFFFFF' },
+              color: { dark: '#000000', light: '#000000' },
             },
           },
         }}

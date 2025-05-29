@@ -90,7 +90,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({
       classes={classes}
       disabled={isValidating}
     >
-      <div className="ml-1.5 text-sm leading-6 font-bold font-plex">{content}</div>
+      <div className="ml-1.5 text-[13px] leading-6 font-bold font-plex">{content}</div>
     </SolidButton>
   );
 }

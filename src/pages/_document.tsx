@@ -13,6 +13,8 @@ export default function Document() {
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color={APP_BRAND_COLOR} />
         <link rel="shortcut icon" href="/favicon-16x16.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet" />
         <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="theme-color" content="#ffffff" />
@@ -23,7 +25,7 @@ export default function Document() {
 
         <meta name="HandheldFriendly" content="true" />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
 
         <meta property="og:url" content={APP_URL} />
         <meta property="og:title" content={APP_NAME} />

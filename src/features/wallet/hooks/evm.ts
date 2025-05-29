@@ -37,19 +37,69 @@ export function useEvmAccount(): AccountInfo {
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { connectOrCreateWallet, logout, authenticated } = usePrivy();
+  const { connectOrCreateWallet, logout, authenticated, ready, user, createWallet } = usePrivy();
+  const { wallets } = useWallets();
+  const { address: wagmiAddress } = useAccount();
 
   return useCallback(async () => {
     try {
-      if (authenticated) {
+      // If authenticated but wallet not properly connected
+      if (authenticated && !wagmiAddress) {
         await logout();
       }
-      connectOrCreateWallet();
-    } catch (error) {
-      console.error('Failed to login with Privy:', error);
-      throw error;
+
+      // Start the connection process
+      await connectOrCreateWallet();
+
+      // Wait for Privy authentication to complete
+      let attempts = 0;
+      const maxAttempts = 30;
+      while ((!ready || !user?.id) && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts++;
+      }
+
+      // If authentication succeeded but no wallet yet, create one
+      if (user?.id && !wagmiAddress) {
+        try {
+          await createWallet();
+        } catch (e) {
+          logger.warn('Failed to create embedded wallet:', e);
+        }
+      }
+
+      // Wait for wallet to be ready
+      attempts = 0;
+      while ((!wagmiAddress || wallets.length === 0) && attempts < maxAttempts) {
+        const embeddedWallet = wallets.find(w => w.connectorType === 'embedded');
+        if (embeddedWallet && !embeddedWallet.isConnected) {
+          try {
+            // @ts-ignore - Privy's type definitions are incomplete
+            await embeddedWallet.connect();
+            if (embeddedWallet.isConnected) break;
+          } catch (e) {
+            logger.warn('Failed to connect embedded wallet:', e);
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts++;
+      }
+
+      // Final check
+      if (!wagmiAddress) {
+        logger.warn('Wallet connection process incomplete');
+        return; // Don't throw error as the process might still be ongoing
+      }
+
+    } catch (error: any) {
+      const errorMsg = error?.message || '';
+      if (!errorMsg.includes('User rejected') && 
+          !errorMsg.includes('user closed modal') &&
+          !errorMsg.includes('verification')) {
+        throw error;
+      }
     }
-  }, [connectOrCreateWallet, logout, authenticated]);
+  }, [connectOrCreateWallet, createWallet, logout, authenticated, wagmiAddress, ready, user?.id, wallets]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {

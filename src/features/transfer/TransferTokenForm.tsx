@@ -2,7 +2,7 @@
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
@@ -46,23 +46,36 @@ export function TransferTokenForm({
 }) {
   const initialValues = useFormInitialValues();
   const { accounts } = useAccounts();
+  const { triggerTransactions, isLoading } = useTokenTransfer(() => setIsReview(false));
 
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
-  const validate = (values: TransferFormValues) => validateForm(values, accounts);
+  const validate = useCallback(
+    async (values: TransferFormValues) => {
+      // Only validate when reviewing or submitting
+      if (!isReview) return {};
+      try {
+        return await validateForm(values, accounts);
+      } catch (error) {
+        // Don't show toasts during validation, only return the error message
+        logger.error('Error validating form', error);
+        let errorMsg = errorToString(error, 40);
+        if (insufficientFundsErrMsg.test(errorMsg)) {
+          errorMsg = 'Insufficient funds for gas fees';
+        }
+        return { form: errorMsg };
+      }
+    },
+    [accounts, isReview],
+  );
 
-  const { triggerTransactions, isLoading } = useTokenTransfer(() => setIsReview(false));
-
-  const onSubmitForm = (values: TransferFormValues) => {
-    if (!isReview) {
-      logger.debug('Reviewing transfer form values for:', values.origin, values.destination);
-      setIsReview(true);
-    } else {
-      logger.debug('Executing transfer for:', values.origin, values.destination);
+  const onSubmitForm = useCallback(
+    (values: TransferFormValues) => {
       triggerTransactions(values);
-    }
-  };
+    },
+    [triggerTransactions],
+  );
 
   return (
     <Formik<TransferFormValues>
@@ -255,7 +268,7 @@ function AmountSection({
         </div>
       )}
       <div className="pt-1 text-right">
-        <TokenBalance label="BALANCE" balance={balance} disabled={isReview} />
+        <TokenBalance label="BALANCE" balance={balance} disabled={isReview} transferType={transferType} />
       </div>
     </div>
   );
@@ -296,10 +309,12 @@ function TokenBalance({
   label,
   balance,
   disabled,
+  transferType,
 }: {
   label: string;
   balance?: TokenAmount | null;
   disabled?: boolean;
+  transferType: string;
 }) {
   const value = balance?.getDecimalFormattedAmount().toFixed(4) || '0';
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
@@ -310,17 +325,20 @@ function TokenBalance({
   const onClick = async () => {
     if (!balance || isNullish(tokenIndex) || disabled) return;
     
-    // Get the balance in BigNumber format
+    // Get the balance in BigNumber format with full precision
     const balanceAmount = new BigNumber(balance.getDecimalFormattedAmount());
     
-    // If balance is less than or equal to 0.45 TIA, can't transfer anything
-    if (balanceAmount.isLessThanOrEqualTo(0.45)) return;
+    // Set buffer based on transfer type
+    const buffer = transferType === 'deposit' ? 0.49 : 0.03;
     
-    // Calculate max transferable amount (balance - 0.45 TIA)
-    const maxTransferableAmount = balanceAmount.minus(0.45);
+    // If balance is less than or equal to buffer amount, can't transfer anything
+    if (balanceAmount.isLessThanOrEqualTo(buffer)) return;
     
-    // Round down to 4 decimal places
-    const roundedAmount = maxTransferableAmount.toFixed(4, BigNumber.ROUND_FLOOR);
+    // Calculate max transferable amount (balance - buffer)
+    const maxTransferableAmount = balanceAmount.minus(buffer);
+    
+    // Ensure we round down and handle potential floating point precision issues
+    const roundedAmount = maxTransferableAmount.decimalPlaces(4, BigNumber.ROUND_DOWN).toString();
     
     // Set the amount in the form
     setFieldValue('amount', roundedAmount);
@@ -333,19 +351,21 @@ function TokenBalance({
   };
 
   // Determine if the button should be disabled
-  const insufficientBalance = new BigNumber(value).isLessThanOrEqualTo(0.45);
+  const buffer = transferType === 'deposit' ? 0.49 : 0.03;
+  const insufficientBalance = new BigNumber(value).isLessThanOrEqualTo(buffer);
   const isDisabled = disabled || insufficientBalance;
 
   return (
     <div className="text-[12px] font-semibold leading-5 text-[#595959]">
-      {label}:
+      <span className="font-medium">{label}</span>:{' '}
       <button 
         type="button" 
         disabled={isDisabled} 
         onClick={onClick}
-        title={insufficientBalance ? "Insufficient balance for gas fees" : "Click to set maximum transferable amount"}
+        title={insufficientBalance ? `Insufficient balance for gas fees (${buffer} TIA needed)` : "Click to set maximum transferable amount"}
+        className="inline-block"
       >
-        <span className={isDisabled ? '' : 'underline ml-1.5 hover:text-[#000000]'}>{value}</span>
+        <span className={`${isDisabled ? '' : 'underline hover:text-[#000000] cursor-pointer'}`}>{value}</span>
       </button>
     </div>
   );
@@ -408,7 +428,7 @@ function ButtonSection({
     if (hasErrors) return Object.values(errors)[0];
     if (!isAmountValid) return 'ENTER AMOUNT';
     if (!isRecipientValid) return 'ENTER RECIPIENT';
-    if (!hasEnoughBalance) return '0.45 TIA is needed for interchain gas fees';
+    if (!hasEnoughBalance) return `${transferType === 'deposit' ? '0.49' : '0.03'} TIA is needed for interchain gas fees`;
     return 'CONTINUE';
   };
 
@@ -517,6 +537,10 @@ function SelfButton({
     if (!address) {
       connectFn();
       setIsConnecting(true);
+    } else {
+      // If wallet is already connected, set the address
+      setFieldValue('recipient', address);
+      setRecipientValue && setRecipientValue(address);
     }
   };
 
@@ -525,11 +549,11 @@ function SelfButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`text-xs text-secondary hover:text-[#000000] absolute right-0.5 top-2 bottom-0.5 px-2 ${
+      className={`text-[13px] text-secondary hover:text-[#000000] absolute right-0.5 top-2 bottom-0.5 px-2 ${
         disabled ? 'bg-[#DADADA]' : 'bg-[#FFFFFF]'
       }`}
     >
-      {address && !disabled ? 'SELF' : ''}
+      {address ? 'SELF' : ''}
     </button>
   );
 }
@@ -663,28 +687,19 @@ async function validateForm(
   values: TransferFormValues,
   accounts: Record<ProtocolType, AccountInfo>,
 ) {
-  try {
-    const { origin, destination, tokenIndex, amount, recipient } = values;
-    const token = getTokenByIndex(tokenIndex);
+  const { origin, destination, tokenIndex, amount, recipient } = values;
+  const token = getTokenByIndex(tokenIndex);
 
-    if (!token) return { token: 'Token is required' };
-    const amountWei = toWei(amount, token.decimals);
-    const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
+  if (!token) return { token: 'Token is required' };
+  const amountWei = toWei(amount, token.decimals);
+  const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
 
-    const result = await getWarpCore().validateTransfer({
-      originTokenAmount: token.amount(amountWei),
-      destination,
-      recipient,
-      sender: address || '',
-      senderPubKey: await senderPubKey,
-    });
-    return result;
-  } catch (error) {
-    logger.error('Error validating form', error);
-    let errorMsg = errorToString(error, 40);
-    if (insufficientFundsErrMsg.test(errorMsg)) {
-      errorMsg = 'Insufficient funds for gas fees';
-    }
-    return { form: errorMsg };
-  }
+  const result = await getWarpCore().validateTransfer({
+    originTokenAmount: token.amount(amountWei),
+    destination,
+    recipient,
+    sender: address || '',
+    senderPubKey: await senderPubKey,
+  });
+  return result;
 }

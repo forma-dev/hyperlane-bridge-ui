@@ -219,7 +219,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                   src={ChevronIcon}
                   className="text-secondary"
                   width={16}
-                  height={6}
+                  height={16}
                   alt=""
                   style={{ filter: 'invert(45%) sepia(96%) saturate(1432%) hue-rotate(1deg) brightness(103%) contrast(105%)' }}
                 />
@@ -238,7 +238,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             }`}
           >
             <span
-              className="w-full font-bold text-sm leading-6"
+              className="w-full font-bold text-[13px] leading-6"
             >
               CONNECT
             </span>
@@ -256,7 +256,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             }`}
           >
             <span
-              className={`w-full font-plex font-bold text-sm leading-6 ${
+              className={`w-full font-plex font-bold text-[13px] leading-6 ${
                 disabled ? 'text-disabled' : 'text-black'
               }`}
             >
