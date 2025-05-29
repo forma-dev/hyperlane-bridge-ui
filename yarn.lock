@@ -3734,8 +3734,8 @@ __metadata:
     "@tanstack/react-query": "npm:^4.29.7"
     "@trivago/prettier-plugin-sort-imports": "npm:^4.1.1"
     "@types/jest": "npm:^29.5.3"
-    "@types/node": "npm:^18.11.18"
-    "@types/react": "npm:^18.2.7"
+    "@types/node": "npm:^22.15.24"
+    "@types/react": "npm:^19.1.6"
     "@types/react-dom": "npm:^18.2.4"
     "@typescript-eslint/eslint-plugin": "npm:^6.14.0"
     "@typescript-eslint/parser": "npm:^6.14.0"
@@ -7623,10 +7623,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.11.18":
-  version: 18.11.18
-  resolution: "@types/node@npm:18.11.18"
-  checksum: da05cf3a0036ef05cd695ac4cb265948593acbe723ba818f0ca0ce466b13ba99e1aac3a363086d6b8c7ea8f30c9233478e0293ac878a6f4b1d5515b10c392257
+"@types/node@npm:^22.15.24":
+  version: 22.15.24
+  resolution: "@types/node@npm:22.15.24"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 249f8206b2da5faf621e200757a15ca936a3d72d84fb31dfbc4021f83b577e3be591b29ba322f832790eeb5bdfa3674b8fd0a0e81059b99f129973250ab7ec04
   languageName: node
   linkType: hard
 
@@ -7653,7 +7655,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^18.2.7":
+"@types/react@npm:*":
   version: 18.2.7
   resolution: "@types/react@npm:18.2.7"
   dependencies:
@@ -7661,6 +7663,15 @@ __metadata:
     "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
   checksum: d0a6ce8a4036a61f3085a100a9bda92e677581b1ecf401739269ddb4abcd9e05201597bf32972b1cf8641908c13bf5b4099ea9048f5b505c0770a51f3209794a
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^19.1.6":
+  version: 19.1.6
+  resolution: "@types/react@npm:19.1.6"
+  dependencies:
+    csstype: "npm:^3.0.2"
+  checksum: 722a8efb36dedaf5cfe226287214df0982d612ff33ebf005dbbb646279647e5987da661f2d9fe6b8a4516d3b29dd6cb3a708641265861251abb682e8e90540cf
   languageName: node
   linkType: hard
 
@@ -18149,6 +18160,13 @@ __metadata:
   version: 5.25.3
   resolution: "undici-types@npm:5.25.3"
   checksum: 9a57f2dd6fecb2d0f7d9b86aa6f417609a0ffc73247a95aa25c078cf36cbbfe6c164b63b8dace7ad01126e6510f284c185b69c78356bb1d6b279f195acffcaf4
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: ec8f41aa4359d50f9b59fa61fe3efce3477cc681908c8f84354d8567bb3701fafdddf36ef6bff307024d3feb42c837cf6f670314ba37fc8145e219560e473d14
   languageName: node
   linkType: hard
 
