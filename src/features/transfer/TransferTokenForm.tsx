@@ -60,24 +60,24 @@ export function TransferTokenForm({
 
   const onSubmitForm = async (values: TransferFormValues) => {
     try {
-        if (transferType === 'deposit') {
-            console.log('Deposit button clicked for the first time');
-            // Only attempt to resolve if it looks like a Celestial domain (contains a dot)
-            if (values.recipient.includes('.')) {
-                const celestialsData = await getCelestialsData(values.recipient);
-                
-                if (celestialsData?.address) {
-                    console.log('celstials resolved, setting recipient to', celestialsData.address);
-                    values.recipient = celestialsData.address;
-                    console.log('recipient set to', values.recipient);
-                    setRecipientValue(celestialsData.address);
-                }
-            }
+      if (transferType === 'deposit') {
+        console.log('Deposit button clicked for the first time');
+        // Only attempt to resolve if it looks like a Celestial domain (contains a dot)
+        if (values.recipient.includes('.')) {
+          const celestialsData = await getCelestialsData(values.recipient);
+
+          if (celestialsData?.address) {
+            console.log('celstials resolved, setting recipient to', celestialsData.address);
+            values.recipient = celestialsData.address;
+            console.log('recipient set to', values.recipient);
+            setRecipientValue(celestialsData.address);
+          }
         }
-        
-        setIsReview(true);
+      }
+
+      setIsReview(true);
     } catch (error) {
-        // Handle error silently
+      // Handle error silently
     }
   };
 
@@ -112,9 +112,9 @@ export function TransferTokenForm({
 
             <div className="px-10 pt-4 pb-8 gap-y-3 flex flex-col">
               <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
-              <RecipientSection 
-                isReview={isReview} 
-                transferType={transferType} 
+              <RecipientSection
+                isReview={isReview}
+                transferType={transferType}
                 recipientValue={recipientValue}
                 setRecipientValue={setRecipientValue}
               />
@@ -278,13 +278,13 @@ function AmountSection({
   );
 }
 
-function RecipientSection({ 
-  isReview, 
+function RecipientSection({
+  isReview,
   transferType,
   recipientValue,
-  setRecipientValue
-}: { 
-  isReview: boolean; 
+  setRecipientValue,
+}: {
+  isReview: boolean;
   transferType: string;
   recipientValue: string;
   setRecipientValue: (value: string) => void;

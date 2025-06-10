@@ -135,7 +135,10 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
-      assert(connectedChainId === expectedChainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
+      assert(
+        connectedChainId === expectedChainId,
+        `Wallet not on chain ${chainName} (ChainMismatchError)`,
+      );
 
       logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
