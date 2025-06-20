@@ -24,7 +24,7 @@ export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
   return (
     <header
       className={`pt-3 pb-2 w-full border-b-[0.5px] ${
-        isSideBarOpen ? 'border-white/[.5]' : 'border-white'
+        isSideBarOpen ? 'border-[#8c8d8f]/[.5]' : 'border-[#8c8d8f]'
       } h-[96px]`}
       onClick={handleHeaderClick}
     >

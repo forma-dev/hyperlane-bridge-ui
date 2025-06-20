@@ -37,11 +37,11 @@ export function SolidButton(
   let baseColors, border, onHover, onActive, style;
 
   if (color === 'button') {
-    baseColors = 'bg-button text-white';
-    onHover = 'hover:bg-[#FF9797]';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-button-active text-black';
+    onHover = 'hover:bg-button-hover';
+    border = 'border-b border-solid border-black';
     style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
+      borderBottomWidth: '0.5px',
     };
   } else if (color === 'navBarButton') {
     baseColors = 'bg-button text-white';
@@ -58,6 +58,10 @@ export function SolidButton(
     baseColors = 'bg-red-600 text-white';
     onHover = 'hover:bg-red-500';
     onActive = 'active:bg-red-400';
+    border = 'border-b border-solid border-black';
+    style = {
+      borderBottomWidth: '0.5px',
+    };
   } else if (color === 'white') {
     baseColors = 'bg-white text-black';
     onHover = 'hover:bg-gray-100';
@@ -67,16 +71,18 @@ export function SolidButton(
     onHover = 'hover:bg-gray-200';
     onActive = 'active:bg-gray-300';
   } else if (color === 'black') {
-    baseColors = 'bg-black text-secondary';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-white text-black';
+    border = 'border border-solid border-black';
+    onHover = 'hover:bg-bg-button-main-disabled';
     style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
+      borderWidth: '0.5px',
     };
   } else if (color === 'disabled') {
-    baseColors = 'bg-black text-secondary cursor-auto opacity-40';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-bg-button-main-disabled text-black opacity-50 cursor-not-allowed';
+    border = 'border-b border-solid border-black';
+    onHover = 'hover:bg-bg-button-main-disabled';
     style = {
-      boxShadow: '2px 3px 0px 0px #FFFFFF',
+      borderBottomWidth: '0.5px',
     };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
@@ -90,7 +96,9 @@ export function SolidButton(
       type={type ?? 'button'}
       disabled={disabled ?? false}
       title={title}
-      className={allClasses}
+      className={`py-2 px-4 flex items-center justify-center font-bold text-sm leading-6 whitespace-nowrap transition-all duration-200 rounded-card ${allClasses} ${
+        disabled ? 'disabled:bg-gray-300 disabled:text-gray-500' : ''
+      }`}
       {...passThruProps}
     >
       {icon ? (

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
-import ChevronIcon from '../../images/icons/chevron-down.svg';
+import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TransferFormValues } from '../transfer/types';
 import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
 
@@ -179,52 +179,41 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         <button
           type="button"
           name={field.name}
-          className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
-            disabled ? styles.disabled : styles.enabled
-          } ${isLocked ? styles.locked : ''}`}
+          className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
+            disabled
+              ? 'cursor-not-allowed bg-[#B5B5B5]'
+              : isLocked
+              ? 'bg-white cursor-not-allowed'
+              : 'bg-white cursor-pointer hover:border-border-hover'
+          }`}
           onClick={onClick}
         >
-          <div className="flex items-center justify-between px-3">
-            <div className="flex items-center">
-              <ChainLogo chainName={field.value} size={32} />
-              <div className="flex flex-col justify-center items-start">
+          <div className="flex items-center">
+            <ChainLogo chainName={field.value} size={32} />
+            <div className="flex flex-col justify-center items-start ml-2">
+              <span
+                className={`font-bold text-base leading-5 ${
+                  disabled ? 'text-secondary' : 'text-black'
+                }`}
+              >
+                {getChainDisplayName(field.value, true)}
+              </span>
+              {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
+                (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
                 <span
-                  className={`font-medium text-base leading-5 ml-2 ${
-                    disabled
-                      ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                      : 'bg-black text-white'
+                  className={`font-medium text-xs leading-5 ${
+                    disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
-                  {getChainDisplayName(field.value, true)}
+                  {formatAddress(account?.address || '')}
                 </span>
-                {(cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                (evmChainIds.includes(chainId) && evmNumReady > 0) ? (
-                  <span
-                    className={`font-medium text-xs leading-5 ml-2 ${
-                      disabled
-                        ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                        : 'bg-black text-white'
-                    }`}
-                  >
-                    {formatAddress(account?.address || '')}
-                  </span>
-                ) : (
-                  <></>
-                )}
-              </div>
-            </div>
-            <div>
-              {!disabled && !isLocked && (
-                <Image
-                  src={ChevronIcon}
-                  className="text-secondary"
-                  width={12}
-                  height={6}
-                  alt=""
-                  style={{ filter: 'invert(1)' }}
-                />
               )}
             </div>
+          </div>
+          <div>
+            {!disabled && !isLocked && (
+              <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
+            )}
           </div>
         </button>
         {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
@@ -233,13 +222,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onClickEnv()}
-            className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
-              disabled ? styles.disabled : styles.enabled
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border-b border-solid border-black transition-colors duration-200 ${
+              disabled ? 'cursor-not-allowed bg-gray-300' : 'bg-arrow hover:bg-[#FB9241]'
             }`}
+            style={{ borderBottomWidth: '0.5px' }}
           >
             <span
-              className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
-                disabled ? 'text-disabled' : 'text-black'
+              className={`w-full font-plex font-bold text-14px leading-6 px-2 py-4 ${
+                disabled ? 'text-secondary' : 'text-black'
               }`}
             >
               CONNECT
@@ -253,15 +243,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onDisconnectEnv()}
-            className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
-              disabled ? styles.disabled : styles.enabled
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
+              disabled
+                ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
+                : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
             }`}
           >
-            <span
-              className={`w-full font-plex font-bold text-sm leading-6  ${
-                disabled ? 'text-disabled' : 'text-white'
-              }`}
-            >
+            <span className="w-full font-plex font-bold text-14px leading-6 px-2 py-4">
               DISCONNECT
             </span>
           </button>

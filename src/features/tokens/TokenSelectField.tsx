@@ -1,12 +1,13 @@
+import { Listbox } from '@headlessui/react';
 import { useField, useFormikContext } from 'formik';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { IToken } from '@hyperlane-xyz/sdk';
 
+import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TokenIcon } from '../../components/icons/TokenIcon';
 import { getIndexForToken, getTokenByIndex, getWarpCore } from '../../context/context';
-import ChevronIcon from '../../images/icons/chevron-down.svg';
 import { TransferFormValues } from '../transfer/types';
 
 import { TokenListModal } from './TokenListModal';
@@ -64,6 +65,7 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
         disabled={isAutomaticSelection || disabled}
         onClick={onClickField}
         isAutomatic={isAutomaticSelection}
+        isReview={disabled}
       />
       <TokenListModal
         isOpen={isModalOpen}
@@ -81,50 +83,54 @@ function TokenButton({
   disabled,
   onClick,
   isAutomatic,
+  isReview,
 }: {
   token?: IToken;
   disabled?: boolean;
   onClick?: () => void;
   isAutomatic?: boolean;
+  isReview?: boolean;
 }) {
+  const getStyleClass = () => {
+    if (isReview) return styles.disabled;
+    if (isAutomatic) return styles.locked;
+    return styles.enabled;
+  };
+
   return (
     <button
       type="button"
-      className={`${styles.base} ${disabled ? styles.disabled : styles.enabled}`}
+      className={`${styles.base} ${getStyleClass()}`}
       onClick={onClick}
-      style={{
-        borderLeft: '2px solid #6E6E6E',
-        borderRadius: 'none',
-      }}
+      disabled={disabled}
     >
       <div className="flex items-center">
         {token ? (
           <>
-            <TokenIcon token={token} size={24} />
-            <span className={`text-primary ml-2 text-xl font-medium leading-5 ${!token?.symbol}`}>
-              {token?.symbol || ''}
-            </span>
+            <TokenIcon token={token} size={28} />
+            <div className="flex flex-col items-start ml-2">
+              <span
+                className={`font-bold text-base leading-5 ${
+                  disabled ? 'text-secondary' : 'text-black'
+                }`}
+              >
+                {token.symbol}
+              </span>
+            </div>
           </>
         ) : (
           <span className={`text-secondary text-xl font-medium leading-5`}>Select</span>
         )}
       </div>
-      {!isAutomatic && (
-        <Image
-          src={ChevronIcon}
-          className="ml-2 texr-secondary"
-          width={12}
-          height={8}
-          alt=""
-          style={{ filter: 'invert(1)' }}
-        />
-      )}
+
+      {!isAutomatic && <ChevronIcon className="w-4 h-4 text-arrow" />}
     </button>
   );
 }
 
 const styles = {
-  base: 'text-secondary px-3.5 py-2 flex items-center justify-center outline-none transition-colors duration-500 absolute right-0.5 top-2 bottom-0.5 px-2',
-  enabled: 'bg-black',
-  disabled: 'cursor-default pointer-events-none',
+  base: 'h-full text-secondary px-3 py-2 flex items-center justify-between outline-none',
+  enabled: 'bg-transparent',
+  locked: 'cursor-default pointer-events-none bg-transparent',
+  disabled: 'cursor-not-allowed bg-[#B5B5B5]',
 };

@@ -1,5 +1,9 @@
 import { Field, FieldAttributes } from 'formik';
+import { ComponentProps } from 'react';
 import { ChangeEvent, InputHTMLAttributes } from 'react';
+
+const defaultInputClasses =
+  'w-full py-2 px-3 border border-border rounded-card focus:outline-none transition-colors duration-200';
 
 export function TextField({ classes, ...props }: FieldAttributes<{ classes: string }>) {
   return <Field className={`${defaultInputClasses} ${classes}`} {...props} />;
@@ -8,23 +12,28 @@ export function TextField({ classes, ...props }: FieldAttributes<{ classes: stri
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
   onChange: (v: string) => void;
   classes?: string;
+  error?: boolean;
 };
 
-export function TextInput({ onChange, classes, ...props }: InputProps) {
+export function TextInput({
+  onChange,
+  classes,
+  error,
+  ...props
+}: InputProps & { error?: boolean }) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e?.target?.value || '');
   };
   return (
     <input
+      id={props.name}
       type="text"
+      className={`${defaultInputClasses} ${error ? 'border-red-500' : 'border-border'} ${classes}`}
+      name={props.name}
+      value={props.value}
       autoComplete="off"
       onChange={handleChange}
-      className={`${defaultInputClasses} ${classes}`}
       {...props}
     />
   );
 }
-
-const defaultInputClasses =
-  //  'mt-1.5 px-2.5 py-2 text-sm rounded-full border border-mint-300 focus:border-mint-500 disabled:bg-gray-150 outline-none transition-all duration-300';
-  'mt-1.5 px-2.5 py-2 text-sm outline-none';
