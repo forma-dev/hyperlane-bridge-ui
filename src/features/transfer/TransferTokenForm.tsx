@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
-import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
