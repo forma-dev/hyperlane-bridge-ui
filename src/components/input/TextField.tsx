@@ -1,5 +1,4 @@
 import { Field, FieldAttributes } from 'formik';
-import { ComponentProps } from 'react';
 import { ChangeEvent, InputHTMLAttributes } from 'react';
 
 const defaultInputClasses =

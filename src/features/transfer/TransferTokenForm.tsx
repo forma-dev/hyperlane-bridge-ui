@@ -294,7 +294,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [cosmosAddress, evmAddress, values.destination]);
+  }, [cosmosAddress, evmAddress, values.destination, accounts, setFieldValue]);
 
   return (
     <div>
@@ -513,7 +513,7 @@ function SelfButton({
       setIsConnecting(false);
       setFieldValue('recipient', address);
     }
-  }, [address, isConnecting]);
+  }, [address, isConnecting, setFieldValue]);
 
   return (
     <button

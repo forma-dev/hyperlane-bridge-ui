@@ -1,8 +1,6 @@
 import Image from 'next/image';
 
-import { links } from '../../consts/links';
 import ArrowRight from '../../images/icons/arrow-right.svg';
-import { Color } from '../../styles/Color';
 import { Card } from '../layout/Card';
 
 export function RelayCard() {
