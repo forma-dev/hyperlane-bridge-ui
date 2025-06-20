@@ -5,7 +5,12 @@ import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
-import { useAccounts, useConnectFns, useDisconnectFns, useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
+import {
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
+} from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
@@ -36,10 +41,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const chainId = field.value;
   const account = useAccountAddressForChain(chainId);
 
-  const handleChange = useCallback((newChainId: ChainName) => {
-    helpers.setValue(newChainId);
-    onChange?.(newChainId);
-  }, [helpers, onChange]);
+  const handleChange = useCallback(
+    (newChainId: ChainName) => {
+      helpers.setValue(newChainId);
+      onChange?.(newChainId);
+    },
+    [helpers, onChange],
+  );
 
   const onClick = () => {
     if (!disabled && !isLocked) setIsModalOpen(true);

@@ -103,12 +103,15 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const { sendTransactionAsync } = useSendTransaction();
   const config = useConfig();
 
-  const onSwitchNetwork = useCallback(async (chainName: ChainName) => {
-    const chainId = getChainMetadata(chainName).chainId as number;
-    await switchChainAsync({ chainId });
-    // Some wallets seem to require a brief pause after switch
-    await sleep(2000);
-  }, [switchChainAsync]);
+  const onSwitchNetwork = useCallback(
+    async (chainName: ChainName) => {
+      const chainId = getChainMetadata(chainName).chainId as number;
+      await switchChainAsync({ chainId });
+      // Some wallets seem to require a brief pause after switch
+      await sleep(2000);
+    },
+    [switchChainAsync],
+  );
 
   // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
   // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
