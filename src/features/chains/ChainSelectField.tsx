@@ -1,12 +1,16 @@
 import { useField, useFormikContext } from 'formik';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
-import { TransferFormValues } from '../transfer/types';
-import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
+import {
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
+} from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
@@ -25,43 +29,29 @@ const evmChainIds = ['forma', 'sketchpad'];
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
-  const { setFieldValue } = useFormikContext<TransferFormValues>();
-  const [chainId, setChainId] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   const { accounts } = useAccounts();
+  const connectFns = useConnectFns();
+  const disconnectFns = useDisconnectFns();
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
-  let account: any = '';
-  if (cosmosChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Cosmos].addresses.find(
-      (address) => address.chainName === chainId,
-    );
-  }
-  if (evmChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Ethereum].addresses[0];
-  }
+  const chainId = field.value;
+  const account = useAccountAddressForChain(chainId);
 
-  const handleChange = (newChainId: ChainName) => {
-    helpers.setValue(newChainId);
-    // Reset other fields on chain change
-    setFieldValue('recipient', '');
-    setFieldValue('amount', '');
-    setFieldValue('tokenIndex', 0);
-    setChainId(newChainId);
-
-    if (onChange) onChange(newChainId);
-  };
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const handleChange = useCallback(
+    (newChainId: ChainName) => {
+      helpers.setValue(newChainId);
+      onChange?.(newChainId);
+    },
+    [helpers, onChange],
+  );
 
   const onClick = () => {
     if (!disabled && !isLocked) setIsModalOpen(true);
   };
-
-  const connectFns = useConnectFns();
-  const disconnectFns = useDisconnectFns();
 
   const onDisconnectEnv = () => async () => {
     let env: string = '';
@@ -165,7 +155,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (transferType == 'deposit' && label == 'From') {
       handleChange('celestia');
     }
-  }, [transferType, label]);
+  }, [transferType, label, handleChange]);
 
   return (
     <div className="flex flex-col items-start w-full">
@@ -204,7 +194,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                     disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
-                  {formatAddress(account?.address || '')}
+                  {formatAddress(account || '')}
                 </span>
               )}
             </div>
