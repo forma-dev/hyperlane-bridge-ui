@@ -1,4 +1,4 @@
-import { useField, useFormikContext } from 'formik';
+import { useField } from 'formik';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
