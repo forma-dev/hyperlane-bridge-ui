@@ -1,5 +1,4 @@
 import { useField, useFormikContext } from 'formik';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
@@ -265,10 +264,3 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     </div>
   );
 }
-
-const styles = {
-  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
-  enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
-  disabled: 'cursor-default bg-disabled pointer-events-none',
-  locked: 'cursor-default pointer-events-none',
-};

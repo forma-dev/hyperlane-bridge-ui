@@ -1,6 +1,4 @@
-import { Listbox } from '@headlessui/react';
 import { useField, useFormikContext } from 'formik';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { IToken } from '@hyperlane-xyz/sdk';

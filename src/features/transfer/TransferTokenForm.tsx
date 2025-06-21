@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { Form, Formik, useFormikContext } from 'formik';
-import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
@@ -202,8 +201,6 @@ function AmountSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { balance } = useOriginBalance(values);
 
-  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
-
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
@@ -262,7 +259,6 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
   const defaultPlaceholder = '0x123456...';
   const [placeholder, setPlaceholder] = useState<string>(defaultPlaceholder);
   const [recipientValue, setRecipientValue] = useState<string>('');
-  const [amountFieldFocused, setAmountFieldFocused] = useState(false);
 
   const handleRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRecipientValue(event.target.value);
