@@ -107,11 +107,7 @@ function TokenButton({
           <>
             <TokenIcon token={token} size={28} />
             <div className="flex flex-col items-start ml-2">
-              <span
-                className="font-bold text-base leading-5 text-black"
-              >
-                {token.symbol}
-              </span>
+              <span className="font-bold text-base leading-5 text-black">{token.symbol}</span>
             </div>
           </>
         ) : (
