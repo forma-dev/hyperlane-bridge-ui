@@ -221,7 +221,7 @@ function AmountSection({
             id="amount-withdraw"
             name="amount"
             placeholder="0.00"
-            classes={`w-full h-full p-3 border-none bg-transparent placeholder:text-secondary focus:outline-none ${
+            classes={`w-full h-full p-3 border-none bg-transparent placeholder:text-disabled focus:outline-none ${
               isReview ? '!text-secondary cursor-not-allowed' : 'text-black'
             }`}
             type="number"
@@ -277,14 +277,13 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
       account = accounts[ProtocolType.Ethereum].addresses[0];
     }
 
+    // Only auto-populate if wallet is connected, don't clear if no wallet
     if (account?.address) {
       setFieldValue('recipient', account?.address);
       setRecipientValue(account?.address);
-    } else {
-      setFieldValue('recipient', '');
-      setRecipientValue('');
     }
 
+    // Update placeholder based on destination chain
     if (['celestia', 'stride'].includes(values.destination)) {
       setPlaceholder(`${values.destination}1234...`);
     } else {
@@ -303,7 +302,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
         <TextField
           name="recipient"
           placeholder={placeholder}
-          classes={`w-full h-12 py-2 px-4 rounded-card border-solid border font-bold ${
+          classes={`w-full h-12 py-2 px-4 rounded-card border-solid border font-bold placeholder:text-disabled ${
             isReview
               ? 'bg-[#B5B5B5] text-secondary cursor-not-allowed'
               : 'bg-white text-black hover:border-border-hover'

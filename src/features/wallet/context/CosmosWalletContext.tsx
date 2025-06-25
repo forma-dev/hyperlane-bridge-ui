@@ -18,8 +18,8 @@ import { getCosmosKitConfig } from '../../chains/metadata';
 
 const theme = extendTheme({
   fonts: {
-    heading: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
-    body: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
+    heading: `'Plus Jakarta Sans', 'Helvetica', 'sans-serif'`,
+    body: `'Plus Jakarta Sans', 'Helvetica', 'sans-serif'`,
   },
 });
 

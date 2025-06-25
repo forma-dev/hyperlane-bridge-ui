@@ -217,7 +217,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             style={{ borderBottomWidth: '0.5px' }}
           >
             <span
-              className={`w-full font-plex font-bold text-14px leading-6 px-2 py-4 ${
+              className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
                 disabled ? 'text-secondary' : 'text-black'
               }`}
             >
@@ -238,7 +238,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                 : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
             }`}
           >
-            <span className="w-full font-plex font-bold text-14px leading-6 px-2 py-4">
+            <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
               DISCONNECT
             </span>
           </button>

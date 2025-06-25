@@ -99,8 +99,8 @@
   /* ===== TYPOGRAPHY ===== */
   --font-family-sans: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
   --font-family-serif: 'Garamond', serif;
-  --font-family-mono: 'Courier New', monospace;
-  --font-family-plex: 'IBM Plex Mono';
+  --font-family-mono: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
+  --font-family-plex: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
 
   --font-family: 'Plus Jakarta Sans', sans-serif;
 

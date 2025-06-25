@@ -55,11 +55,12 @@ export function SolidButton(
     onHover = 'hover:bg-green-600';
     onActive = 'active:bg-green-700';
   } else if (color === 'red') {
-    baseColors = 'bg-red-600 text-white';
-    onHover = 'hover:bg-red-500';
-    onActive = 'active:bg-red-400';
+    baseColors = 'text-white';
+    onHover = 'hover:opacity-90';
+    onActive = 'active:opacity-80';
     border = 'border-b border-solid border-black';
     style = {
+      backgroundColor: '#FF4D3D',
       borderBottomWidth: '0.5px',
     };
   } else if (color === 'white') {
