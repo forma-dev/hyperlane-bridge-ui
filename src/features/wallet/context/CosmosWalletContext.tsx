@@ -9,6 +9,7 @@ import { wallets as keplrWallets } from '@cosmos-kit/keplr-extension';
 import { wallets as leapWallets } from '@cosmos-kit/leap-extension';
 import { wallets as leapSnapWallets } from '@cosmos-kit/leap-metamask-cosmos-snap';
 import { ChainProvider } from '@cosmos-kit/react';
+import '@interchain-ui/react/styles';
 import { PropsWithChildren } from 'react';
 
 import { APP_DESCRIPTION, APP_NAME, APP_URL } from '../../../consts/app';
@@ -70,10 +71,10 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
           isLazy: true,
         }}
         modalTheme={{
-          defaultTheme: 'dark',
+          defaultTheme: 'light',
           overrides: {
             'connect-modal': {
-              bg: { dark: '#000', light: '#000' },
+              bg: { dark: '#000000', light: '#FFFFFF' },
             },
           },
         }}
