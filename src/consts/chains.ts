@@ -98,9 +98,9 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
           decimals: 6,
           denom: 'utia',
         },
-        grpcUrls: [{ http: 'https://public-celestia-grpc.numia.xyz' }],
-        restUrls: [{ http: 'https://public-celestia-lcd.numia.xyz' }],
-        rpcUrls: [{ http: 'https://public-celestia-rpc.numia.xyz' }],
+        grpcUrls: [{ http: 'https://celestia-grpc.publicnode.com' }],
+        restUrls: [{ http: 'https://celestia-rest.publicnode.com' }],
+        rpcUrls: [{ http: 'https://celestia-rpc.publicnode.com' }],
         blockExplorers: [
           {
             name: 'MintScan',
