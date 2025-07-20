@@ -1,0 +1,158 @@
+:root {
+  /* ===== COLORS ===== */
+
+  /* Primary Colors */
+  --color-primary-black: #010101;
+  --color-primary-white: #ffffff;
+  --color-primary-gray: #6b7280;
+  --color-light-gray: #d0d4db;
+  --color-primary-blue: #025aa1;
+  --color-primary-pink: #d631b9;
+  --color-primary-beige: #f1ede9;
+  --color-primary-red: #bf1b15;
+  --color-primary-mint: #31d99c;
+
+  /* UI Colors */
+  --color-button: #ff6f00;
+  --color-button-active: #ff6f00;
+  --color-button-hover: #f5ad76;
+  --color-accent: #ffc901;
+  --color-background: #ebebeb;
+  --color-card: #ffffff;
+  --color-sidebar: #0e0e0e;
+  --color-hover-form: #1e1e1e;
+  --color-toast: #1e1e1e;
+  --color-disabled: #1f1f1f;
+  --color-border: #8c8d8f;
+  --color-border-hover: #000000;
+  --color-arrow: #ff6f00;
+
+  /* Text Colors */
+  --color-text-primary: #000000;
+  --color-text-secondary: #595959;
+  --color-text-disabled: #8c8d8f;
+  --color-text-error: #ff6f00;
+
+  /* Gray Scale */
+  --color-gray-150: #ebedf0;
+  --color-gray-250: #404040;
+  --color-gray-350: #6b6b6b;
+
+  /* Blue Scale */
+  --color-blue-50: #e6edf9;
+  --color-blue-100: #cddcf4;
+  --color-blue-200: #a7c2ec;
+  --color-blue-300: #82a8e4;
+  --color-blue-400: #5385d2;
+  --color-blue-500: #2362c0;
+  --color-blue-600: #1d4685;
+  --color-blue-700: #162a4a;
+  --color-blue-800: #11213b;
+  --color-blue-900: #0d192c;
+
+  /* Red Scale */
+  --color-red-100: #ebbab8;
+  --color-red-200: #df8d8a;
+  --color-red-300: #d25f5b;
+  --color-red-400: #c5312c;
+  --color-red-500: #bf1b15;
+  --color-red-600: #ab1812;
+  --color-red-700: #85120e;
+  --color-red-800: #5f0d0a;
+  --color-red-900: #390806;
+
+  /* Green Scale */
+  --color-green-50: #d3e3db;
+  --color-green-100: #bed5c9;
+  --color-green-200: #93baa6;
+  --color-green-300: #679f82;
+  --color-green-400: #3c835e;
+  --color-green-500: #27764d;
+  --color-green-600: #236a45;
+  --color-green-700: #1f5e3d;
+  --color-green-800: #17462e;
+  --color-green-900: #0f2f1e;
+
+  /* Pink Scale */
+  --color-pink-50: #faeaf8;
+  --color-pink-100: #f2c1ea;
+  --color-pink-200: #ea98dc;
+  --color-pink-300: #e26ece;
+  --color-pink-400: #da45c0;
+  --color-pink-500: #d631b9;
+  --color-pink-600: #c02ca6;
+  --color-pink-700: #952281;
+  --color-pink-800: #6b185c;
+  --color-pink-900: #400e37;
+
+  /* Mint Scale */
+  --color-mint-50: #e5faf4;
+  --color-mint-100: #b3f1e0;
+  --color-mint-200: #88e9ce;
+  --color-mint-300: #5ce1bc;
+  --color-mint-400: #47ddb3;
+  --color-mint-500: #31d99c;
+  --color-mint-600: #25cb9d;
+  --color-mint-700: #21b68c;
+  --color-mint-800: #1ea07b;
+
+  /* ===== TYPOGRAPHY ===== */
+  --font-family-sans: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
+  --font-family-serif: 'Garamond', serif;
+  --font-family-mono: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
+  --font-family-plex: 'Plus Jakarta Sans', 'Helvetica', sans-serif;
+
+  --font-family: 'Plus Jakarta Sans', sans-serif;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* ===== SPACING ===== */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-88: 22rem;
+  --spacing-100: 26rem;
+  --spacing-112: 28rem;
+  --spacing-128: 32rem;
+  --spacing-144: 36rem;
+
+  /* ===== BORDER RADIUS ===== */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius-default: 0.35rem;
+  --radius-md: 0.45rem;
+  --radius-lg: 0.55rem;
+  --radius-card: 5px;
+  --radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  --shadow-dropdown: 2px 4px 0px 0px rgba(255, 255, 255, 0.4);
+
+  /* ===== BLUR ===== */
+  --blur-xs: 3px;
+
+  /* ===== BREAKPOINTS ===== */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ===== MAX WIDTHS ===== */
+  --max-width-xl-1: 39.5rem;
+
+  /* ===== FONT SIZES ===== */
+  --font-size-xs: 0.75rem;
+  --font-size-balance: 12px;
+  --font-size-thin: 0.625rem;
+  --font-size-md: 0.95rem;
+
+  --color-bg-button-main-disabled: #dadada;
+  --color-bg-button-hover: #fb9241;
+}

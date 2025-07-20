@@ -79,7 +79,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({
 
   return (
     <SolidButton type={type} color={color} onClick={onClick} classes={classes}>
-      <div className="ml-1.5 text-white text-sm leading-6 font-bold font-plex">{content}</div>
+      <div className="ml-1.5 text-black text-sm leading-6 font-bold font-sans">{content}</div>
     </SolidButton>
   );
 }

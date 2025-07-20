@@ -73,7 +73,7 @@ export function WalletControlBar({ isSideBarOpen = false, setIsSideBarOpen }: Pr
             >
               {numReady}
             </div>
-            <div className="flex flex-col mx-3 items-start font-plex">
+            <div className="flex flex-col mx-3 items-start font-sans">
               <div className="text-xs leading-6 text-white">WALLETS</div>
               <div className="text-sm font-bold leading-6 text-white">{`${numReady} CONNECTED`}</div>
             </div>

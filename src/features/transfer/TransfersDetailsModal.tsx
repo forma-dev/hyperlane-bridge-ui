@@ -132,7 +132,7 @@ export function TransfersDetailsModal({
         </div>
       )}
 
-      <div className="mt-4 p-3 flex items-center justify-center w-full bg-toast">
+      <div className="mt-4 p-3 flex items-center justify-center w-full bg-gray-150 border border-gray-400 rounded-md">
         <TokenIcon token={token} size={30} />
         <div className="ml-2 flex items items-baseline">
           <span className="text-xl font-medium">{amount}</span>
@@ -191,16 +191,16 @@ export function TransfersDetailsModal({
         </div>
       ) : (
         <div className="py-4 flex flex-col justify-center items-center">
-          <Spinner white={true} />
+          <Spinner />
           <div
-            className={`mt-5 text-white font-semibold text-sm text-center ${
-              status === TransferStatus.Failed ? 'text-red-600' : 'text-white'
+            className={`mt-5 font-semibold text-sm text-center ${
+              isFailed ? 'text-red-600' : 'text-primary'
             }`}
           >
             {statusDescription}
           </div>
           {showSignWarning && (
-            <div className="mt-3 text-white font-semibold text-sm text-center">
+            <div className="mt-3 text-primary font-semibold text-sm text-center">
               If your wallet does not show a transaction request, please try the transfer again.
             </div>
           )}

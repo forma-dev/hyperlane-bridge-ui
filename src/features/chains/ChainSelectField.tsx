@@ -1,13 +1,16 @@
-import { useField, useFormikContext } from 'formik';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useField } from 'formik';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
-import ChevronIcon from '../../images/icons/chevron-down.svg';
-import { TransferFormValues } from '../transfer/types';
-import { useAccounts, useConnectFns, useDisconnectFns } from '../wallet/hooks/multiProtocol';
+import { ChevronIcon } from '../../components/icons/ChevronIcon';
+import {
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
+} from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
@@ -26,43 +29,29 @@ const evmChainIds = ['forma', 'sketchpad'];
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
-  const { setFieldValue } = useFormikContext<TransferFormValues>();
-  const [chainId, setChainId] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   const { accounts } = useAccounts();
+  const connectFns = useConnectFns();
+  const disconnectFns = useDisconnectFns();
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
-  let account: any = '';
-  if (cosmosChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Cosmos].addresses.find(
-      (address) => address.chainName === chainId,
-    );
-  }
-  if (evmChainIds.includes(chainId)) {
-    account = accounts[ProtocolType.Ethereum].addresses[0];
-  }
+  const chainId = field.value;
+  const account = useAccountAddressForChain(chainId);
 
-  const handleChange = (newChainId: ChainName) => {
-    helpers.setValue(newChainId);
-    // Reset other fields on chain change
-    setFieldValue('recipient', '');
-    setFieldValue('amount', '');
-    setFieldValue('tokenIndex', 0);
-    setChainId(newChainId);
-
-    if (onChange) onChange(newChainId);
-  };
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const handleChange = useCallback(
+    (newChainId: ChainName) => {
+      helpers.setValue(newChainId);
+      onChange?.(newChainId);
+    },
+    [helpers, onChange],
+  );
 
   const onClick = () => {
     if (!disabled && !isLocked) setIsModalOpen(true);
   };
-
-  const connectFns = useConnectFns();
-  const disconnectFns = useDisconnectFns();
 
   const onDisconnectEnv = () => async () => {
     let env: string = '';
@@ -166,7 +155,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     if (transferType == 'deposit' && label == 'From') {
       handleChange('celestia');
     }
-  }, [transferType, label]);
+  }, [transferType, label, handleChange]);
 
   return (
     <div className="flex flex-col items-start w-full">
@@ -179,52 +168,41 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         <button
           type="button"
           name={field.name}
-          className={`mt-1.5 w-9/12 border-[1px] border-solid border-[#8C8D8F] h-[48px] ${
-            disabled ? styles.disabled : styles.enabled
-          } ${isLocked ? styles.locked : ''}`}
+          className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
+            disabled
+              ? 'cursor-not-allowed bg-[#B5B5B5]'
+              : isLocked
+              ? 'bg-white cursor-not-allowed'
+              : 'bg-white cursor-pointer hover:border-border-hover'
+          }`}
           onClick={onClick}
         >
-          <div className="flex items-center justify-between px-3">
-            <div className="flex items-center">
-              <ChainLogo chainName={field.value} size={32} />
-              <div className="flex flex-col justify-center items-start">
+          <div className="flex items-center">
+            <ChainLogo chainName={field.value} size={32} />
+            <div className="flex flex-col justify-center items-start ml-2">
+              <span
+                className={`font-bold text-base leading-5 ${
+                  disabled ? 'text-secondary' : 'text-black'
+                }`}
+              >
+                {getChainDisplayName(field.value, true)}
+              </span>
+              {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
+                (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
                 <span
-                  className={`font-medium text-base leading-5 ml-2 ${
-                    disabled
-                      ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                      : 'bg-black text-white'
+                  className={`font-medium text-xs leading-5 ${
+                    disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
-                  {getChainDisplayName(field.value, true)}
+                  {formatAddress(account || '')}
                 </span>
-                {(cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                (evmChainIds.includes(chainId) && evmNumReady > 0) ? (
-                  <span
-                    className={`font-medium text-xs leading-5 ml-2 ${
-                      disabled
-                        ? 'bg-disabled text-disabled cursor-default pointer-events-none'
-                        : 'bg-black text-white'
-                    }`}
-                  >
-                    {formatAddress(account?.address || '')}
-                  </span>
-                ) : (
-                  <></>
-                )}
-              </div>
-            </div>
-            <div>
-              {!disabled && !isLocked && (
-                <Image
-                  src={ChevronIcon}
-                  className="text-secondary"
-                  width={12}
-                  height={6}
-                  alt=""
-                  style={{ filter: 'invert(1)' }}
-                />
               )}
             </div>
+          </div>
+          <div>
+            {!disabled && !isLocked && (
+              <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
+            )}
           </div>
         </button>
         {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
@@ -233,13 +211,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onClickEnv()}
-            className={`w-4/12 border-[0.5px] border-white border-solid bg-white p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFFCC] ${
-              disabled ? styles.disabled : styles.enabled
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border-b border-solid border-black transition-colors duration-200 ${
+              disabled ? 'cursor-not-allowed bg-gray-300' : 'bg-arrow hover:bg-[#FB9241]'
             }`}
+            style={{ borderBottomWidth: '0.5px' }}
           >
             <span
-              className={`w-full font-plex font-bold text-sm leading-6 px-2 py-4 ${
-                disabled ? 'text-disabled' : 'text-black'
+              className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
+                disabled ? 'text-secondary' : 'text-black'
               }`}
             >
               CONNECT
@@ -253,15 +232,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             disabled={disabled}
             type="button"
             onClick={onDisconnectEnv()}
-            className={`w-4/12 border-[0.5px] px-2 border-[#8C8D8F] border-solid  p-2 h-[48px] flex items-center justify-center hover:bg-[#FFFFFF1A] ${
-              disabled ? styles.disabled : styles.enabled
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
+              disabled
+                ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
+                : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
             }`}
           >
-            <span
-              className={`w-full font-plex font-bold text-sm leading-6  ${
-                disabled ? 'text-disabled' : 'text-white'
-              }`}
-            >
+            <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
               DISCONNECT
             </span>
           </button>
@@ -277,10 +254,3 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     </div>
   );
 }
-
-const styles = {
-  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
-  enabled: 'cursor-pointer hover:border-white hover:border-[1px] bg-form',
-  disabled: 'cursor-default bg-disabled pointer-events-none',
-  locked: 'cursor-default pointer-events-none',
-};

@@ -11,6 +11,7 @@ import { EvmWalletContext } from '../features/wallet/context/EvmWalletContext';
 import { SolanaWalletContext } from '../features/wallet/context/SolanaWalletContext';
 import '../styles/fonts.css';
 import '../styles/globals.css';
+import '../styles/theme.css';
 import { useIsSsr } from '../utils/ssr';
 
 export default function App({ Component, pageProps }: AppProps) {
