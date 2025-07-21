@@ -1,16 +1,18 @@
 import { useField } from 'formik';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
+import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
-  useDisconnectFns,
+    useAccountAddressForChain,
+    useAccounts,
+    useConnectFns,
+    useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
+import { mapRelayChainToInternalName } from './utils';
 
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName } from './utils';
@@ -24,9 +26,6 @@ type Props = {
   transferType: string;
 };
 
-const cosmosChainIds = ['stride', 'celestia'];
-const evmChainIds = ['forma', 'sketchpad'];
-
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +34,32 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const { accounts } = useAccounts();
   const connectFns = useConnectFns();
   const disconnectFns = useDisconnectFns();
+  const { relayChains } = useRelaySupportedChains();
+
+  // Dynamic chain protocol detection
+  const chainProtocols = useMemo(() => {
+    const cosmos: string[] = [];
+    const evm: string[] = [];
+    
+    // Add hardcoded known chains for this bridge
+    cosmos.push('stride', 'celestia');
+    evm.push('forma', 'sketchpad');
+    
+    // Add Relay chains (all EVM-based) - using centralized mapping
+    relayChains.forEach(chain => {
+      if (chain.name && chain.depositEnabled && !chain.disabled) {
+        const internalName = mapRelayChainToInternalName(chain.name);
+        
+        // Only add if not already present
+        if (internalName && !evm.includes(internalName) && !cosmos.includes(internalName)) {
+          evm.push(internalName);
+        }
+      }
+    });
+    
+    return { cosmos, evm };
+  }, [relayChains]);
+
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
@@ -55,7 +80,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const onDisconnectEnv = () => async () => {
     let env: string = '';
-    if (cosmosChainIds.includes(chainId)) {
+    if (chainProtocols.cosmos.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
       env = ProtocolType.Ethereum;
@@ -67,7 +92,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const onClickEnv = () => async () => {
     let env: string = '';
-    if (cosmosChainIds.includes(chainId)) {
+    if (chainProtocols.cosmos.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
       env = ProtocolType.Ethereum;
@@ -179,16 +204,16 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         >
           <div className="flex items-center">
             <ChainLogo chainName={field.value} size={32} />
-            <div className="flex flex-col justify-center items-start ml-2">
+            <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
               <span
-                className={`font-bold text-base leading-5 ${
+                className={`font-bold text-base leading-5 truncate w-full ${
                   disabled ? 'text-secondary' : 'text-black'
                 }`}
               >
-                {getChainDisplayName(field.value, true)}
+                {getChainDisplayName(field.value, false)}
               </span>
-              {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+              {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
+                (chainProtocols.evm.includes(chainId) && evmNumReady > 0)) && (
                 <span
                   className={`font-medium text-xs leading-5 ${
                     disabled ? 'text-secondary' : 'text-black'
@@ -205,8 +230,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             )}
           </div>
         </button>
-        {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady === 0)) && (
+        {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady === 0) ||
+          (chainProtocols.evm.includes(chainId) && evmNumReady === 0)) && (
           <button
             disabled={disabled}
             type="button"
@@ -226,8 +251,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           </button>
         )}
 
-        {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+        {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
+          (chainProtocols.evm.includes(chainId) && evmNumReady > 0)) && (
           <button
             disabled={disabled}
             type="button"

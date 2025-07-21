@@ -20,7 +20,7 @@ import { TransfersDetailsModal } from '../transfer/TransfersDetailsModal';
 import { TransferContext } from '../transfer/types';
 
 import { useAccounts, useDisconnectFns } from './hooks/multiProtocol';
-import { AccountInfo } from './hooks/types';
+import { AccountInfo, ChainAddress } from './hooks/types';
 
 export function SideBarMenu({
   onConnectWallet,
@@ -114,7 +114,7 @@ export function SideBarMenu({
                       acc.addresses.map((addr, j) => {
                         //if (addr?.chainName?.includes(PLACEHOLDER_COSMOS_CHAIN)) return null;
                         return (
-                          <AccountSummary key={`${i}-${j}`} account={acc} address={addr.address} />
+                          <AccountSummary key={`${i}-${j}`} account={acc} chainAddress={addr} />
                         );
                       }),
                     )}
@@ -176,26 +176,31 @@ export function SideBarMenu({
   );
 }
 
-function AccountSummary({ address }: { account: AccountInfo; address: Address }) {
+function AccountSummary({ account, chainAddress }: { account: AccountInfo; chainAddress: ChainAddress }) {
   const onClickCopy = async () => {
-    if (!address) return;
-    await tryClipboardSet(address);
+    if (!chainAddress.address) return;
+    await tryClipboardSet(chainAddress.address);
     toast.success('Address copied to clipboard', { autoClose: 2000 });
   };
 
   return (
     <button
-      key={address}
+      key={chainAddress.address}
       onClick={onClickCopy}
       className={`${styles.btn} bg-white border-[0.5px] border-border border-solid`}
     >
       <div className="shrink-0">
-        <Identicon address={address} size={40} />
+        <Identicon address={chainAddress.address} size={40} />
       </div>
       <div className="flex flex-col mx-3 items-start">
-        {/* <div className="text-gray-800 text-sm font-normal">{account.connectorName || 'Wallet'}</div> */}
+        {/* Show full chain name if available */}
+        {chainAddress.chainName && (
+          <div className="text-gray-600 text-xs font-medium">
+            {getChainDisplayName(chainAddress.chainName, false)}
+          </div>
+        )}
         <div className="text-black font-medium leading-6 text-sm truncate w-64">
-          {address ? address : 'Unknown'}
+          {chainAddress.address ? chainAddress.address : 'Unknown'}
         </div>
       </div>
     </button>
@@ -232,11 +237,11 @@ function TransferSummary({
             </div>
             <div className="mt-1 flex flex-row items-center">
               <span className="text-black text-sm font-medium leading-6 tracking-wide">
-                {getChainDisplayName(origin, true)}
+                {getChainDisplayName(origin, false)}
               </span>
               <Image className="mx-1" src={ArrowRightIcon} width={10} height={10} alt="" />
               <span className="text-black text-sm font-medium leading-6 tracking-wide">
-                {getChainDisplayName(destination, true)}
+                {getChainDisplayName(destination, false)}
               </span>
             </div>
           </div>

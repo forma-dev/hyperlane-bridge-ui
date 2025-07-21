@@ -7,6 +7,7 @@ import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TokenIcon } from '../../components/icons/TokenIcon';
 import { getIndexForToken, getTokenByIndex, getWarpCore } from '../../context/context';
 import { TransferFormValues } from '../transfer/types';
+import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 
 import { TokenListModal } from './TokenListModal';
 
@@ -16,34 +17,188 @@ type Props = {
   setIsNft: (value: boolean) => void;
 };
 
+// Helper function to determine if a chain is a Relay chain
+function isRelayChain(chainName: string, relayChains: any[]): boolean {
+  if (!chainName) return false;
+  
+  // First check against known Relay chain names (hardcoded list)
+  const knownRelayChains = ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche'];
+  if (knownRelayChains.includes(chainName.toLowerCase())) {
+    return true;
+  }
+  
+  // Also check against the dynamic Relay chains list if available
+  if (relayChains?.length) {
+    return relayChains.some(chain => {
+      const internalName = mapRelayChainToInternalName(chain.name);
+      return internalName && internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
+    });
+  }
+  
+  return false;
+}
+
+// Helper function to map Relay chain names to internal names
+function mapRelayChainToInternalName(relayChainName: string): string | null {
+  const nameMapping: Record<string, string> = {
+    'ethereum': 'ethereum',
+    'polygon': 'polygon', 
+    'arbitrum-one': 'arbitrum',
+    'arbitrum': 'arbitrum',
+    'optimism': 'optimism',
+    'base': 'base',
+    'binance-smart-chain': 'bsc',
+    'bnb-smart-chain': 'bsc',
+    'bsc': 'bsc',
+    'avalanche': 'avalanche',
+    'avalanche-c-chain': 'avalanche',
+  };
+  
+  return nameMapping[relayChainName.toLowerCase()] || null;
+}
+
+// Get native token info for Relay chains
+function getNativeTokenInfo(chainName: string) {
+  const nativeTokens: Record<string, { symbol: string; decimals: number; name: string }> = {
+    'ethereum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
+    'polygon': { symbol: 'MATIC', decimals: 18, name: 'Polygon' },
+    'arbitrum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
+    'optimism': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
+    'base': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
+    'bsc': { symbol: 'BNB', decimals: 18, name: 'BNB' },
+    'avalanche': { symbol: 'AVAX', decimals: 18, name: 'Avalanche' },
+  };
+  
+  return nativeTokens[chainName.toLowerCase()];
+}
+
 export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   const { values } = useFormikContext<TransferFormValues>();
   const [field, , helpers] = useField<number | undefined>(name);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAutomaticSelection, setIsAutomaticSelection] = useState(false);
+  const { relayChains } = useRelaySupportedChains();
 
   const { origin, destination } = values;
+  
+  console.log('🚀 TOKEN SELECTION TRIGGERED:', { origin, destination });
+  
   useEffect(() => {
-    const tokensWithRoute = getWarpCore().getTokensForRoute(origin, destination);
-    let newFieldValue: number | undefined;
-    let newIsAutomatic: boolean;
-    // No tokens available for this route
-    if (tokensWithRoute.length === 0) {
-      newFieldValue = undefined;
-      newIsAutomatic = true;
-    }
-    // Exactly one found
-    else if (tokensWithRoute.length === 1) {
-      newFieldValue = getIndexForToken(tokensWithRoute[0]);
-      newIsAutomatic = true;
-      // Multiple possibilities
+    console.log('🎲 TOKEN SELECTION START:', { origin, destination, relayChains: relayChains.length });
+    
+    // Check if origin is a Relay chain
+    const isOriginRelay = isRelayChain(origin, relayChains);
+    const isDestinationRelay = isRelayChain(destination, relayChains);
+    
+    // Check if this is a Relay transfer (either origin or destination is Relay)
+    const isRelayTransfer = isOriginRelay || isDestinationRelay;
+    
+    if (isOriginRelay) {
+      // For pure Relay chains, automatically select the native token
+      // Since we don't have actual Hyperlane tokens for Relay chains,
+      // we'll use a special token index of -1 to indicate Relay native token
+      console.log('📍 SELECTING RELAY NATIVE TOKEN for', origin);
+      helpers.setValue(-1);
+      setIsAutomaticSelection(true);
+      setIsNft(false); // Native tokens are never NFTs
+    } else if ((origin === 'forma' || origin === 'sketchpad') && isDestinationRelay) {
+      // Special case: Forma/Sketchpad withdrawals to Relay chains
+      // We need to find the Forma TIA token in the Hyperlane token list
+      const warpCore = getWarpCore();
+      const tokens = warpCore.tokens;
+      
+      console.log('📍 SEARCHING FOR FORMA TIA TOKEN:', { 
+        origin, 
+        totalTokens: tokens.length,
+        allFormaTokens: tokens.filter(t => t.chainName === origin).map(t => ({
+          symbol: t.symbol,
+          protocol: t.protocol,
+          address: t.addressOrDenom
+        }))
+      });
+      
+      // For Forma withdrawals, we need to find the EVM TIA token, not the Cosmos one
+      // Try multiple strategies to find the correct TIA token
+      let formaToken = tokens.find(token => 
+        token.chainName === origin && 
+        token.symbol === 'TIA' && 
+        token.protocol === 'ethereum'  // Prioritize EVM protocol for Forma
+      );
+      
+      if (!formaToken) {
+        // Fallback 1: Look for any EVM token with TIA in name
+        formaToken = tokens.find(token => 
+          token.chainName === origin && 
+          token.name?.toLowerCase().includes('tia') &&
+          token.protocol === 'ethereum'
+        );
+      }
+      
+      if (!formaToken) {
+        // Fallback 2: Look for any TIA token (any protocol)
+        formaToken = tokens.find(token => 
+          token.chainName === origin && token.symbol === 'TIA'
+        );
+      }
+      
+      if (!formaToken) {
+        // Fallback 3: Look for any token on Forma
+        formaToken = tokens.find(token => token.chainName === origin);
+      }
+      
+      if (formaToken) {
+        console.log('🎯 SELECTED TIA TOKEN for token selection:', { 
+          symbol: formaToken.symbol, 
+          protocol: formaToken.protocol,
+          address: formaToken.addressOrDenom,
+          chainName: formaToken.chainName
+        });
+        helpers.setValue(getIndexForToken(formaToken));
+        setIsAutomaticSelection(true);
+        setIsNft(false);
+      } else {
+        console.log('❌ NO TIA TOKEN FOUND for token selection');
+        helpers.setValue(undefined);
+        setIsAutomaticSelection(true);
+      }
     } else {
-      newFieldValue = undefined;
-      newIsAutomatic = false;
+      // For pure Hyperlane chains, use the existing logic
+      const tokensWithRoute = getWarpCore().getTokensForRoute(origin, destination);
+      let newFieldValue: number | undefined;
+      let newIsAutomatic: boolean;
+      
+      console.log('📍 USING STANDARD HYPERLANE LOGIC:', {
+        origin,
+        destination, 
+        tokensWithRoute: tokensWithRoute.length,
+        tokens: tokensWithRoute.map(t => ({ symbol: t.symbol, protocol: t.protocol, address: t.addressOrDenom }))
+      });
+      
+      // No tokens available for this route
+      if (tokensWithRoute.length === 0) {
+        newFieldValue = undefined;
+        newIsAutomatic = true;
+      }
+      // Exactly one found
+      else if (tokensWithRoute.length === 1) {
+        newFieldValue = getIndexForToken(tokensWithRoute[0]);
+        newIsAutomatic = true;
+        console.log('✅ AUTO-SELECTED TOKEN:', {
+          symbol: tokensWithRoute[0].symbol,
+          protocol: tokensWithRoute[0].protocol,
+          address: tokensWithRoute[0].addressOrDenom
+        });
+      } 
+      // Multiple possibilities
+      else {
+        newFieldValue = undefined;
+        newIsAutomatic = false;
+      }
+      
+      helpers.setValue(newFieldValue);
+      setIsAutomaticSelection(newIsAutomatic);
     }
-    helpers.setValue(newFieldValue);
-    setIsAutomaticSelection(newIsAutomatic);
-  }, [origin, destination, helpers]);
+  }, [origin, destination, helpers, relayChains, setIsNft]);
 
   const onSelectToken = (newToken: IToken) => {
     // Set the token address value in formik state
@@ -56,10 +211,16 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
     if (!disabled && !isAutomaticSelection) setIsModalOpen(true);
   };
 
+  // Get the token to display
+  const displayToken = field.value === -1 ? null : getTokenByIndex(field.value);
+  const nativeTokenInfo = field.value === -1 ? getNativeTokenInfo(origin) : null;
+
   return (
     <>
       <TokenButton
-        token={getTokenByIndex(field.value)}
+        token={displayToken}
+        nativeTokenInfo={nativeTokenInfo}
+        _chainName={origin}
         disabled={isAutomaticSelection || disabled}
         onClick={onClickField}
         isAutomatic={isAutomaticSelection}
@@ -78,12 +239,16 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
 
 function TokenButton({
   token,
+  nativeTokenInfo,
+  _chainName,
   disabled,
   onClick,
   isAutomatic,
   isReview,
 }: {
-  token?: IToken;
+  token?: IToken | null;
+  nativeTokenInfo?: { symbol: string; decimals: number; name: string } | null;
+  _chainName?: string;
   disabled?: boolean;
   onClick?: () => void;
   isAutomatic?: boolean;
@@ -93,6 +258,29 @@ function TokenButton({
     if (isReview) return styles.disabled;
     if (isAutomatic) return styles.locked;
     return styles.enabled;
+  };
+
+  // Custom token icon for Relay native tokens
+  const renderNativeTokenIcon = (tokenInfo: { symbol: string; decimals: number; name: string }) => {
+    // Create a simple token icon based on the symbol
+    const getTokenColor = (symbol: string) => {
+      const colors: Record<string, string> = {
+        'ETH': '#627EEA',
+        'MATIC': '#8247E5', 
+        'BNB': '#F3BA2F',
+        'AVAX': '#E84142',
+      };
+      return colors[symbol] || '#6B7280';
+    };
+
+    return (
+      <div 
+        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+        style={{ backgroundColor: getTokenColor(tokenInfo.symbol) }}
+      >
+        {tokenInfo.symbol.slice(0, 3)}
+      </div>
+    );
   };
 
   return (
@@ -108,6 +296,13 @@ function TokenButton({
             <TokenIcon token={token} size={28} />
             <div className="flex flex-col items-start ml-2">
               <span className="font-bold text-base leading-5 text-black">{token.symbol}</span>
+            </div>
+          </>
+        ) : nativeTokenInfo ? (
+          <>
+            {renderNativeTokenIcon(nativeTokenInfo)}
+            <div className="flex flex-col items-start ml-2">
+              <span className="font-bold text-base leading-5 text-black">{nativeTokenInfo.symbol}</span>
             </div>
           </>
         ) : (
@@ -126,3 +321,4 @@ const styles = {
   locked: 'cursor-default pointer-events-none bg-transparent',
   disabled: 'cursor-not-allowed bg-[#B5B5B5]',
 };
+

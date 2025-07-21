@@ -10,9 +10,36 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 // Sometimes useful to disable this during development
 const ENABLE_CSP_HEADER = true;
-const FRAME_SRC_HOSTS = ['https://*.walletconnect.com', 'https://*.walletconnect.org','https://*.solflare.com'];
+const FRAME_SRC_HOSTS = [
+  'https://*.walletconnect.com', 
+  'https://*.walletconnect.org',
+  'https://*.solflare.com',
+  'https://*.privy.io'
+];
 const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
-const IMG_SRC_HOSTS = ['https://*.walletconnect.com'];
+const IMG_SRC_HOSTS = [
+  'https://*.walletconnect.com',
+  'https://*.relay.network',
+  'https://*.relay.link',
+  'https://assets.relay.network',
+  'https://assets.relay.link',
+  'https://cdn.relay.network',
+  'https://*.amazonaws.com',
+  'https://*.cloudfront.net',
+  'https://*.googleapis.com',
+  'https://*.githubusercontent.com',
+  'https://*.chainlist.org',
+  'https://*.trustwallet.com',
+  'https://*.coingecko.com',
+  'https://*.coinmarketcap.com',
+  'https://*.reservoir.tools',
+  'https://*.reservoir0x.com',
+  'https://raw.githubusercontent.com',
+  'https://s3.amazonaws.com',
+  'https://assets.coingecko.com',
+  'https://logos.covalenthq.com',
+  'https:',  // Temporarily allow all HTTPS images for debugging
+];
 const cspHeader = `
   default-src 'self';
   script-src 'self'${isDev ? " 'unsafe-eval'" : ''};

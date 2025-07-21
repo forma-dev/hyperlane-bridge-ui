@@ -2,6 +2,7 @@ import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PropsWithChildren, useMemo } from 'react';
+import { arbitrum, avalanche, base, bsc, mainnet, optimism, polygon } from 'wagmi/chains';
 
 import { forma } from '../../../config/chain';
 import { wagmiConfig } from '../../../config/wagmi';
@@ -35,7 +36,7 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
           createOnLogin: 'users-without-wallets',
         },
         defaultChain: forma,
-        supportedChains: [forma],
+        supportedChains: [forma, mainnet, polygon, arbitrum, optimism, base, bsc, avalanche],
       }}
     >
       <QueryClientProvider client={queryClient}>

@@ -8,6 +8,7 @@ import { ErrorBoundary } from '../components/errors/ErrorBoundary';
 import { AppLayout } from '../components/layout/AppLayout';
 import { CosmosWalletContext } from '../features/wallet/context/CosmosWalletContext';
 import { EvmWalletContext } from '../features/wallet/context/EvmWalletContext';
+import { RelayProvider } from '../features/wallet/context/RelayContext';
 import { SolanaWalletContext } from '../features/wallet/context/SolanaWalletContext';
 import '../styles/fonts.css';
 import '../styles/globals.css';
@@ -24,6 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary>
+      <RelayProvider>
       <EvmWalletContext>
         <SolanaWalletContext>
           <CosmosWalletContext>
@@ -34,6 +36,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </CosmosWalletContext>
         </SolanaWalletContext>
       </EvmWalletContext>
+      </RelayProvider>
     </ErrorBoundary>
   );
 }
