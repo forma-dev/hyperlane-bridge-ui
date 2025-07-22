@@ -99,12 +99,6 @@ export function isRelayChain(chain: ChainNameOrId): boolean {
   return chainStr.toLowerCase() in RELAY_CHAIN_METADATA || relayChains.includes(chainStr.toLowerCase());
 }
 
-// Helper function to check if a chain is a Relay chain
-function isRelayChainLegacy(chain: ChainNameOrId): boolean {
-  const chainStr = typeof chain === 'string' ? chain : chain.toString();
-  return chainStr in RELAY_CHAIN_METADATA;
-}
-
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';

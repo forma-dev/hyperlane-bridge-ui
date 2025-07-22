@@ -7,7 +7,6 @@ import {
 
 // Environment-based configuration
 const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet'
-const isDevelopment = process.env.NODE_ENV === 'development'
 
 // Simplified base configuration - let SDK handle chains
 const relayConfig = {
@@ -23,12 +22,7 @@ export function initializeRelayClient() {
   if (!relayClient) {
     relayClient = createClient(relayConfig)
     
-    if (isDevelopment) {
-      console.log('Relay client initialized with default chains:', {
-        network: isMainnet ? 'mainnet' : 'testnet',
-        apiUrl: relayConfig.baseApiUrl
-      })
-    }
+
   }
   
   return relayClient
@@ -39,13 +33,10 @@ export async function setupDynamicChains() {
   try {
     const dynamicChains = await configureDynamicChains()
     
-    if (isDevelopment) {
-      console.log('Dynamic chains configured from Relay:', dynamicChains.length)
-    }
+
     
     return dynamicChains
   } catch (error) {
-    console.error('Failed to configure dynamic chains:', error)
     // Return empty array if dynamic configuration fails
     return []
   }

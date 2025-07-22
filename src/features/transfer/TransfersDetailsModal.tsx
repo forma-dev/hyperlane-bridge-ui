@@ -138,7 +138,7 @@ export function TransfersDetailsModal({
     try {
       return getWarpCore().findToken(origin, originTokenAddressOrDenom);
     } catch (error) {
-      console.warn(`Could not find token for ${origin} with address ${originTokenAddressOrDenom}:`, error);
+      // console.warn(`Could not find token for ${origin} with address ${originTokenAddressOrDenom}:`, error);
       return null;
     }
   }, [isRelayTransfer, origin, originTokenAddressOrDenom]);

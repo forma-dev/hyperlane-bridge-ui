@@ -176,7 +176,7 @@ export function SideBarMenu({
   );
 }
 
-function AccountSummary({ account, chainAddress }: { account: AccountInfo; chainAddress: ChainAddress }) {
+function AccountSummary({ account: _account, chainAddress }: { account: AccountInfo; chainAddress: ChainAddress }) {
   const onClickCopy = async () => {
     if (!chainAddress.address) return;
     await tryClipboardSet(chainAddress.address);

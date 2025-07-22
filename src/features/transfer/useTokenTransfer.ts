@@ -252,7 +252,7 @@ async function executeRelayTransfer({
   const { origin, destination, amount, recipient } = values;
   
   const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
+  // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
   
   logger.debug('Preparing Relay transfer transaction(s):', {
     type: isDeposit ? 'DEPOSIT' : 'WITHDRAWAL',
@@ -435,11 +435,11 @@ async function executeRelayTransfer({
             
             logger.debug('DEBUG: sendTransaction returned:', result);
             
-            const { hash, confirm } = result;
+            const { hash } = result;
             logger.debug('DEBUG: Transaction sent successfully, hash:', hash);
             hashes.push(hash);
             
-            const receipt = await confirm();
+            // const receipt = await confirm();
             logger.debug(`Relay transaction confirmed, hash:`, hash);
             
             // Show success toast

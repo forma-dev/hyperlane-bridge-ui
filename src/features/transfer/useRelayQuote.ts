@@ -30,7 +30,7 @@ export function useRelayQuote({
   originChain,
   destinationChain,
   amount,
-  transferType,
+  transferType: _transferType,
   relayChains,
   user,
   recipient,
@@ -42,30 +42,7 @@ export function useRelayQuote({
   const { getQuote, isReady } = useRelayContext();
   
   const getRelayQuoteData = useCallback(async () => {
-    console.log('🔄 RELAY QUOTE TRIGGERED:', {
-      isReady,
-      originChain,
-      destinationChain,
-      amount,
-      user,
-      recipient,
-      transferType,
-      hasRecipient: !!recipient,
-      recipientLength: recipient?.length
-    });
-
     if (!isReady || !originChain || !destinationChain || !amount || parseFloat(amount) === 0 || !user || !recipient) {
-      console.log('❌ RELAY QUOTE EARLY RETURN:', {
-        isReady,
-        hasOriginChain: !!originChain,
-        hasDestinationChain: !!destinationChain,
-        hasAmount: !!amount,
-        amountValue: parseFloat(amount),
-        hasUser: !!user,
-        hasRecipient: !!recipient,
-        recipientValue: recipient,
-        recipientLength: recipient?.length
-      });
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -98,39 +75,18 @@ export function useRelayQuote({
 
     // For withdrawals: Check if destination chain is supported by Relay  
     if (isWithdrawal) {
-      console.log('🔍 WITHDRAWAL CHECK:', {
-        destinationChain,
-        relayChains: relayChains.map(c => ({ name: c.name, depositEnabled: c.depositEnabled, disabled: c.disabled }))
-      });
-      
       const relayChain = relayChains.find(chain => {
         const internalName = mapRelayChainToInternalName(chain.name);
         const matches = internalName === destinationChain.toLowerCase();
         const isEnabled = chain.depositEnabled && !chain.disabled;
         
-        console.log('🔍 CHAIN CHECK:', {
-          chainName: chain.name,
-          internalName,
-          destinationChain: destinationChain.toLowerCase(),
-          matches,
-          isEnabled,
-          depositEnabled: chain.depositEnabled,
-          disabled: chain.disabled
-        });
-        
         return matches && isEnabled;
       });
 
       if (!relayChain) {
-        console.log('❌ WITHDRAWAL CHAIN NOT SUPPORTED:', {
-          destinationChain,
-          availableChains: relayChains.map(c => c.name)
-        });
         setEstimatedOutput(null);
         setError(null);
         return;
-      } else {
-        console.log('✅ WITHDRAWAL CHAIN SUPPORTED:', relayChain);
       }
     }
     
@@ -142,17 +98,7 @@ export function useRelayQuote({
     const isFormaInvolved = originChain === 'forma' || originChain === 'sketchpad' || 
                            destinationChain === 'forma' || destinationChain === 'sketchpad';
     
-    logger.debug('Transfer direction:', { 
-      isDeposit, 
-      isWithdrawal, 
-      originChain, 
-      destinationChain,
-      isFormaInvolved 
-    });
-    
     if (isFormaInvolved) {
-      logger.debug('Forma-involved transfer detected - checking if supported by Relay...');
-      
       // Check supported chains
       try {
         const { getRelaySupportedChains } = await import('./relayApi');
@@ -162,12 +108,9 @@ export function useRelayQuote({
         );
         
         if (!formaSupported) {
-          logger.debug('Forma not found in supported chains:', supportedChains.map(c => ({ id: c.chainId, name: c.name })));
           setError('Forma chain is not yet supported by Relay API');
           setIsLoading(false);
           return;
-        } else {
-          logger.debug('Forma found in supported chains:', formaSupported);
         }
       } catch (error) {
         logger.error('Failed to check supported chains:', error);
@@ -213,11 +156,7 @@ export function useRelayQuote({
         recipient,
       });
 
-      console.log('✅ RELAY QUOTE SUCCESS:', {
-        quote,
-        outputAmount: quote.details?.currencyOut?.amount,
-        outputDecimals: quote.details?.currencyOut?.currency?.decimals
-      });
+
 
       // Parse the quote response to extract the estimated output
       const outputAmount = quote.details.currencyOut.amount;
@@ -247,7 +186,7 @@ export function useRelayQuote({
     } finally {
       setIsLoading(false);
     }
-  }, [isReady, originChain, destinationChain, amount, transferType, relayChains, user, recipient, getQuote]);
+  }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote]);
 
   useEffect(() => {
     getRelayQuoteData();

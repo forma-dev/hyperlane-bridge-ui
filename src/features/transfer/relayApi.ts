@@ -14,7 +14,6 @@ export async function getRelaySupportedChains(): Promise<any[]> {
       throw new Error(`Failed to fetch Relay chains: ${response.status}`);
     }
     const data = await response.json();
-    logger.debug('Relay supported chains:', data);
     
     // Extract chains array from response object
     const chains = data.chains || data;
@@ -66,9 +65,45 @@ export interface RelayQuoteResponse {
     }>;
   }>;
   fees: {
-    gas: string;
-    relayer: string;
-    app: string;
+    gas: {
+      currency: {
+        symbol: string;
+        name: string;
+        decimals: number;
+        chainId: number;
+        address: string;
+      };
+      amount: string;
+      amountFormatted: string;
+      amountUsd: string;
+      minimumAmount: string;
+    };
+    relayer: {
+      currency: {
+        symbol: string;
+        name: string;
+        decimals: number;
+        chainId: number;
+        address: string;
+      };
+      amount: string;
+      amountFormatted: string;
+      amountUsd: string;
+      minimumAmount: string;
+    };
+    app: {
+      currency: {
+        symbol: string;
+        name: string;
+        decimals: number;
+        chainId: number;
+        address: string;
+      };
+      amount: string;
+      amountFormatted: string;
+      amountUsd: string;
+      minimumAmount: string;
+    };
   };
   details: {
     rate: string;
@@ -481,12 +516,6 @@ export function getNativeCurrency(chainName: string): string {
   };
 
   const tokenAddress = currencyMap[chainName.toLowerCase()] || '0x0000000000000000000000000000000000000000';
-  
-  console.log('🪙 CURRENCY FOR RELAY API:', {
-    chainName,
-    tokenAddress,
-    isNativeToken: tokenAddress === '0x0000000000000000000000000000000000000000'
-  });
 
   return tokenAddress;
 } 

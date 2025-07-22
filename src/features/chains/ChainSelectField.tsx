@@ -1,21 +1,20 @@
-import { useField } from 'formik';
+import { useField, useFormikContext } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
+import { TextField } from '../../components/input/TextField';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    useAccountAddressForChain,
-    useAccounts,
-    useConnectFns,
-    useDisconnectFns,
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
-import { mapRelayChainToInternalName } from './utils';
-
 import { ChainSelectListModal } from './ChainSelectModal';
-import { formatAddress, getChainDisplayName } from './utils';
+import { formatAddress, getChainDisplayName, mapRelayChainToInternalName } from './utils';
 
 type Props = {
   name: string;
@@ -65,6 +64,13 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const chainId = field.value;
   const account = useAccountAddressForChain(chainId);
+
+  // Check if this is deposit "To" field or withdrawal "To" field and wallet is not connected
+  const isDepositTo = transferType === 'deposit' && name === 'destination';
+  const isWithdrawTo = transferType === 'withdraw' && name === 'destination';
+  const isWalletConnected = (chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
+                           (chainProtocols.evm.includes(chainId) && evmNumReady > 0);
+  const shouldShowInputField = (isDepositTo || isWithdrawTo) && !isWalletConnected;
 
   const handleChange = useCallback(
     (newChainId: ChainName) => {
@@ -182,6 +188,18 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     }
   }, [transferType, label, handleChange]);
 
+  const { values, setFieldValue } = useFormikContext<any>();
+  const recipientValue = values.recipient;
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Auto-set recipient address when wallet is connected for deposit "To" or withdrawal "To" field
+  useEffect(() => {
+    if ((isDepositTo || isWithdrawTo) && isWalletConnected && account && !recipientValue) {
+
+      setFieldValue('recipient', account);
+    }
+  }, [isDepositTo, isWithdrawTo, isWalletConnected, account, recipientValue, setFieldValue, transferType, name, chainId]);
+
   return (
     <div className="flex flex-col items-start w-full">
       <div className="flex justify-between pr-1">
@@ -190,48 +208,81 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         </label>
       </div>
       <div className="w-full flex gap-[12px] justify-between items-end">
-        <button
-          type="button"
-          name={field.name}
-          className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
-            disabled
-              ? 'cursor-not-allowed bg-[#B5B5B5]'
-              : isLocked
-              ? 'bg-white cursor-not-allowed'
-              : 'bg-white cursor-pointer hover:border-border-hover'
-          }`}
-          onClick={onClick}
-        >
-          <div className="flex items-center">
-            <ChainLogo chainName={field.value} size={32} />
-            <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
-              <span
-                className={`font-bold text-base leading-5 truncate w-full ${
-                  disabled ? 'text-secondary' : 'text-black'
-                }`}
-              >
-                {getChainDisplayName(field.value, false)}
-              </span>
-              {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
-                (chainProtocols.evm.includes(chainId) && evmNumReady > 0)) && (
+        {shouldShowInputField ? (
+                      <div className="mt-1.5 w-9/12 h-[48px] rounded-card flex items-center px-3 border border-solid border-border bg-white relative">
+              <ChainLogo chainName={field.value} size={32} />
+              <div className="flex-1 h-full flex items-center relative">
+                <TextField
+                  name="recipient"
+                  placeholder=""
+                  classes="w-full h-full border-none bg-transparent focus:outline-none text-black"
+                  disabled={disabled}
+                  style={{ 
+                    padding: '12px', 
+                    textAlign: 'left', 
+                    fontSize: '16px', 
+                    lineHeight: '20px',
+                  }}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                />
+                {!recipientValue && !isFocused && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-start pointer-events-none text-disabled text-left"
+                    style={{ fontSize: '16px', lineHeight: '20px', paddingLeft: '12px' }}
+                  >
+                    <div>
+                      Connect Wallet<br />or Enter Address
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+        ) : (
+          // Show normal chain selection button
+          <button
+            type="button"
+            name={field.name}
+            className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
+              disabled
+                ? 'cursor-not-allowed bg-[#B5B5B5]'
+                : isLocked
+                ? 'bg-white cursor-not-allowed'
+                : 'bg-white cursor-pointer hover:border-border-hover'
+            }`}
+            onClick={onClick}
+          >
+            <div className="flex items-center">
+              <ChainLogo chainName={field.value} size={32} />
+              <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
                 <span
-                  className={`font-medium text-xs leading-5 ${
+                  className={`font-bold text-base leading-5 truncate w-full text-left ${
                     disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
-                  {formatAddress(account || '')}
+                  {getChainDisplayName(field.value, false)}
                 </span>
+                {isWalletConnected && (
+                  <span
+                    className={`font-medium text-xs leading-5 text-left ${
+                      disabled ? 'text-secondary' : 'text-black'
+                    }`}
+                  >
+                    {formatAddress(account || '')}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div>
+              {!disabled && !isLocked && (
+                <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
               )}
             </div>
-          </div>
-          <div>
-            {!disabled && !isLocked && (
-              <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
-            )}
-          </div>
-        </button>
-        {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady === 0) ||
-          (chainProtocols.evm.includes(chainId) && evmNumReady === 0)) && (
+          </button>
+        )}
+        
+        {shouldShowInputField ? (
+          // Show CONNECT button for input field
           <button
             disabled={disabled}
             type="button"
@@ -249,24 +300,46 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
               CONNECT
             </span>
           </button>
-        )}
+        ) : (
+          // Show normal connect/disconnect buttons
+          <>
+            {!isWalletConnected && (
+              <button
+                disabled={disabled}
+                type="button"
+                onClick={onClickEnv()}
+                className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border-b border-solid border-black transition-colors duration-200 ${
+                  disabled ? 'cursor-not-allowed bg-gray-300' : 'bg-arrow hover:bg-[#FB9241]'
+                }`}
+                style={{ borderBottomWidth: '0.5px' }}
+              >
+                <span
+                  className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
+                    disabled ? 'text-secondary' : 'text-black'
+                  }`}
+                >
+                  CONNECT
+                </span>
+              </button>
+            )}
 
-        {((chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
-          (chainProtocols.evm.includes(chainId) && evmNumReady > 0)) && (
-          <button
-            disabled={disabled}
-            type="button"
-            onClick={onDisconnectEnv()}
-            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
-              disabled
-                ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
-                : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
-            }`}
-          >
-            <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
-              DISCONNECT
-            </span>
-          </button>
+            {isWalletConnected && (
+              <button
+                disabled={disabled}
+                type="button"
+                onClick={onDisconnectEnv()}
+                className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
+                  disabled
+                    ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
+                    : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
+                }`}
+              >
+                <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
+                  DISCONNECT
+                </span>
+              </button>
+            )}
+          </>
         )}
       </div>
 

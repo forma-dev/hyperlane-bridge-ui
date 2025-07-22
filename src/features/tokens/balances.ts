@@ -55,21 +55,6 @@ function mapRelayChainToInternalName(relayChainName: string): string | null {
   return nameMapping[relayChainName.toLowerCase()] || null;
 }
 
-// Get native token info for Relay chains
-function getNativeTokenInfo(chainName: string) {
-  const nativeTokens: Record<string, { symbol: string; decimals: number; name: string }> = {
-    'ethereum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'polygon': { symbol: 'MATIC', decimals: 18, name: 'Polygon' },
-    'arbitrum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'optimism': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'base': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'bsc': { symbol: 'BNB', decimals: 18, name: 'BNB' },
-    'avalanche': { symbol: 'AVAX', decimals: 18, name: 'Avalanche' },
-  };
-  
-  return nativeTokens[chainName.toLowerCase()];
-}
-
 // Get chain ID for supported Relay chains
 function getChainIdForRelayChain(chainName: string): number | undefined {
   const chainIdMapping: Record<string, number> = {
@@ -158,23 +143,13 @@ export function useBalance(chain?: ChainName, token?: IToken, address?: Address)
   };
 }
 
-export function useOriginBalance(values: TransferFormValues) {
+export function useOriginBalance(values: TransferFormValues, _transferType?: string) {
   const { origin, destination, tokenIndex } = values;
   const address = useAccountAddressForChain(origin);
   const token = getTokenByIndex(tokenIndex);
   const { relayChains } = useRelaySupportedChains();
   
-  console.log('🔍 BALANCE DEBUG:', {
-    origin,
-    destination,
-    tokenIndex,
-    address,
-    hasToken: !!token,
-    tokenSymbol: token?.symbol,
-    tokenProtocol: token?.protocol,
-    tokenAddress: token?.addressOrDenom,
-    tokenChainName: token?.chainName
-  });
+
   
   // Check if this is a Relay chain
   const isRelayOrigin = isRelayChain(origin, relayChains);
@@ -200,7 +175,7 @@ export function useOriginBalance(values: TransferFormValues) {
   if (origin === 'forma' || origin === 'sketchpad') {
     const tokens = getTokens();
     
-    console.log('🚨 FORMA TOKEN OVERRIDE - Finding correct EVM TIA token for', origin);
+
     
     // ALWAYS find the EVM TIA token for Forma, regardless of what tokenIndex says
     let correctTiaToken = tokens.find(t => 
@@ -227,16 +202,7 @@ export function useOriginBalance(values: TransferFormValues) {
     }
     
     if (correctTiaToken) {
-      console.log('✅ OVERRIDING with correct EVM TIA token:', {
-        symbol: correctTiaToken.symbol,
-        protocol: correctTiaToken.protocol,
-        chainName: correctTiaToken.chainName,
-        address: correctTiaToken.addressOrDenom
-      });
       hyperlaneToken = correctTiaToken;
-    } else {
-      console.log('❌ CRITICAL ERROR: No EVM TIA token found for', origin);
-      console.log('Available tokens on', origin, ':', tokens.filter(t => t.chainName === origin));
     }
   }
 
@@ -246,25 +212,13 @@ export function useOriginBalance(values: TransferFormValues) {
     address
   );
 
-  // CRITICAL DEBUG: Compare exact same values for deposit vs withdraw
-  console.log('🚨 FINAL BALANCE LOGIC:', {
-    scenario: `${origin} → ${destination}`,
-    isRelayTransfer,
-    isFormaWithdrawal,
-    willUseRelayBalance: isRelayTransfer && !isFormaWithdrawal,
-    willUseHyperlaneBalance: !isRelayTransfer || isFormaWithdrawal,
-    relayBalanceValue: relayBalance.balance,
-    hyperlaneBalanceValue: hyperlaneBalance.balance,
-    hyperlaneIsLoading: hyperlaneBalance.isLoading,
-    hyperlaneIsError: hyperlaneBalance.isError,
-    selectedBalance: (isRelayTransfer && !isFormaWithdrawal) ? relayBalance.balance : hyperlaneBalance.balance,
-    finalTokenUsed: hyperlaneToken ? {
-      symbol: hyperlaneToken.symbol,
-      protocol: hyperlaneToken.protocol,
-      chainName: hyperlaneToken.chainName,
-      address: hyperlaneToken.addressOrDenom
-    } : 'NO TOKEN'
-  });
+  // Determine which balance to use
+  // const finalTokenUsed = hyperlaneToken ? {
+  //   symbol: hyperlaneToken.symbol,
+  //   protocol: hyperlaneToken.protocol,
+  //   chainName: hyperlaneToken.chainName,
+  //   address: hyperlaneToken.addressOrDenom
+  // } : 'NO TOKEN';
 
   // Return the appropriate balance based on transfer type
   if (isRelayTransfer && !isFormaWithdrawal) {
@@ -274,20 +228,25 @@ export function useOriginBalance(values: TransferFormValues) {
   }
 }
 
-export function useDestinationBalance(values: TransferFormValues) {
-  const { origin, destination, tokenIndex, recipient } = values;
+export function useDestinationBalance(values: TransferFormValues, _transferType?: string) {
+  const { origin, destination, tokenIndex } = values;
   const { relayChains } = useRelaySupportedChains();
+  
+  // Get the connected wallet address for the destination chain
+  const destinationWalletAddress = useAccountAddressForChain(destination);
+  
+
   
   // Check if this is a Relay transfer
   const isOriginRelay = isRelayChain(origin, relayChains);
   const isDestinationRelay = isRelayChain(destination, relayChains);
-  const isRelayTransfer = isOriginRelay || isDestinationRelay;
+  // const isRelayTransfer = isOriginRelay || isDestinationRelay;
   
   // Special case: For Relay deposits to Forma, we need to show the TIA token balance on Forma
   const isRelayToFormaDeposit = isOriginRelay && (destination === 'forma' || destination === 'sketchpad');
   
   // Use Relay balance for Relay destination chains
-  const relayBalance = useRelayBalance(isDestinationRelay ? destination : undefined, recipient);
+  const relayBalance = useRelayBalance(isDestinationRelay ? destination : undefined, destinationWalletAddress);
   
   // Use Hyperlane balance for Hyperlane destination chains
   const originToken = getTokenByIndex(tokenIndex);
@@ -304,7 +263,7 @@ export function useDestinationBalance(values: TransferFormValues) {
     );
   }
   
-  const hyperlaneBalance = useBalance(!isDestinationRelay ? destination : undefined, destinationToken, recipient);
+  const hyperlaneBalance = useBalance(!isDestinationRelay ? destination : undefined, destinationToken, destinationWalletAddress);
   
   // Return the appropriate balance based on chain type
   return isDestinationRelay ? relayBalance : hyperlaneBalance;

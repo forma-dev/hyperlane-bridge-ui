@@ -21,13 +21,13 @@ import { ChainSelectField } from '../chains/ChainSelectField';
 import { tryGetChainProtocol } from '../chains/utils';
 import { useStore } from '../store';
 import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
-import { TokenSelectField } from '../tokens/TokenSelectField';
 // import { useIsApproveRequired } from '../tokens/approval';
-import { useOriginBalance } from '../tokens/balances';
+import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import {
-    getAccountAddressAndPubKey,
-    useAccountAddressForChain,
-    useAccounts
+  getAccountAddressAndPubKey,
+  getAccountAddressForChain,
+  useAccountAddressForChain,
+  useAccounts
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -46,11 +46,6 @@ function ChainChangeWatcher() {
   useEffect(() => {
     // Check if chains have changed
     if (prevChains.current.origin !== origin || prevChains.current.destination !== destination) {
-      console.log('🔄 CHAIN CHANGE DETECTED:', {
-        from: { origin: prevChains.current.origin, destination: prevChains.current.destination },
-        to: { origin, destination }
-      });
-      
       // Clear form fields when chains change
       setFieldValue('amount', '');
       setFieldValue('recipient', '');
@@ -59,6 +54,70 @@ function ChainChangeWatcher() {
       prevChains.current = { origin, destination };
     }
   }, [origin, destination, setFieldValue]);
+
+  return null;
+}
+
+function TokenSelectionWatcher({ transferType }: { transferType: string }) {
+  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+  const { origin, destination } = values;
+  const { relayChains } = useRelaySupportedChains();
+  const prevTransferType = useRef(transferType);
+
+  useEffect(() => {
+    // Trigger token reselection when transferType changes or when origin/destination change
+    if (prevTransferType.current !== transferType || origin || destination) {
+      
+      // Special case: Forma withdrawals to ANY destination need Forma TIA token
+      if ((origin === 'forma' || origin === 'sketchpad') && transferType === 'withdraw') {
+        const tokens = getTokens();
+        
+        let formaToken = tokens.find(token => 
+          token.chainName === origin && 
+          token.symbol === 'TIA' && 
+          token.protocol === 'ethereum'
+        );
+        
+        if (!formaToken) {
+          formaToken = tokens.find(token => 
+            token.chainName === origin && 
+            token.name?.toLowerCase().includes('tia') &&
+            token.protocol === 'ethereum'
+          );
+        }
+        
+        if (!formaToken) {
+          formaToken = tokens.find(token => 
+            token.chainName === origin && token.symbol === 'TIA'
+          );
+        }
+        
+        if (!formaToken) {
+          formaToken = tokens.find(token => token.chainName === origin);
+        }
+        
+        if (formaToken) {
+          setFieldValue('tokenIndex', getIndexForToken(formaToken));
+        }
+      }
+      // Handle deposits: Select appropriate token for the origin chain
+      else if (transferType === 'deposit') {
+        const tokens = getTokens();
+        
+        // Find a token that exists on the origin chain
+        const depositToken = tokens.find(token => token.chainName === origin);
+        
+        if (depositToken) {
+          setFieldValue('tokenIndex', getIndexForToken(depositToken));
+        } else {
+          // Reset to first available token as fallback
+          setFieldValue('tokenIndex', 0);
+        }
+      }
+      
+      prevTransferType.current = transferType;
+    }
+  }, [transferType, origin, destination, setFieldValue, relayChains]);
 
   return null;
 }
@@ -82,7 +141,6 @@ export function TransferTokenForm({
   const validate = (values: TransferFormValues) => validateForm(values, accounts, relayChains);
 
   const onSubmitForm = (values: TransferFormValues) => {
-    logger.debug('Reviewing transfer form values for:', values.origin, values.destination);
     setIsReview(true);
   };
 
@@ -97,6 +155,7 @@ export function TransferTokenForm({
       {({ isValidating }) => (
         <Form className="items-stretch w-full">
           <ChainChangeWatcher />
+          <TokenSelectionWatcher transferType={transferType} />
           <div
             className="px-10 py-4 gap-y-6 flex flex-col"
             style={{ borderBottom: '0.5px solid #8C8D8F', borderTop: '0.5px solid #8C8D8F' }}
@@ -236,20 +295,6 @@ function ChainSelectSection({
   );
 }
 
-function TokenSection({
-  setIsNft,
-  isReview,
-}: {
-  setIsNft: (b: boolean) => void;
-  isReview: boolean;
-}) {
-  return (
-    <div className="flex-1">
-      <TokenSelectField name="tokenIndex" disabled={isReview} setIsNft={setIsNft} />
-    </div>
-  );
-}
-
 function AmountSection({
   isNft,
   isReview,
@@ -262,28 +307,21 @@ function AmountSection({
   setIsNft: (b: boolean) => void;
 }) {
   const { values } = useFormikContext<TransferFormValues>();
-  const originBalanceResult = useOriginBalance(values);
+  const originBalanceResult = useOriginBalance(values, transferType);
   const { balance } = originBalanceResult;
   const { relayChains } = useRelaySupportedChains();
+  const { accounts } = useAccounts();
   
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains, accounts);
   
-  // Essential balance debugging only
-  if (!balance) {
-    console.log('⚠️ NO BALANCE FOUND:', {
-      origin: values.origin,
-      destination: values.destination,
-      transferType,
-      isRelayTransfer
-    });
-  }
+
 
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
         <label htmlFor="amount" className="block text-sm text-secondary leading-5 font-medium">
-          {transferType === 'deposit' ? 'Deposit' : 'Amount to Withdraw'}
+          Convert
         </label>
         {/* <TokenBalance label="My balance" balance={balance} /> */}
       </div>
@@ -496,25 +534,34 @@ function ButtonSection({
 function ReviewDetails({ visible }: { visible: boolean }) {
   const { values } = useFormikContext<TransferFormValues>();
   const { relayChains } = useRelaySupportedChains();
-  // const { tokenIndex } = values;
-  // const originToken = getTokenByIndex(tokenIndex);
-  // const originTokenSymbol = originToken?.symbol || '';
-  // const connection = originToken?.getConnectionForChain(destination);
-  // const destinationToken = connection?.token;
-  // const isNft = originToken?.isNft();
-
-  // const amountWei = isNft ? amount.toString() : toWei(amount, originToken?.decimals);
-
-  // const { isLoading: isApproveLoading, isApproveRequired } = useIsApproveRequired(
-  //   originToken,
-  //   amountWei,
-  //   visible,
-  // );
+  
   // Only fetch fee quotes for Hyperlane transfers, not Relay transfers
-  const isUsingRelay = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const { accounts: reviewAccounts } = useAccounts();
+  const isUsingRelay = isUsingRelayForTransfer(values.origin, values.destination, relayChains, reviewAccounts);
   const { fees } = useFeeQuotes(values, visible && !isUsingRelay);
+  
+  // For Relay transfers, get fee information from Relay quote
+  const user = useAccountAddressForChain(values.origin);
+  const destinationUser = useAccountAddressForChain(values.destination);
+  const recipient = values.recipient || destinationUser || '';
+  
+  const { 
+    estimatedOutput
+  } = useRelayQuote({
+    originChain: values.origin,
+    destinationChain: values.destination,
+    amount: values.amount,
+    transferType: '', // Not needed for fee display
+    relayChains,
+    user: user || '',
+    recipient: recipient || '',
+  });
+  
+  // Extract fee information from Relay quote if available
+  const relayQuote = estimatedOutput?.quote;
+  const relayFees = relayQuote?.fees;
+  
 
-  // const isLoading = isApproveLoading || isQuoteLoading;
 
   return (
     <div
@@ -522,7 +569,8 @@ function ReviewDetails({ visible }: { visible: boolean }) {
         visible ? 'max-h-screen duration-1000 ease-in' : 'max-h-0 duration-500'
       } overflow-hidden transition-all`}
     >
-      {fees?.localQuote && fees.localQuote.amount > 0n && (
+      {/* Show Hyperlane fees for Hyperlane transfers */}
+      {!isUsingRelay && fees?.localQuote && fees.localQuote.amount > 0n && (
         <p className="flex justify-between">
           <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
             Local Gas (est.)
@@ -532,7 +580,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
           } ${fees.localQuote.token.symbol || ''}`}</span>
         </p>
       )}
-      {fees?.interchainQuote && fees.interchainQuote.amount > 0n && (
+      {!isUsingRelay && fees?.interchainQuote && fees.interchainQuote.amount > 0n && (
         <p className="flex justify-between">
           <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
             Interchain Gas
@@ -542,6 +590,45 @@ function ReviewDetails({ visible }: { visible: boolean }) {
           } ${fees.interchainQuote.token.symbol || ''}`}</span>
         </p>
       )}
+      
+      {/* Show Relay fees for Relay transfers */}
+      {isUsingRelay && relayFees && (
+        <>
+          {relayFees.gas && relayFees.gas.amountFormatted && parseFloat(relayFees.gas.amountFormatted) > 0 && (
+            <p className="flex justify-between">
+              <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
+                Gas Fee (est.)
+              </span>
+              <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
+                {(() => {
+                  const amount = parseFloat(relayFees.gas.amountFormatted);
+                  const symbol = relayFees.gas.currency?.symbol || 'ETH';
+                  const formattedAmount = amount.toFixed(6);
+                  const usdValue = relayFees.gas.amountUsd ? `(~$${parseFloat(relayFees.gas.amountUsd).toFixed(2)})` : '';
+                  return `${formattedAmount} ${symbol} ${usdValue}`;
+                })()}
+              </span>
+            </p>
+          )}
+          {relayFees.relayer && relayFees.relayer.amountFormatted && parseFloat(relayFees.relayer.amountFormatted) > 0 && (
+            <p className="flex justify-between">
+              <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
+                Relay Fee
+              </span>
+              <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
+                {(() => {
+                  const amount = parseFloat(relayFees.relayer.amountFormatted);
+                  const symbol = relayFees.relayer.currency?.symbol || 'ETH';
+                  const formattedAmount = amount.toFixed(6);
+                  const usdValue = relayFees.relayer.amountUsd ? `(~$${parseFloat(relayFees.relayer.amountUsd).toFixed(2)})` : '';
+                  return `${formattedAmount} ${symbol} ${usdValue}`;
+                })()}
+              </span>
+            </p>
+          )}
+        </>
+      )}
+      
       <p className="flex justify-between">
         <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
           Time to Transfer
@@ -632,12 +719,14 @@ async function validateForm(
     if (!amount || parseFloat(amount) <= 0) return { amount: 'Valid amount is required' };
     if (!recipient) return { recipient: 'Recipient address is required' };
     
+
+    
     const { address, publicKey: senderPubKey } = getAccountAddressAndPubKey(origin, accounts);
     
     if (!address) return { origin: 'Please connect wallet for origin chain' };
 
-    // Determine if this should use Relay or Hyperlane
-    const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains);
+    // Determine if this should use Relay or Hyperlane based on connected wallets
+    const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains, accounts);
     
     if (isRelayTransfer) {
       // Relay-specific validation (no token requirement)
@@ -702,7 +791,7 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
 }
 
 // Helper function to determine if using Relay for transfer
-function isUsingRelayForTransfer(origin: string, destination: string, relayChains: any[]): boolean {
+function isUsingRelayForTransfer(origin: string, destination: string, relayChains: any[], accounts?: Record<ProtocolType, AccountInfo>): boolean {
   // Import warp core to check Hyperlane availability
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
@@ -711,12 +800,30 @@ function isUsingRelayForTransfer(origin: string, destination: string, relayChain
                          destination === 'forma' || destination === 'sketchpad';
   
   const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
   
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
   const originIsHyperlane = hyperlaneChains.includes(origin);
   const destinationIsHyperlane = hyperlaneChains.includes(destination);
+  
+  // Check which wallets are actually connected
+  const destinationWalletConnected = accounts ? getAccountAddressForChain(destination, accounts) : null;
+  
+  // NEW LOGIC: If a wallet is connected for the destination chain, prefer that protocol
+  // This is especially important for withdrawals where the user chooses the destination
+  if (destinationWalletConnected) {
+    const destinationProtocol = tryGetChainProtocol(destination);
+    
+    // If destination is Cosmos (Hyperlane), prefer Hyperlane
+    if (destinationProtocol === ProtocolType.Cosmos && destinationIsHyperlane) {
+      return false; // Use Hyperlane
+    }
+    
+    // If destination is EVM and it's Relay-only (not on Hyperlane), prefer Relay
+    if (destinationProtocol === ProtocolType.Ethereum && destinationIsRelay && !destinationIsHyperlane) {
+      return true; // Use Relay
+    }
+  }
   
   // 1. If both chains are available on Hyperlane, prefer Hyperlane (return false for Relay)
   if (originIsHyperlane && destinationIsHyperlane) {
@@ -821,17 +928,6 @@ async function validateRelayTransfer({
   }
 }
 
-// Helper function to check if a chain name will be recognized by the UI
-function isRecognizedChainName(chainName: string): boolean {
-  // List of chain names that our UI recognizes and can display properly
-  const recognizedChains = [
-    'ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche',
-    'celestia', 'stride', 'forma', 'sketchpad'
-  ];
-  
-  return recognizedChains.includes(chainName.toLowerCase());
-}
-
 // Utility function to get available chain names from Relay supported chains
 function getRelayChainNames(relayChains: any[]): string[] {
   const chainNames: string[] = [];
@@ -898,28 +994,14 @@ function ReceiveSection({
   });
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const { accounts: receiveAccounts } = useAccounts();
+  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains, receiveAccounts);
+  
+  const destinationBalanceResult = useDestinationBalance(values, transferType);
+  const { balance: destinationBalance } = destinationBalanceResult;
   
   // Always show for deposits and withdraws
   const shouldShowReceive = transferType === 'deposit' || transferType === 'withdraw';
-
-  // Debug logging
-  console.log('🔍 RECEIVE SECTION DEBUG:', {
-    transferType,
-    origin: values.origin,
-    destination: values.destination,
-    amount: values.amount,
-    isRelayTransfer,
-    isLoading,
-    error,
-    estimatedOutput,
-    user,
-    destinationUser,
-    recipient,
-    originalRecipient: values.recipient,
-    hasDestinationUser: !!destinationUser,
-    hasRecipient: !!recipient
-  });
 
   if (!shouldShowReceive) {
     return null;
@@ -936,20 +1018,11 @@ function ReceiveSection({
   // Use Relay quote if it's a Relay transfer, otherwise use Hyperlane amount
   const displayAmount = isRelayTransfer ? relayReceiveAmount : hyperlaneReceiveAmount;
 
-  console.log('📊 RECEIVE AMOUNT CALCULATION:', {
-    isRelayTransfer,
-    hyperlaneReceiveAmount,
-    relayReceiveAmount,
-    displayAmount,
-    isLoading,
-    error
-  });
-
   return (
     <div className="flex-1">
       <div className="flex justify-between pr-1">
         <label className="block text-sm text-secondary leading-5 font-medium">
-          {transferType === 'deposit' ? 'Receive' : 'You will receive'}
+          Receive
         </label>
       </div>
       <div
@@ -1024,6 +1097,9 @@ function ReceiveSection({
             );
           })()}
         </div>
+      </div>
+      <div className="pt-1 text-right">
+        <TokenBalance label="BALANCE" balance={destinationBalance} disabled={isReview} />
       </div>
     </div>
   );

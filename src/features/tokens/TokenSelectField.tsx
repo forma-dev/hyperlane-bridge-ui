@@ -81,41 +81,23 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
 
   const { origin, destination } = values;
   
-  console.log('🚀 TOKEN SELECTION TRIGGERED:', { origin, destination });
-  
   useEffect(() => {
-    console.log('🎲 TOKEN SELECTION START:', { origin, destination, relayChains: relayChains.length });
     
     // Check if origin is a Relay chain
     const isOriginRelay = isRelayChain(origin, relayChains);
-    const isDestinationRelay = isRelayChain(destination, relayChains);
-    
-    // Check if this is a Relay transfer (either origin or destination is Relay)
-    const isRelayTransfer = isOriginRelay || isDestinationRelay;
     
     if (isOriginRelay) {
       // For pure Relay chains, automatically select the native token
       // Since we don't have actual Hyperlane tokens for Relay chains,
       // we'll use a special token index of -1 to indicate Relay native token
-      console.log('📍 SELECTING RELAY NATIVE TOKEN for', origin);
       helpers.setValue(-1);
       setIsAutomaticSelection(true);
       setIsNft(false); // Native tokens are never NFTs
-    } else if ((origin === 'forma' || origin === 'sketchpad') && isDestinationRelay) {
-      // Special case: Forma/Sketchpad withdrawals to Relay chains
+    } else if (origin === 'forma' || origin === 'sketchpad') {
+      // Special case: Forma/Sketchpad withdrawals to ANY destination
       // We need to find the Forma TIA token in the Hyperlane token list
       const warpCore = getWarpCore();
       const tokens = warpCore.tokens;
-      
-      console.log('📍 SEARCHING FOR FORMA TIA TOKEN:', { 
-        origin, 
-        totalTokens: tokens.length,
-        allFormaTokens: tokens.filter(t => t.chainName === origin).map(t => ({
-          symbol: t.symbol,
-          protocol: t.protocol,
-          address: t.addressOrDenom
-        }))
-      });
       
       // For Forma withdrawals, we need to find the EVM TIA token, not the Cosmos one
       // Try multiple strategies to find the correct TIA token
@@ -147,17 +129,10 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       }
       
       if (formaToken) {
-        console.log('🎯 SELECTED TIA TOKEN for token selection:', { 
-          symbol: formaToken.symbol, 
-          protocol: formaToken.protocol,
-          address: formaToken.addressOrDenom,
-          chainName: formaToken.chainName
-        });
         helpers.setValue(getIndexForToken(formaToken));
         setIsAutomaticSelection(true);
         setIsNft(false);
       } else {
-        console.log('❌ NO TIA TOKEN FOUND for token selection');
         helpers.setValue(undefined);
         setIsAutomaticSelection(true);
       }
@@ -166,13 +141,6 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       const tokensWithRoute = getWarpCore().getTokensForRoute(origin, destination);
       let newFieldValue: number | undefined;
       let newIsAutomatic: boolean;
-      
-      console.log('📍 USING STANDARD HYPERLANE LOGIC:', {
-        origin,
-        destination, 
-        tokensWithRoute: tokensWithRoute.length,
-        tokens: tokensWithRoute.map(t => ({ symbol: t.symbol, protocol: t.protocol, address: t.addressOrDenom }))
-      });
       
       // No tokens available for this route
       if (tokensWithRoute.length === 0) {
@@ -183,11 +151,6 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       else if (tokensWithRoute.length === 1) {
         newFieldValue = getIndexForToken(tokensWithRoute[0]);
         newIsAutomatic = true;
-        console.log('✅ AUTO-SELECTED TOKEN:', {
-          symbol: tokensWithRoute[0].symbol,
-          protocol: tokensWithRoute[0].protocol,
-          address: tokensWithRoute[0].addressOrDenom
-        });
       } 
       // Multiple possibilities
       else {

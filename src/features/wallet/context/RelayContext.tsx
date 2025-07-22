@@ -63,7 +63,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
   // Fallback chain configuration (moved before useEffect to fix dependencies)
   const setFallbackChains = useCallback(() => {
-    logger.info('Using fallback chain configuration');
     const fallbackChains: RelayChain[] = [
       { 
         id: 1, 
@@ -133,8 +132,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   useEffect(() => {
     const initClient = async () => {
       try {
-        logger.info('Initializing Relay SDK client...');
-        
         // Initialize the client with better error handling
         const relayClient = initializeRelayClient();
         setClient(relayClient);
@@ -142,14 +139,12 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         // Setup dynamic chains with error handling
         try {
           await setupDynamicChains();
-          logger.info('Dynamic chains configured successfully');
         } catch (chainError) {
           logger.warn('Failed to setup dynamic chains, continuing with static config:', chainError);
           // Continue without dynamic chains - this shouldn't break the app
         }
         
         setIsReady(true);
-        logger.info('Relay SDK client initialized successfully');
         
       } catch (error) {
         logger.error('Failed to initialize Relay client:', error);
@@ -166,7 +161,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   // Setup fallback chains on error or when client fails
   useEffect(() => {
     if (!isReady && !isLoadingChains && relayChains.length === 0) {
-      logger.info('Setting up fallback chains due to Relay initialization issues');
       setFallbackChains();
     }
   }, [isReady, isLoadingChains, relayChains.length, setFallbackChains]);
@@ -175,24 +169,12 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   const fetchDynamicChains = useCallback(async () => {
     try {
       setIsLoadingChains(true);
-      logger.info('Fetching chains from Relay SDK...');
 
       // First try to get chains from the initialized client
       if (client && client.chains && Array.isArray(client.chains) && client.chains.length > 0) {
         const chains = client.chains;
         
-        // Log the raw chain data to understand what Relay actually provides
-        console.log('🔍 RAW RELAY CHAIN DATA:', chains.map((chain: any) => ({
-          id: chain.id,
-          name: chain.name,
-          displayName: chain.displayName,
-          disabled: chain.disabled,
-          depositEnabled: chain.depositEnabled,
-          withdrawEnabled: chain.withdrawEnabled,
-          enabled: chain.enabled,
-          nativeCurrency: chain.nativeCurrency,
-          allProps: Object.keys(chain)
-        })));
+
         
         // Convert SDK chains to our RelayChain format
         const formattedChains: RelayChain[] = chains
@@ -202,16 +184,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
             const supportsDeposits = chain.depositEnabled === true || chain.depositEnabled !== false;
             const hasValidName = chain.name && chain.name.trim().length > 0;
             
-            console.log(`🔍 CHAIN FILTER CHECK: ${chain.name}`, {
-              disabled: chain.disabled,
-              enabled: chain.enabled,
-              depositEnabled: chain.depositEnabled,
-              withdrawEnabled: chain.withdrawEnabled,
-              isEnabled,
-              supportsDeposits,
-              hasValidName,
-              willInclude: isEnabled && supportsDeposits && hasValidName
-            });
+
             
             return isEnabled && supportsDeposits && hasValidName;
           })
@@ -239,28 +212,11 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         setSupportedChains(chainIds);
         setRelayChains(formattedChains);
         
-        logger.info('Relay chains configured from SDK default chains', { 
-          chainCount: formattedChains.length,
-          chainIds: chainIds,
-          chains: formattedChains.map(c => ({ 
-            id: c.id, 
-            name: c.name, 
-            displayName: c.displayName,
-            currencySymbol: c.currency.symbol,
-            currencyName: c.currency.name
-          }))
-        });
+
         
-        // Additional logging for currency symbols specifically
-        console.log('🪙 RELAY CHAIN CURRENCY SYMBOLS:', 
-          formattedChains.reduce((acc, chain) => {
-            acc[chain.name] = chain.currency.symbol;
-            return acc;
-          }, {} as Record<string, string>)
-        );
+
       } else {
         // If no chains available from client, try dynamic configuration
-        logger.info('No default chains available, attempting dynamic chain configuration...');
         await setupDynamicChains();
         
         // After dynamic setup, check if we now have chains
@@ -294,10 +250,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
     try {
       // Use SDK getQuote action as per documentation
-      logger.debug('Getting quote via Relay SDK:', request);
-      
       const quote = await client.actions.getQuote(request);
-      logger.debug('Relay SDK quote response:', quote);
       return quote;
     } catch (error) {
       logger.error('Failed to get Relay quote via SDK:', error);
@@ -313,10 +266,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
     try {
       // Use SDK execute action as per documentation
-      logger.debug('Executing swap via Relay SDK:', request);
-      
       const swapResult = await client.actions.execute(request);
-      logger.debug('Relay SDK execute response:', swapResult);
       return swapResult;
     } catch (error) {
       logger.error('Failed to execute Relay swap via SDK:', error);
