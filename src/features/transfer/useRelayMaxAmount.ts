@@ -1,5 +1,6 @@
 import { BigNumber } from 'bignumber.js';
 import { useCallback, useState } from 'react';
+
 import { logger } from '../../utils/logger';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import { useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
@@ -42,9 +43,10 @@ export function useRelayMaxAmount({
     }
 
     // Only calculate for Relay deposits (origin is Relay chain, destination is Forma)
-    const isRelayDeposit = transferType === 'deposit' && 
+    const isRelayDeposit =
+      transferType === 'deposit' &&
       (destination === 'forma' || destination === 'sketchpad') &&
-      relayChains.some(rc => {
+      relayChains.some((rc) => {
         const internalName = rc.name.toLowerCase();
         return internalName === origin.toLowerCase();
       });
@@ -60,15 +62,15 @@ export function useRelayMaxAmount({
 
     try {
       const fullBalance = balance.getDecimalFormattedAmount();
-      
+
       // For now, use a simple approach: subtract estimated fees (1% of balance)
       const estimatedFees = fullBalance * 0.01;
       const maxAmountAfterFees = fullBalance - estimatedFees;
-      
+
       if (maxAmountAfterFees > 0) {
         const roundedAmount = new BigNumber(maxAmountAfterFees).toFixed(4, BigNumber.ROUND_FLOOR);
         setMaxAmount(roundedAmount);
-        
+
         // Set the field value if callback is provided
         if (setFieldValue) {
           setFieldValue('amount', roundedAmount);
@@ -90,4 +92,4 @@ export function useRelayMaxAmount({
     error,
     calculateMaxAmount,
   };
-} 
+}

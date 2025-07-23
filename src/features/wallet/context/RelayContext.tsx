@@ -5,10 +5,22 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from 'react';
+
 import { logger } from '../../../utils/logger';
-import { getRelayClient, initializeRelayClient, isRelayClientReady, setupDynamicChains } from './RelayClient';
+// Import centralized Relay utilities
+import {
+  getRelayChainNames as relayGetChainNames,
+  mapRelayChainToInternalName as relayMapChainName,
+} from '../../chains/relayUtils';
+
+import {
+  getRelayClient,
+  initializeRelayClient,
+  isRelayClientReady,
+  setupDynamicChains,
+} from './RelayClient';
 
 // Types for chain configuration (keeping existing interface for compatibility)
 interface RelayChain {
@@ -64,9 +76,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   // Fallback chain configuration (moved before useEffect to fix dependencies)
   const setFallbackChains = useCallback(() => {
     const fallbackChains: RelayChain[] = [
-      { 
-        id: 1, 
-        name: 'ethereum', 
+      {
+        id: 1,
+        name: 'ethereum',
         displayName: 'Ethereum',
         iconUrl: undefined,
         logoUrl: undefined,
@@ -81,11 +93,11 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           decimals: 18,
           supportsBridging: true,
         },
-        viemChain: null 
+        viemChain: null,
       },
-      { 
-        id: 10, 
-        name: 'optimism', 
+      {
+        id: 10,
+        name: 'optimism',
         displayName: 'Optimism',
         iconUrl: undefined,
         logoUrl: undefined,
@@ -100,11 +112,11 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           decimals: 18,
           supportsBridging: true,
         },
-        viemChain: null 
+        viemChain: null,
       },
-      { 
-        id: 42161, 
-        name: 'arbitrum', 
+      {
+        id: 42161,
+        name: 'arbitrum',
         displayName: 'Arbitrum',
         iconUrl: undefined,
         logoUrl: undefined,
@@ -119,11 +131,11 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           decimals: 18,
           supportsBridging: true,
         },
-        viemChain: null 
-      }
+        viemChain: null,
+      },
     ];
 
-    const chainIds = fallbackChains.map(chain => chain.id);
+    const chainIds = fallbackChains.map((chain) => chain.id);
     setSupportedChains(chainIds);
     setRelayChains(fallbackChains);
   }, []);
@@ -143,9 +155,8 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           logger.warn('Failed to setup dynamic chains, continuing with static config:', chainError);
           // Continue without dynamic chains - this shouldn't break the app
         }
-        
+
         setIsReady(true);
-        
       } catch (error) {
         logger.error('Failed to initialize Relay client:', error);
         // Don't let Relay client failure break the entire app
@@ -173,19 +184,16 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       // First try to get chains from the initialized client
       if (client && client.chains && Array.isArray(client.chains) && client.chains.length > 0) {
         const chains = client.chains;
-        
 
-        
         // Convert SDK chains to our RelayChain format
         const formattedChains: RelayChain[] = chains
           .filter((chain: any) => {
             // More comprehensive filtering based on actual capabilities
             const isEnabled = !chain.disabled && chain.enabled !== false;
-            const supportsDeposits = chain.depositEnabled === true || chain.depositEnabled !== false;
+            const supportsDeposits =
+              chain.depositEnabled === true || chain.depositEnabled !== false;
             const hasValidName = chain.name && chain.name.trim().length > 0;
-            
 
-            
             return isEnabled && supportsDeposits && hasValidName;
           })
           .map((chain: any) => ({
@@ -201,24 +209,21 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
               id: chain.nativeCurrency?.id || '',
               symbol: chain.nativeCurrency?.symbol || '',
               name: chain.nativeCurrency?.name || '',
-              address: chain.nativeCurrency?.address || '0x0000000000000000000000000000000000000000',
+              address:
+                chain.nativeCurrency?.address || '0x0000000000000000000000000000000000000000',
               decimals: chain.nativeCurrency?.decimals || 18,
               supportsBridging: true,
             },
             viemChain: chain.viemChain || null,
           }));
 
-        const chainIds = formattedChains.map(chain => chain.id);
+        const chainIds = formattedChains.map((chain) => chain.id);
         setSupportedChains(chainIds);
         setRelayChains(formattedChains);
-        
-
-        
-
       } else {
         // If no chains available from client, try dynamic configuration
         await setupDynamicChains();
-        
+
         // After dynamic setup, check if we now have chains
         if (client && client.chains && client.chains.length > 0) {
           // Recursive call to process the newly configured chains
@@ -243,36 +248,42 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   }, [fetchDynamicChains]);
 
   // SDK-based quote method
-  const getQuote = useCallback(async (request: any) => {
-    if (!client) {
-      throw new Error('Relay client not initialized');
-    }
+  const getQuote = useCallback(
+    async (request: any) => {
+      if (!client) {
+        throw new Error('Relay client not initialized');
+      }
 
-    try {
-      // Use SDK getQuote action as per documentation
-      const quote = await client.actions.getQuote(request);
-      return quote;
-    } catch (error) {
-      logger.error('Failed to get Relay quote via SDK:', error);
-      throw error;
-    }
-  }, [client]);
+      try {
+        // Use SDK getQuote action as per documentation
+        const quote = await client.actions.getQuote(request);
+        return quote;
+      } catch (error) {
+        logger.error('Failed to get Relay quote via SDK:', error);
+        throw error;
+      }
+    },
+    [client],
+  );
 
   // SDK-based swap execution
-  const executeSwap = useCallback(async (request: any) => {
-    if (!client) {
-      throw new Error('Relay client not initialized');
-    }
+  const executeSwap = useCallback(
+    async (request: any) => {
+      if (!client) {
+        throw new Error('Relay client not initialized');
+      }
 
-    try {
-      // Use SDK execute action as per documentation
-      const swapResult = await client.actions.execute(request);
-      return swapResult;
-    } catch (error) {
-      logger.error('Failed to execute Relay swap via SDK:', error);
-      throw error;
-    }
-  }, [client]);
+      try {
+        // Use SDK execute action as per documentation
+        const swapResult = await client.actions.execute(request);
+        return swapResult;
+      } catch (error) {
+        logger.error('Failed to execute Relay swap via SDK:', error);
+        throw error;
+      }
+    },
+    [client],
+  );
 
   // Fetch chains when client is ready
   useEffect(() => {
@@ -282,35 +293,34 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   }, [isReady, client, fetchDynamicChains]);
 
   // Context value
-  const contextValue = useMemo(() => ({
-    client,
-    isReady: isReady && isRelayClientReady(),
-    isMainnet,
-    apiUrl,
-    supportedChains,
-    relayChains,
-    isLoadingChains,
-    refreshChains,
-    getQuote,
-    executeSwap,
-  }), [
-    client,
-    isReady,
-    isMainnet,
-    apiUrl,
-    supportedChains,
-    relayChains,
-    isLoadingChains,
-    refreshChains,
-    getQuote,
-    executeSwap
-  ]);
-
-  return (
-    <RelayContext.Provider value={contextValue}>
-      {children}
-    </RelayContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      client,
+      isReady: isReady && isRelayClientReady(),
+      isMainnet,
+      apiUrl,
+      supportedChains,
+      relayChains,
+      isLoadingChains,
+      refreshChains,
+      getQuote,
+      executeSwap,
+    }),
+    [
+      client,
+      isReady,
+      isMainnet,
+      apiUrl,
+      supportedChains,
+      relayChains,
+      isLoadingChains,
+      refreshChains,
+      getQuote,
+      executeSwap,
+    ],
   );
+
+  return <RelayContext.Provider value={contextValue}>{children}</RelayContext.Provider>;
 }
 
 // Hook to use Relay context
@@ -328,9 +338,6 @@ export function useRelaySupportedChains() {
   return { relayChains, isLoadingChains, refreshChains };
 }
 
-// Import centralized Relay utilities
-import { getRelayChainNames as relayGetChainNames, mapRelayChainToInternalName as relayMapChainName } from '../../chains/relayUtils';
-
 // Compatibility functions for existing code
 export function getRelayChainNames(relayChains: RelayChain[]): string[] {
   return relayGetChainNames(relayChains);
@@ -338,4 +345,4 @@ export function getRelayChainNames(relayChains: RelayChain[]): string[] {
 
 export function mapRelayChainToInternalName(relayChainName: string): string {
   return relayMapChainName(relayChainName);
-} 
+}

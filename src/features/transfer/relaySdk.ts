@@ -1,4 +1,3 @@
-
 /**
  * Get supported chains from Relay SDK
  */
@@ -6,14 +5,14 @@ export async function getRelaySupportedChains(): Promise<any[]> {
   try {
     const { getClient } = await import('@reservoir0x/relay-sdk');
     const client = getClient();
-    
+
     if (!client) {
       throw new Error('Relay client not initialized');
     }
-    
-                 // Get chains from the SDK client
-             const chains = client.chains;
-    
+
+    // Get chains from the SDK client
+    const chains = client.chains;
+
     return chains || [];
   } catch (error) {
     return [];
@@ -195,11 +194,11 @@ export interface RelaySwapResponse {
 export async function getRelayQuote(params: RelayQuoteParams): Promise<RelayQuoteResponse> {
   const { getClient } = await import('@reservoir0x/relay-sdk');
   const client = getClient();
-  
+
   if (!client) {
     throw new Error('Relay client not initialized');
   }
-  
+
   // Use SDK getQuote method
   const quote = await client.actions.getQuote({
     chainId: params.originChainId,
@@ -207,11 +206,14 @@ export async function getRelayQuote(params: RelayQuoteParams): Promise<RelayQuot
     currency: params.originCurrency,
     toCurrency: params.destinationCurrency,
     amount: params.amount,
-    tradeType: (params.tradeType || 'EXACT_INPUT') as 'EXACT_INPUT' | 'EXACT_OUTPUT' | 'EXPECTED_OUTPUT',
+    tradeType: (params.tradeType || 'EXACT_INPUT') as
+      | 'EXACT_INPUT'
+      | 'EXACT_OUTPUT'
+      | 'EXPECTED_OUTPUT',
     user: params.user,
     recipient: params.recipient,
   });
-  
+
   // Convert SDK response to our expected format
   return quote as unknown as RelayQuoteResponse;
 }
@@ -219,14 +221,17 @@ export async function getRelayQuote(params: RelayQuoteParams): Promise<RelayQuot
 /**
  * Execute a cross-chain swap using Relay SDK
  */
-export async function executeRelaySwap(params: RelaySwapParams, wallet?: any): Promise<RelaySwapResponse> {
+export async function executeRelaySwap(
+  params: RelaySwapParams,
+  wallet?: any,
+): Promise<RelaySwapResponse> {
   const { getClient } = await import('@reservoir0x/relay-sdk');
   const client = getClient();
-  
+
   if (!client) {
     throw new Error('Relay client not initialized');
   }
-  
+
   // Convert our params to SDK format
   const sdkParams = {
     chainId: params.origins[0].chainId,
@@ -238,16 +243,16 @@ export async function executeRelaySwap(params: RelaySwapParams, wallet?: any): P
     user: params.user,
     recipient: params.recipient,
   };
-  
+
   // First get a quote
   const quote = await client.actions.getQuote(sdkParams);
-  
+
   // Then execute the quote
   const result = await client.actions.execute({
     quote,
     wallet,
   });
-  
+
   // Convert SDK response to our expected format
   return result as unknown as RelaySwapResponse;
 }
@@ -277,30 +282,36 @@ export async function executeRelaySwapSingleOrigin({
   tradeType?: 'EXACT_INPUT' | 'EXACT_OUTPUT';
   wallet?: any;
 }): Promise<RelaySwapResponse> {
-  return executeRelaySwap({
-    user,
-    origins: [
-      {
-        chainId: originChainId,
-        currency: originCurrency,
-        amount,
-      }
-    ],
-    destinationCurrency,
-    destinationChainId,
-    tradeType,
-    recipient,
-  }, wallet);
+  return executeRelaySwap(
+    {
+      user,
+      origins: [
+        {
+          chainId: originChainId,
+          currency: originCurrency,
+          amount,
+        },
+      ],
+      destinationCurrency,
+      destinationChainId,
+      tradeType,
+      recipient,
+    },
+    wallet,
+  );
 }
 
 /**
  * Map internal chain names to Relay chain IDs
  * Returns both mainnet and testnet options
  */
-export function getRelayChainId(chainName: string): { mainnet: number | null; testnet: number | null } {
+export function getRelayChainId(chainName: string): {
+  mainnet: number | null;
+  testnet: number | null;
+} {
   const chainMaps = {
     ethereum: { mainnet: 1, testnet: 11155111 }, // Sepolia
-    polygon: { mainnet: 137, testnet: 80001 }, // Mumbai  
+    polygon: { mainnet: 137, testnet: 80001 }, // Mumbai
     arbitrum: { mainnet: 42161, testnet: 421614 }, // Arbitrum Sepolia
     optimism: { mainnet: 10, testnet: 11155420 }, // OP Sepolia
     base: { mainnet: 8453, testnet: 84532 }, // Base Sepolia
@@ -327,4 +338,4 @@ export function getNativeCurrency(chainName: string): string {
   };
 
   return currencyMap[chainName.toLowerCase()] || '0x0000000000000000000000000000000000000000';
-} 
+}

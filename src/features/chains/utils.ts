@@ -3,6 +3,9 @@ import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
 
+// Import centralized Relay utilities
+import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
+
 // Fallback metadata for Relay chains that aren't in Hyperlane
 const RELAY_CHAIN_METADATA: Record<string, any> = {
   ethereum: {
@@ -36,11 +39,7 @@ const RELAY_CHAIN_METADATA: Record<string, any> = {
     nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: [{ http: 'https://optimism.rpc.hyperlane.xyz' }],
   },
-
 };
-
-// Import centralized Relay utilities
-import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
 
 // Re-export for backward compatibility
 export function mapRelayChainToInternalName(relayChainName: string): string {
@@ -51,11 +50,12 @@ export function mapRelayChainToInternalName(relayChainName: string): string {
 export function isRelayChain(chain: ChainNameOrId): boolean {
   const chainStr = typeof chain === 'string' ? chain : chain.toString();
   const relayChains = ['ethereum', 'arbitrum', 'optimism'];
-  
-  // Check both hardcoded metadata and known Relay chains
-  return chainStr.toLowerCase() in RELAY_CHAIN_METADATA || relayChains.includes(chainStr.toLowerCase());
-}
 
+  // Check both hardcoded metadata and known Relay chains
+  return (
+    chainStr.toLowerCase() in RELAY_CHAIN_METADATA || relayChains.includes(chainStr.toLowerCase())
+  );
+}
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';
@@ -88,13 +88,13 @@ export function tryGetChainMetadata(chain: ChainNameOrId) {
   if (hyperlaneMetadata) {
     return hyperlaneMetadata;
   }
-  
+
   // Fallback to Relay chain metadata if available
   if (isRelayChain(chain)) {
     const chainStr = typeof chain === 'string' ? chain : chain.toString();
     return RELAY_CHAIN_METADATA[chainStr];
   }
-  
+
   return null;
 }
 

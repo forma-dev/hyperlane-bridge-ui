@@ -30,21 +30,21 @@ export interface RelayChain {
 export function mapRelayChainToInternalName(relayChainName: string): string {
   const nameMapping: Record<string, string> = {
     // Standard Relay chain names
-    'Ethereum': 'ethereum',
-    'Arbitrum': 'arbitrum',
+    Ethereum: 'ethereum',
+    Arbitrum: 'arbitrum',
     'Arbitrum One': 'arbitrum',
-    'Optimism': 'optimism',
-    
+    Optimism: 'optimism',
+
     // Lowercase variations
-    'ethereum': 'ethereum',
+    ethereum: 'ethereum',
     'arbitrum-one': 'arbitrum',
-    'arbitrum': 'arbitrum',
-    'optimism': 'optimism',
-    
+    arbitrum: 'arbitrum',
+    optimism: 'optimism',
+
     // Additional variations
     'arbitrum one': 'arbitrum',
   };
-  
+
   return nameMapping[relayChainName] || relayChainName.toLowerCase();
 }
 
@@ -52,7 +52,7 @@ export function mapRelayChainToInternalName(relayChainName: string): string {
  * Extracts chain names from an array of Relay chain objects
  */
 export function getRelayChainNames(relayChains: RelayChain[]): string[] {
-  return relayChains.map(chain => chain.name);
+  return relayChains.map((chain) => chain.name);
 }
 
 /**
@@ -60,13 +60,14 @@ export function getRelayChainNames(relayChains: RelayChain[]): string[] {
  */
 export function isRelayChain(chainName: string, relayChains: RelayChain[]): boolean {
   if (!chainName || !relayChains) return false;
-  
+
   const chainStr = chainName.toLowerCase();
-  
+
   // Check if it's in the relay chains array
-  return relayChains.some(chain => 
-    chain.name.toLowerCase() === chainStr || 
-    mapRelayChainToInternalName(chain.name).toLowerCase() === chainStr
+  return relayChains.some(
+    (chain) =>
+      chain.name.toLowerCase() === chainStr ||
+      mapRelayChainToInternalName(chain.name).toLowerCase() === chainStr,
   );
 }
 
@@ -77,33 +78,33 @@ export function isRelayChain(chainName: string, relayChains: RelayChain[]): bool
 export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) {
   // Hardcoded values for known chains (prioritized for correct symbols)
   const nativeTokens: Record<string, { symbol: string; decimals: number; name: string }> = {
-    'ethereum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'arbitrum': { symbol: 'ARB', decimals: 18, name: 'Arbitrum' },
-    'optimism': { symbol: 'OP', decimals: 18, name: 'Optimism' },
+    ethereum: { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
+    arbitrum: { symbol: 'ARB', decimals: 18, name: 'Arbitrum' },
+    optimism: { symbol: 'OP', decimals: 18, name: 'Optimism' },
   };
-  
+
   // Check if we have hardcoded values for this chain
   const hardcodedInfo = nativeTokens[chainName.toLowerCase()];
   if (hardcodedInfo) {
     return hardcodedInfo;
   }
-  
+
   // If we have Relay API data and no hardcoded values, use it
   if (relayChains && relayChains.length > 0) {
-    const relayChain = relayChains.find(rc => {
+    const relayChain = relayChains.find((rc) => {
       const internalName = mapRelayChainToInternalName(rc.name);
       return internalName === chainName.toLowerCase();
     });
-    
+
     if (relayChain?.currency) {
       return {
         symbol: relayChain.currency.symbol || 'ETH',
         decimals: relayChain.currency.decimals || 18,
-        name: relayChain.currency.name || relayChain.name || 'Unknown'
+        name: relayChain.currency.name || relayChain.name || 'Unknown',
       };
     }
   }
-  
+
   // Final fallback
   return { symbol: 'ETH', decimals: 18, name: 'Unknown' };
 }
@@ -119,20 +120,18 @@ export function getRelayCurrencySymbol(chainName: string): string {
 /**
  * List of verified working chains for Forma bridging
  */
-export const VERIFIED_WORKING_RELAY_CHAINS = [
-  'ethereum',
-  'optimism',
-  'arbitrum',
-];
+export const VERIFIED_WORKING_RELAY_CHAINS = ['ethereum', 'optimism', 'arbitrum'];
 
 /**
  * Filters relay chains to only include verified working ones
  */
 export function getVerifiedWorkingRelayChains(relayChains: RelayChain[]): RelayChain[] {
-  return relayChains.filter(chain => {
+  return relayChains.filter((chain) => {
     const internalName = mapRelayChainToInternalName(chain.name);
-    return VERIFIED_WORKING_RELAY_CHAINS.includes(internalName) && 
-           chain.depositEnabled && 
-           !chain.disabled;
+    return (
+      VERIFIED_WORKING_RELAY_CHAINS.includes(internalName) &&
+      chain.depositEnabled &&
+      !chain.disabled
+    );
   });
-} 
+}

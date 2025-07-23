@@ -28,7 +28,7 @@ export function useEvmAccount(): AccountInfo {
   // Map wagmi chain names to internal chain names
   const getInternalChainName = (chainId?: number): string => {
     if (!chainId) return 'ethereum';
-    
+
     const chainMapping: Record<number, string> = {
       1: 'ethereum',
       42161: 'arbitrum',
@@ -36,16 +36,16 @@ export function useEvmAccount(): AccountInfo {
       984122: 'forma', // Forma chain ID
       // Add more chain mappings as needed
     };
-    
+
     return chainMapping[chainId] || 'ethereum';
   };
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
-      addresses: activeWallet ? [
-        { address: activeWallet.address, chainName: getInternalChainName(chain?.id) }
-      ] : [],
+      addresses: activeWallet
+        ? [{ address: activeWallet.address, chainName: getInternalChainName(chain?.id) }]
+        : [],
       connectorName: connector?.name || 'Privy',
       isReady,
     }),
@@ -124,7 +124,7 @@ export function useEvmTransactionFns(): ChainTransactionFns {
     async (chainName: ChainName) => {
       const chainId = getChainMetadata(chainName).chainId as number;
       logger.debug(`DEBUG: Switching to chain ${chainName} (${chainId})`);
-      
+
       try {
         await switchChainAsync({ chainId });
         logger.debug(`DEBUG: Chain switch successful`);
@@ -166,14 +166,14 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
-      
+
       logger.debug(`DEBUG: Chain verification:`, {
         chainName,
         expectedChainId,
         connectedChainId,
-        matches: connectedChainId === expectedChainId
+        matches: connectedChainId === expectedChainId,
       });
-      
+
       assert(
         connectedChainId === expectedChainId,
         `Wallet not on chain ${chainName} (ChainMismatchError)`,
@@ -183,16 +183,16 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
       logger.debug(`DEBUG: Wagmi transaction object:`, wagmiTx);
       logger.debug(`DEBUG: About to call sendTransactionAsync...`);
-      
+
       let hash: `0x${string}`;
       try {
         // Add timeout to prevent hanging
-        const timeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000)
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000),
         );
-        
+
         const txPromise = sendTransactionAsync(wagmiTx);
-        hash = await Promise.race([txPromise, timeout]) as `0x${string}`;
+        hash = (await Promise.race([txPromise, timeout])) as `0x${string}`;
         logger.debug(`DEBUG: Transaction sent successfully, hash:`, hash);
       } catch (error) {
         logger.debug(`DEBUG: sendTransactionAsync failed:`, error);
@@ -204,7 +204,9 @@ export function useEvmTransactionFns(): ChainTransactionFns {
         // Check if it's a timeout
         if (error instanceof Error && error.message.includes('timeout')) {
           logger.debug(`DEBUG: Transaction timed out - wallet may not be responding`);
-          throw new Error('Transaction request timed out. Please ensure your wallet is connected and responsive.');
+          throw new Error(
+            'Transaction request timed out. Please ensure your wallet is connected and responsive.',
+          );
         }
         throw error;
       }

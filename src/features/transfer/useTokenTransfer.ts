@@ -7,17 +7,17 @@ import { ProtocolType, toTitleCase, toWei } from '@hyperlane-xyz/utils';
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { getTokenByIndex, getWarpCore } from '../../context/context';
 import { logger } from '../../utils/logger';
+import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { tryGetChainProtocol } from '../chains/utils';
 import { AppState, useStore } from '../store';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    getAccountAddressForChain,
-    useAccounts,
-    useActiveChains,
-    useTransactionFns,
+  getAccountAddressForChain,
+  useAccounts,
+  useActiveChains,
+  useTransactionFns,
 } from '../wallet/hooks/multiProtocol';
 
-import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { TransferContext, TransferFormValues, TransferStatus } from './types';
 import { tryGetMsgIdFromTransferReceipt } from './utils';
 
@@ -42,7 +42,7 @@ export function useTokenTransfer(onDone?: () => void) {
       // Determine if this should use Relay or Hyperlane
       const protocol = getTransferProtocol(values.origin, values.destination, relayChains);
       const isRelayTransfer = protocol === 'relay';
-      
+
       if (isRelayTransfer) {
         return executeRelayTransfer({
           values,
@@ -57,15 +57,15 @@ export function useTokenTransfer(onDone?: () => void) {
         });
       } else {
         return executeHyperlaneTransfer({
-        values,
-        transferIndex,
-        activeAccounts,
-        activeChains,
-        transactionFns,
-        addTransfer,
-        updateTransferStatus,
-        setIsLoading,
-        onDone,
+          values,
+          transferIndex,
+          activeAccounts,
+          activeChains,
+          transactionFns,
+          addTransfer,
+          updateTransferStatus,
+          setIsLoading,
+          onDone,
         });
       }
     },
@@ -89,47 +89,53 @@ export function useTokenTransfer(onDone?: () => void) {
 }
 
 // Helper function to determine transfer protocol
-function getTransferProtocol(origin: string, destination: string, relayChains: any[]): 'relay' | 'hyperlane' {
-  
+function getTransferProtocol(
+  origin: string,
+  destination: string,
+  relayChains: any[],
+): 'relay' | 'hyperlane' {
   // Import warp core to check Hyperlane availability
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
-  
-  const isFormaInvolved = origin === 'forma' || origin === 'sketchpad' || 
-                         destination === 'forma' || destination === 'sketchpad';
-  
+
+  const isFormaInvolved =
+    origin === 'forma' ||
+    origin === 'sketchpad' ||
+    destination === 'forma' ||
+    destination === 'sketchpad';
+
   const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
   // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
-  
+
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
   const originIsHyperlane = hyperlaneChains.includes(origin);
   const destinationIsHyperlane = hyperlaneChains.includes(destination);
-  
+
   // STRATEGY: More specific routing logic
-  
+
   // 1. If both chains are available on Hyperlane, prefer Hyperlane
   if (originIsHyperlane && destinationIsHyperlane) {
     return 'hyperlane';
   }
-  
+
   // 2. If Forma is involved and the other chain is Relay-only (not on Hyperlane), use Relay
   if (isFormaInvolved) {
     const otherChain = isDeposit ? origin : destination;
     const otherChainIsRelay = isRelayChain(otherChain, relayChains);
     const otherChainIsHyperlane = hyperlaneChains.includes(otherChain);
-    
+
     // Use Relay if the other chain is available on Relay but NOT on Hyperlane
     if (otherChainIsRelay && !otherChainIsHyperlane) {
       return 'relay';
     }
   }
-  
+
   // 3. If either chain is Relay-only (not available on Hyperlane), use Relay
   if ((originIsRelay && !originIsHyperlane) || (destinationIsRelay && !destinationIsHyperlane)) {
     return 'relay';
   }
-  
+
   // 4. Default to Hyperlane
   return 'hyperlane';
 }
@@ -139,13 +145,14 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName || !relayChains?.length) {
     return false;
   }
-  
-  const result = relayChains.some(chain => {
+
+  const result = relayChains.some((chain) => {
     const internalName = mapRelayChainToInternalName(chain.name);
-    const isMatch = internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
+    const isMatch =
+      internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
     return isMatch;
   });
-  
+
   return result;
 }
 
@@ -172,37 +179,40 @@ async function executeRelayTransfer({
   wallet?: any;
 }) {
   const { origin, destination, amount, recipient } = values;
-  
+
   // const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
   // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
-  
+
   setIsLoading(true);
   let transferStatus: TransferStatus = TransferStatus.Preparing;
   updateTransferStatus(transferIndex, transferStatus);
 
   try {
     const sender = getAccountAddressForChain(origin, activeAccounts.accounts);
-    
+
     if (!sender) {
       throw new Error('No active account found for origin chain');
     }
 
     // Import Relay API functions
-    const { getRelayQuote, executeRelaySwapSingleOrigin, getRelayChainId, getNativeCurrency } = await import('./relaySdk');
-    
+    const { getRelayQuote, executeRelaySwapSingleOrigin, getRelayChainId, getNativeCurrency } =
+      await import('./relaySdk');
+
     // Get chain IDs for Relay API
     const originChainIds = getRelayChainId(origin);
     const destinationChainIds = getRelayChainId(destination);
-    
+
     // For now, try mainnet first to test currency format
     // If either chain requires testnet, use testnet for both
     const needsTestnet = false; // Temporarily force mainnet to test currency format
     // const needsTestnet = destinationChainIds.mainnet === null || originChainIds.mainnet === null ||
     //                     destinationChainIds.testnet === 984123 || originChainIds.testnet === 984123; // Check for sketchpad testnet
-    
+
     const originChainId = needsTestnet ? originChainIds.testnet : originChainIds.mainnet;
-    const destinationChainId = needsTestnet ? destinationChainIds.testnet : destinationChainIds.mainnet;
-    
+    const destinationChainId = needsTestnet
+      ? destinationChainIds.testnet
+      : destinationChainIds.mainnet;
+
     if (!originChainId || !destinationChainId) {
       throw new Error(`Unsupported chain for Relay: ${origin} -> ${destination}`);
     }
@@ -224,12 +234,12 @@ async function executeRelayTransfer({
     // Step 1: Get a quote from Relay
     const originCurrency = getNativeCurrency(origin);
     const destinationCurrency = getNativeCurrency(destination);
-    
+
     // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
     // TIA token on Forma has 18 decimals (same as ETH)
     const decimals = 18;
     const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
-    
+
     await getRelayQuote({
       user: sender,
       recipient,
@@ -241,14 +251,12 @@ async function executeRelayTransfer({
       tradeType: 'EXACT_INPUT',
     });
 
-
-
     // Step 2: Execute the swap using NEW API format
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.SigningTransfer));
-    
+
     // For now, pass null wallet to let Relay SDK handle wallet detection
     const walletToUse = wallet || null;
-    
+
     const swapResponse = await executeRelaySwapSingleOrigin({
       user: sender,
       recipient,
@@ -266,7 +274,7 @@ async function executeRelayTransfer({
 
     const originProtocol = tryGetChainProtocol(origin) || ProtocolType.Ethereum;
     const sendTransaction = transactionFns[originProtocol].sendTransaction;
-    
+
     // Execute each step from the Relay response (NEW STRUCTURE)
     const hashes: string[] = [];
 
@@ -307,7 +315,9 @@ async function executeRelayTransfer({
               chainId: item.data.chainId,
               // Include gas fields if provided by new API
               ...(item.data.maxFeePerGas && { maxFeePerGas: item.data.maxFeePerGas }),
-              ...(item.data.maxPriorityFeePerGas && { maxPriorityFeePerGas: item.data.maxPriorityFeePerGas }),
+              ...(item.data.maxPriorityFeePerGas && {
+                maxPriorityFeePerGas: item.data.maxPriorityFeePerGas,
+              }),
             },
           };
           const result = await sendTransaction({
@@ -357,7 +367,6 @@ async function executeRelayTransfer({
     setIsLoading(false);
     if (onDone) onDone();
     return;
-    
   } catch (error) {
     updateTransferStatus(transferIndex, TransferStatus.Failed);
     // Log the error to the console

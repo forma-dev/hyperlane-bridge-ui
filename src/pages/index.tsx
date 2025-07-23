@@ -7,11 +7,7 @@ const Home: NextPage = () => {
   const maintenance = false;
   return (
     <div className="pt-5 space-y-3">
-      {maintenance ? (
-        <MaintenanceCard />
-      ) : (
-          <TransferTokenCard />
-      )}
+      {maintenance ? <MaintenanceCard /> : <TransferTokenCard />}
     </div>
   );
 };

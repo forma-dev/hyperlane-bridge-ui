@@ -13,15 +13,21 @@ interface SimpleBalance {
   getDecimalFormattedAmount(): number;
 }
 
-export function useRecipientBalanceWatcher(recipient?: Address, balance?: TokenAmount | SimpleBalance | null) {
+export function useRecipientBalanceWatcher(
+  recipient?: Address,
+  balance?: TokenAmount | SimpleBalance | null,
+) {
   // A crude way to detect transfer completions by triggering
   // toast on recipient balance increase. This is not ideal because it
   // could confuse unrelated balance changes for message delivery
   // TODO replace with a polling worker that queries the hyperlane explorer
-  const prevRecipientBalance = useRef<{ balance?: TokenAmount | SimpleBalance | null; recipient?: string }>({
+  const prevRecipientBalance = useRef<{
+    balance?: TokenAmount | SimpleBalance | null;
+    recipient?: string;
+  }>({
     recipient: '',
   });
-  
+
   useEffect(() => {
     if (
       recipient &&

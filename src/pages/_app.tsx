@@ -26,16 +26,16 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ErrorBoundary>
       <RelayProvider>
-      <EvmWalletContext>
-        <SolanaWalletContext>
-          <CosmosWalletContext>
-            <AppLayout>
-              <Component {...pageProps} />
-            </AppLayout>
-            <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
-          </CosmosWalletContext>
-        </SolanaWalletContext>
-      </EvmWalletContext>
+        <EvmWalletContext>
+          <SolanaWalletContext>
+            <CosmosWalletContext>
+              <AppLayout>
+                <Component {...pageProps} />
+              </AppLayout>
+              <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
+            </CosmosWalletContext>
+          </SolanaWalletContext>
+        </EvmWalletContext>
       </RelayProvider>
     </ErrorBoundary>
   );

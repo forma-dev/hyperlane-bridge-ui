@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
-import { getNativeCurrency, getRelayChainId, RelayQuoteResponse } from './relaySdk';
+
+import { RelayQuoteResponse, getNativeCurrency, getRelayChainId } from './relaySdk';
 
 interface UseRelayQuoteParams {
   originChain: string;
@@ -39,11 +41,19 @@ export function useRelayQuote({
   const [estimatedOutput, setEstimatedOutput] = useState<EstimatedOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { getQuote, isReady } = useRelayContext();
-  
+
   const getRelayQuoteData = useCallback(async () => {
-    if (!isReady || !originChain || !destinationChain || !amount || parseFloat(amount) === 0 || !user || !recipient) {
+    if (
+      !isReady ||
+      !originChain ||
+      !destinationChain ||
+      !amount ||
+      parseFloat(amount) === 0 ||
+      !user ||
+      !recipient
+    ) {
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -52,7 +62,7 @@ export function useRelayQuote({
     // Check if this is a Relay-supported transfer (either deposit or withdrawal)
     const isDeposit = destinationChain === 'forma' || destinationChain === 'sketchpad'; // TO Forma
     const isWithdrawal = originChain === 'forma' || originChain === 'sketchpad'; // FROM Forma
-    
+
     // Only get quotes for Relay transfers involving Forma
     if (!isDeposit && !isWithdrawal) {
       setEstimatedOutput(null);
@@ -62,9 +72,11 @@ export function useRelayQuote({
 
     // For deposits: Check if origin chain is supported by Relay
     if (isDeposit) {
-      const relayChain = relayChains.find(chain => {
+      const relayChain = relayChains.find((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
-        return internalName === originChain.toLowerCase() && chain.depositEnabled && !chain.disabled;
+        return (
+          internalName === originChain.toLowerCase() && chain.depositEnabled && !chain.disabled
+        );
       });
 
       if (!relayChain) {
@@ -74,13 +86,13 @@ export function useRelayQuote({
       }
     }
 
-    // For withdrawals: Check if destination chain is supported by Relay  
+    // For withdrawals: Check if destination chain is supported by Relay
     if (isWithdrawal) {
-      const relayChain = relayChains.find(chain => {
+      const relayChain = relayChains.find((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         const matches = internalName === destinationChain.toLowerCase();
         const isEnabled = chain.depositEnabled && !chain.disabled;
-        
+
         return matches && isEnabled;
       });
 
@@ -90,24 +102,27 @@ export function useRelayQuote({
         return;
       }
     }
-    
+
     // Get chain IDs for Relay API
     const originChainIds = getRelayChainId(originChain);
     const destinationChainIds = getRelayChainId(destinationChain);
-    
+
     // For this bridge, Forma is always involved (either origin or destination)
-    const isFormaInvolved = originChain === 'forma' || originChain === 'sketchpad' || 
-                           destinationChain === 'forma' || destinationChain === 'sketchpad';
-    
+    const isFormaInvolved =
+      originChain === 'forma' ||
+      originChain === 'sketchpad' ||
+      destinationChain === 'forma' ||
+      destinationChain === 'sketchpad';
+
     if (isFormaInvolved) {
       // Check supported chains
       try {
         const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
-        const formaSupported = supportedChains.find(chain => 
-          chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma')
+        const formaSupported = supportedChains.find(
+          (chain) => chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma'),
         );
-        
+
         if (!formaSupported) {
           setError('Forma chain is not yet supported by Relay API');
           setIsLoading(false);
@@ -117,16 +132,18 @@ export function useRelayQuote({
         logger.error('Failed to check supported chains:', error);
       }
     }
-    
+
     // For now, try mainnet first to test currency format
-    // If either chain requires testnet, use testnet for both  
+    // If either chain requires testnet, use testnet for both
     const needsTestnet = false; // Temporarily force mainnet to test currency format
     // const needsTestnet = destinationChainIds.mainnet === null || originChainIds.mainnet === null ||
     //                     destinationChainIds.testnet === 984123 || originChainIds.testnet === 984123; // Check for sketchpad testnet
-    
+
     const originChainId = needsTestnet ? originChainIds.testnet : originChainIds.mainnet;
-    const destinationChainId = needsTestnet ? destinationChainIds.testnet : destinationChainIds.mainnet;
-    
+    const destinationChainId = needsTestnet
+      ? destinationChainIds.testnet
+      : destinationChainIds.mainnet;
+
     if (!originChainId || !destinationChainId) {
       setError('Unsupported chain for Relay');
       return;
@@ -139,13 +156,11 @@ export function useRelayQuote({
       // Get native currency for the origin and destination chains
       const originCurrency = getNativeCurrency(originChain);
       const destinationCurrency = getNativeCurrency(destinationChain);
-      
+
       // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
       // TIA token on Forma has 18 decimals (same as ETH)
       const decimals = 18;
       const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
-
-
 
       // Use SDK getQuote method with correct parameters
       const quote = await getQuote({
@@ -159,15 +174,13 @@ export function useRelayQuote({
         recipient,
       });
 
-
-
       // Parse the quote response to extract the estimated output
       const outputAmount = quote.details.currencyOut.amount;
       const outputDecimals = quote.details.currencyOut.currency.decimals;
-      
+
       // Convert from wei to human readable
       const formattedOutput = (parseFloat(outputAmount) / Math.pow(10, outputDecimals)).toFixed(4);
-      
+
       // Calculate USD value (assuming TIA price of ~$8.50 for now)
       const usdValue = (parseFloat(formattedOutput) * 8.5).toFixed(2);
 
@@ -197,7 +210,7 @@ export function useRelayQuote({
 
   return {
     estimatedOutput,
-    isLoading, 
+    isLoading,
     error,
   };
-} 
+}

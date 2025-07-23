@@ -6,10 +6,12 @@ import { IToken } from '@hyperlane-xyz/sdk';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TokenIcon } from '../../components/icons/TokenIcon';
 import { getIndexForToken, getTokenByIndex, getWarpCore } from '../../context/context';
+import { getRelayNativeTokenInfo } from '../chains/relayUtils';
+// Import centralized Relay utilities
+import { mapRelayChainToInternalName as relayMapChainName } from '../chains/relayUtils';
 import { TransferFormValues } from '../transfer/types';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 
-import { getRelayNativeTokenInfo } from '../chains/relayUtils';
 import { TokenListModal } from './TokenListModal';
 
 type Props = {
@@ -21,26 +23,28 @@ type Props = {
 // Helper function to determine if a chain is a Relay chain
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName) return false;
-  
+
   // First check against known Relay chain names (hardcoded list)
   const knownRelayChains = ['ethereum', 'arbitrum', 'optimism'];
   if (knownRelayChains.includes(chainName.toLowerCase())) {
     return true;
   }
-  
+
   // Also check against the dynamic Relay chains list if available
   if (relayChains?.length) {
-    return relayChains.some(chain => {
+    return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
-      return internalName && internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
+      return (
+        internalName &&
+        internalName === chainName.toLowerCase() &&
+        chain.depositEnabled &&
+        !chain.disabled
+      );
     });
   }
-  
+
   return false;
 }
-
-// Import centralized Relay utilities
-import { mapRelayChainToInternalName as relayMapChainName } from '../chains/relayUtils';
 
 // Helper function to map Relay chain names to internal names
 function mapRelayChainToInternalName(relayChainName: string): string | null {
@@ -61,12 +65,11 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   const { relayChains } = useRelaySupportedChains();
 
   const { origin, destination } = values;
-  
+
   useEffect(() => {
-    
     // Check if origin is a Relay chain
     const isOriginRelay = isRelayChain(origin, relayChains);
-    
+
     if (isOriginRelay) {
       // For pure Relay chains, automatically select the native token
       // Since we don't have actual Hyperlane tokens for Relay chains,
@@ -79,36 +82,34 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       // We need to find the Forma TIA token in the Hyperlane token list
       const warpCore = getWarpCore();
       const tokens = warpCore.tokens;
-      
+
       // For Forma withdrawals, we need to find the EVM TIA token, not the Cosmos one
       // Try multiple strategies to find the correct TIA token
-      let formaToken = tokens.find(token => 
-        token.chainName === origin && 
-        token.symbol === 'TIA' && 
-        token.protocol === 'ethereum'  // Prioritize EVM protocol for Forma
+      let formaToken = tokens.find(
+        (token) =>
+          token.chainName === origin && token.symbol === 'TIA' && token.protocol === 'ethereum', // Prioritize EVM protocol for Forma
       );
-      
+
       if (!formaToken) {
         // Fallback 1: Look for any EVM token with TIA in name
-        formaToken = tokens.find(token => 
-          token.chainName === origin && 
-          token.name?.toLowerCase().includes('tia') &&
-          token.protocol === 'ethereum'
+        formaToken = tokens.find(
+          (token) =>
+            token.chainName === origin &&
+            token.name?.toLowerCase().includes('tia') &&
+            token.protocol === 'ethereum',
         );
       }
-      
+
       if (!formaToken) {
         // Fallback 2: Look for any TIA token (any protocol)
-        formaToken = tokens.find(token => 
-          token.chainName === origin && token.symbol === 'TIA'
-        );
+        formaToken = tokens.find((token) => token.chainName === origin && token.symbol === 'TIA');
       }
-      
+
       if (!formaToken) {
         // Fallback 3: Look for any token on Forma
-        formaToken = tokens.find(token => token.chainName === origin);
+        formaToken = tokens.find((token) => token.chainName === origin);
       }
-      
+
       if (formaToken) {
         helpers.setValue(getIndexForToken(formaToken));
         setIsAutomaticSelection(true);
@@ -122,7 +123,7 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       const tokensWithRoute = getWarpCore().getTokensForRoute(origin, destination);
       let newFieldValue: number | undefined;
       let newIsAutomatic: boolean;
-      
+
       // No tokens available for this route
       if (tokensWithRoute.length === 0) {
         newFieldValue = undefined;
@@ -132,13 +133,13 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       else if (tokensWithRoute.length === 1) {
         newFieldValue = getIndexForToken(tokensWithRoute[0]);
         newIsAutomatic = true;
-      } 
+      }
       // Multiple possibilities
       else {
         newFieldValue = undefined;
         newIsAutomatic = false;
       }
-      
+
       helpers.setValue(newFieldValue);
       setIsAutomaticSelection(newIsAutomatic);
     }
@@ -209,15 +210,15 @@ function TokenButton({
     // Create a simple token icon based on the symbol
     const getTokenColor = (symbol: string) => {
       const colors: Record<string, string> = {
-        'ETH': '#627EEA',
-        'ARB': '#28A0F0',
-        'OP': '#FF0420',
+        ETH: '#627EEA',
+        ARB: '#28A0F0',
+        OP: '#FF0420',
       };
       return colors[symbol] || '#6B7280';
     };
 
     return (
-      <div 
+      <div
         className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
         style={{ backgroundColor: getTokenColor(tokenInfo.symbol) }}
       >
@@ -245,7 +246,9 @@ function TokenButton({
           <>
             {renderNativeTokenIcon(nativeTokenInfo)}
             <div className="flex flex-col items-start ml-2">
-              <span className="font-bold text-base leading-5 text-black">{nativeTokenInfo.symbol}</span>
+              <span className="font-bold text-base leading-5 text-black">
+                {nativeTokenInfo.symbol}
+              </span>
             </div>
           </>
         ) : (
@@ -264,4 +267,3 @@ const styles = {
   locked: 'cursor-default pointer-events-none bg-transparent',
   disabled: 'cursor-not-allowed bg-[#B5B5B5]',
 };
-

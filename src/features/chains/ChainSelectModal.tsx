@@ -1,8 +1,8 @@
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Modal } from '../../components/layout/Modal';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
-import { mapRelayChainToInternalName } from './relayUtils';
 
+import { mapRelayChainToInternalName } from './relayUtils';
 import { getChainDisplayName } from './utils';
 
 export function ChainSelectListModal({
@@ -21,16 +21,21 @@ export function ChainSelectListModal({
   // Helper function to determine if a chain is a Relay chain
   const isRelayChain = (chainName: string): boolean => {
     if (!chainName || !relayChains?.length) return false;
-    
-    return relayChains.some(chain => {
+
+    return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
-      return internalName && internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
+      return (
+        internalName &&
+        internalName === chainName.toLowerCase() &&
+        chain.depositEnabled &&
+        !chain.disabled
+      );
     });
   };
 
   // Separate chains by protocol
-  const hyperlaneChains = chains.filter(chain => !isRelayChain(chain));
-  const relayChainsList = chains.filter(chain => isRelayChain(chain));
+  const hyperlaneChains = chains.filter((chain) => !isRelayChain(chain));
+  const relayChainsList = chains.filter((chain) => isRelayChain(chain));
 
   const onSelectChain = (chain: ChainName) => {
     return () => {
@@ -54,9 +59,7 @@ export function ChainSelectListModal({
         </div>
         <span
           className={`text-xs px-2 py-1 rounded-full font-medium ${
-            protocol === 'relay'
-              ? 'bg-blue-100 text-blue-800'
-              : 'bg-gray-100 text-gray-800'
+            protocol === 'relay' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
           }`}
         >
           {protocol === 'relay' ? 'Relay' : 'Hyperlane'}
@@ -90,15 +93,16 @@ export function ChainSelectListModal({
         )}
 
         {/* No separation needed if only one type */}
-        {(hyperlaneChains.length === 0 || relayChainsList.length === 0) && 
-         chains.length > 0 && 
-         (hyperlaneChains.length === 0 && relayChainsList.length === 0) && (
-          <>
-            {chains.map((chain) => 
-              renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane')
-            )}
-          </>
-        )}
+        {(hyperlaneChains.length === 0 || relayChainsList.length === 0) &&
+          chains.length > 0 &&
+          hyperlaneChains.length === 0 &&
+          relayChainsList.length === 0 && (
+            <>
+              {chains.map((chain) =>
+                renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane'),
+              )}
+            </>
+          )}
       </div>
     </Modal>
   );
