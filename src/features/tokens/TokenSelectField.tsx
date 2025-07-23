@@ -9,6 +9,7 @@ import { getIndexForToken, getTokenByIndex, getWarpCore } from '../../context/co
 import { TransferFormValues } from '../transfer/types';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 
+import { getRelayNativeTokenInfo } from '../chains/relayUtils';
 import { TokenListModal } from './TokenListModal';
 
 type Props = {
@@ -22,7 +23,7 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName) return false;
   
   // First check against known Relay chain names (hardcoded list)
-  const knownRelayChains = ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche'];
+  const knownRelayChains = ['ethereum', 'arbitrum', 'optimism'];
   if (knownRelayChains.includes(chainName.toLowerCase())) {
     return true;
   }
@@ -38,38 +39,18 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
   return false;
 }
 
+// Import centralized Relay utilities
+import { mapRelayChainToInternalName as relayMapChainName } from '../chains/relayUtils';
+
 // Helper function to map Relay chain names to internal names
 function mapRelayChainToInternalName(relayChainName: string): string | null {
-  const nameMapping: Record<string, string> = {
-    'ethereum': 'ethereum',
-    'polygon': 'polygon', 
-    'arbitrum-one': 'arbitrum',
-    'arbitrum': 'arbitrum',
-    'optimism': 'optimism',
-    'base': 'base',
-    'binance-smart-chain': 'bsc',
-    'bnb-smart-chain': 'bsc',
-    'bsc': 'bsc',
-    'avalanche': 'avalanche',
-    'avalanche-c-chain': 'avalanche',
-  };
-  
-  return nameMapping[relayChainName.toLowerCase()] || null;
+  const result = relayMapChainName(relayChainName);
+  return result || null;
 }
 
 // Get native token info for Relay chains
 function getNativeTokenInfo(chainName: string) {
-  const nativeTokens: Record<string, { symbol: string; decimals: number; name: string }> = {
-    'ethereum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'polygon': { symbol: 'MATIC', decimals: 18, name: 'Polygon' },
-    'arbitrum': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'optimism': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'base': { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    'bsc': { symbol: 'BNB', decimals: 18, name: 'BNB' },
-    'avalanche': { symbol: 'AVAX', decimals: 18, name: 'Avalanche' },
-  };
-  
-  return nativeTokens[chainName.toLowerCase()];
+  return getRelayNativeTokenInfo(chainName);
 }
 
 export function TokenSelectField({ name, disabled, setIsNft }: Props) {
@@ -229,9 +210,8 @@ function TokenButton({
     const getTokenColor = (symbol: string) => {
       const colors: Record<string, string> = {
         'ETH': '#627EEA',
-        'MATIC': '#8247E5', 
-        'BNB': '#F3BA2F',
-        'AVAX': '#E84142',
+        'ARB': '#28A0F0',
+        'OP': '#FF0420',
       };
       return colors[symbol] || '#6B7280';
     };

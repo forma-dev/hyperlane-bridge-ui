@@ -38,7 +38,6 @@ const IMG_SRC_HOSTS = [
   'https://s3.amazonaws.com',
   'https://assets.coingecko.com',
   'https://logos.covalenthq.com',
-  'https:',  // Temporarily allow all HTTPS images for debugging
 ];
 const cspHeader = `
   default-src 'self';

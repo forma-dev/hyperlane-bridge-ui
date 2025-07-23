@@ -1,12 +1,13 @@
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PropsWithChildren, useMemo } from 'react';
-import { arbitrum, avalanche, base, bsc, mainnet, optimism, polygon } from 'wagmi/chains';
+import { PropsWithChildren, useEffect, useMemo } from 'react';
+import { arbitrum, mainnet, optimism } from 'wagmi/chains';
 
 import { forma } from '../../../config/chain';
 import { wagmiConfig } from '../../../config/wagmi';
 import { config } from '../../../consts/config';
+import { logger } from '../../../utils/logger';
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,27 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
       return process.env.NEXT_PUBLIC_PRIVY_APP_ID_PROD;
     }
     return process.env.NEXT_PUBLIC_PRIVY_APP_ID_DEV;
+  }, []);
+
+  // Add error boundary for Privy analytics errors
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        return await originalFetch(...args);
+      } catch (error) {
+        // Silently handle Privy analytics errors to prevent console spam
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('auth.privy.io')) {
+          logger.debug('Privy analytics request failed (expected in development):', error);
+          return new Response('{}', { status: 200 });
+        }
+        throw error;
+      }
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
   }, []);
 
   return (
@@ -36,7 +58,7 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
           createOnLogin: 'users-without-wallets',
         },
         defaultChain: forma,
-        supportedChains: [forma, mainnet, polygon, arbitrum, optimism, base, bsc, avalanche],
+        supportedChains: [forma, mainnet, arbitrum, optimism],
       }}
     >
       <QueryClientProvider client={queryClient}>

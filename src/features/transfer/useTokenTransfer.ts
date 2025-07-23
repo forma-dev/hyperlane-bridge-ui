@@ -17,6 +17,7 @@ import {
     useTransactionFns,
 } from '../wallet/hooks/multiProtocol';
 
+import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { TransferContext, TransferFormValues, TransferStatus } from './types';
 import { tryGetMsgIdFromTransferReceipt } from './utils';
 
@@ -37,18 +38,10 @@ export function useTokenTransfer(onDone?: () => void) {
 
   // TODO implement cancel callback for when modal is closed?
   const triggerTransactions = useCallback(
-    (values: TransferFormValues) => {
+    (values: TransferFormValues, wallet?: any) => {
       // Determine if this should use Relay or Hyperlane
       const protocol = getTransferProtocol(values.origin, values.destination, relayChains);
       const isRelayTransfer = protocol === 'relay';
-      
-      logger.debug('Transfer protocol decision:', {
-        origin: values.origin,
-        destination: values.destination,
-        protocol,
-        isRelayTransfer,
-        relayChains: relayChains.length
-      });
       
       if (isRelayTransfer) {
         return executeRelayTransfer({
@@ -60,6 +53,7 @@ export function useTokenTransfer(onDone?: () => void) {
           updateTransferStatus,
           setIsLoading,
           onDone,
+          wallet,
         });
       } else {
         return executeHyperlaneTransfer({
@@ -96,7 +90,6 @@ export function useTokenTransfer(onDone?: () => void) {
 
 // Helper function to determine transfer protocol
 function getTransferProtocol(origin: string, destination: string, relayChains: any[]): 'relay' | 'hyperlane' {
-  logger.debug('getTransferProtocol called with:', { origin, destination, relayChains: relayChains.length });
   
   // Import warp core to check Hyperlane availability
   const warpCore = getWarpCore();
@@ -106,31 +99,17 @@ function getTransferProtocol(origin: string, destination: string, relayChains: a
                          destination === 'forma' || destination === 'sketchpad';
   
   const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
+  // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
   
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
   const originIsHyperlane = hyperlaneChains.includes(origin);
   const destinationIsHyperlane = hyperlaneChains.includes(destination);
   
-  logger.debug('Transfer protocol analysis:', { 
-    isFormaInvolved, 
-    isDeposit, 
-    isWithdrawal, 
-    origin, 
-    destination,
-    originIsRelay,
-    destinationIsRelay,
-    originIsHyperlane,
-    destinationIsHyperlane,
-    relayChains: relayChains.length
-  });
-  
   // STRATEGY: More specific routing logic
   
   // 1. If both chains are available on Hyperlane, prefer Hyperlane
   if (originIsHyperlane && destinationIsHyperlane) {
-    logger.debug('Using Hyperlane protocol - both chains available on Hyperlane');
     return 'hyperlane';
   }
   
@@ -140,92 +119,33 @@ function getTransferProtocol(origin: string, destination: string, relayChains: a
     const otherChainIsRelay = isRelayChain(otherChain, relayChains);
     const otherChainIsHyperlane = hyperlaneChains.includes(otherChain);
     
-    logger.debug('Forma bridge check:', { 
-      otherChain, 
-      otherChainIsRelay, 
-      otherChainIsHyperlane 
-    });
-    
     // Use Relay if the other chain is available on Relay but NOT on Hyperlane
     if (otherChainIsRelay && !otherChainIsHyperlane) {
-      logger.debug('Using Relay protocol - Forma bridge with Relay-only chain');
       return 'relay';
     }
   }
   
   // 3. If either chain is Relay-only (not available on Hyperlane), use Relay
   if ((originIsRelay && !originIsHyperlane) || (destinationIsRelay && !destinationIsHyperlane)) {
-    logger.debug('Using Relay protocol - at least one chain is Relay-only');
     return 'relay';
   }
   
   // 4. Default to Hyperlane
-  logger.debug('Using Hyperlane protocol - default case');
   return 'hyperlane';
 }
 
 // Helper function to determine if a chain is a Relay chain
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName || !relayChains?.length) {
-    logger.debug('isRelayChain early return:', { chainName, relayChains: relayChains?.length });
     return false;
   }
   
   const result = relayChains.some(chain => {
     const internalName = mapRelayChainToInternalName(chain.name);
     const isMatch = internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
-    if (chainName === 'ethereum') {
-      logger.debug('Ethereum relay check:', { 
-        chainName, 
-        relayChainName: chain.name, 
-        internalName, 
-        isMatch, 
-        depositEnabled: chain.depositEnabled, 
-        disabled: chain.disabled 
-      });
-    }
     return isMatch;
   });
   
-  logger.debug('isRelayChain result:', { chainName, result });
-  return result;
-}
-
-// Helper function to map Relay chain names to internal names  
-function mapRelayChainToInternalName(relayChainName: string): string {
-  if (!relayChainName) return '';
-  
-  const mapping: { [key: string]: string } = {
-    // Pascal case
-    'Ethereum': 'ethereum',
-    'Polygon': 'polygon',
-    'Arbitrum': 'arbitrum',
-    'Optimism': 'optimism',
-    'Base': 'base',
-    'BNB Smart Chain': 'bsc',
-    'Avalanche': 'avalanche',
-    // Lower case (likely format from API)
-    'ethereum': 'ethereum',
-    'polygon': 'polygon',
-    'arbitrum': 'arbitrum',
-    'arbitrum-one': 'arbitrum',
-    'optimism': 'optimism',
-    'base': 'base',
-    'bnb': 'bsc',
-    'bsc': 'bsc',
-    'binance-smart-chain': 'bsc',
-    'avalanche': 'avalanche',
-    'avalanche-c-chain': 'avalanche',
-    // Any other formats we might encounter
-    'eth': 'ethereum',
-    'matic': 'polygon',
-    'arb': 'arbitrum',
-    'op': 'optimism',
-    'avax': 'avalanche',
-  };
-  
-  const result = mapping[relayChainName] || relayChainName.toLowerCase();
-  logger.debug('mapRelayChainToInternalName:', { relayChainName, result });
   return result;
 }
 
@@ -239,6 +159,7 @@ async function executeRelayTransfer({
   updateTransferStatus,
   setIsLoading,
   onDone,
+  wallet,
 }: {
   values: TransferFormValues;
   transferIndex: number;
@@ -248,18 +169,12 @@ async function executeRelayTransfer({
   updateTransferStatus: AppState['updateTransferStatus'];
   setIsLoading: (b: boolean) => void;
   onDone?: () => void;
+  wallet?: any;
 }) {
   const { origin, destination, amount, recipient } = values;
   
-  const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
+  // const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
   // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
-  
-  logger.debug('Preparing Relay transfer transaction(s):', {
-    type: isDeposit ? 'DEPOSIT' : 'WITHDRAWAL',
-    from: origin,
-    to: destination,
-    amount
-  });
   
   setIsLoading(true);
   let transferStatus: TransferStatus = TransferStatus.Preparing;
@@ -273,7 +188,7 @@ async function executeRelayTransfer({
     }
 
     // Import Relay API functions
-    const { getRelayQuote, executeRelaySwapSingleOrigin, getRelayChainId, getNativeCurrency } = await import('./relayApi');
+    const { getRelayQuote, executeRelaySwapSingleOrigin, getRelayChainId, getNativeCurrency } = await import('./relaySdk');
     
     // Get chain IDs for Relay API
     const originChainIds = getRelayChainId(origin);
@@ -307,7 +222,6 @@ async function executeRelayTransfer({
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.CreatingTxs));
 
     // Step 1: Get a quote from Relay
-    logger.debug('Getting Relay quote...');
     const originCurrency = getNativeCurrency(origin);
     const destinationCurrency = getNativeCurrency(destination);
     
@@ -316,14 +230,7 @@ async function executeRelayTransfer({
     const decimals = 18;
     const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
     
-    logger.debug('DEBUG: Amount conversion:', {
-      originalAmount: amount,
-      decimals,
-      amountWei,
-      chain: origin
-    });
-
-    const quote = await getRelayQuote({
+    await getRelayQuote({
       user: sender,
       recipient,
       originChainId,
@@ -334,10 +241,13 @@ async function executeRelayTransfer({
       tradeType: 'EXACT_INPUT',
     });
 
-    logger.debug('Relay quote received:', quote);
+
 
     // Step 2: Execute the swap using NEW API format
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.SigningTransfer));
+    
+    // For now, pass null wallet to let Relay SDK handle wallet detection
+    const walletToUse = wallet || null;
     
     const swapResponse = await executeRelaySwapSingleOrigin({
       user: sender,
@@ -348,16 +258,7 @@ async function executeRelayTransfer({
       destinationCurrency,
       amount: amountWei,
       tradeType: 'EXACT_INPUT',
-    });
-
-    logger.debug('Relay swap response:', swapResponse);
-
-    // DEBUGGING: Log the full structure to understand why wallet popup isn't showing
-    logger.debug('DEBUG: Swap response structure:', {
-      hasSteps: !!swapResponse?.steps,
-      stepsLength: swapResponse?.steps?.length || 0,
-      steps: swapResponse?.steps,
-      fullResponse: swapResponse
+      wallet: walletToUse,
     });
 
     // Step 3: Execute the transactions from the swap response
@@ -366,44 +267,35 @@ async function executeRelayTransfer({
     const originProtocol = tryGetChainProtocol(origin) || ProtocolType.Ethereum;
     const sendTransaction = transactionFns[originProtocol].sendTransaction;
     
-    logger.debug('DEBUG: Send transaction function:', { 
-      originProtocol,
-      hasSendTransaction: !!sendTransaction,
-      transactionFns: Object.keys(transactionFns)
-    });
-    
     // Execute each step from the Relay response (NEW STRUCTURE)
     const hashes: string[] = [];
-    
-    if (!swapResponse?.steps || !Array.isArray(swapResponse.steps)) {
-      logger.debug('DEBUG: No steps found in response or steps is not an array');
-      throw new Error('Invalid response structure from Relay API - no steps found');
+
+    // Use the correct path for steps (swapResponse.data.steps)
+    const steps = (swapResponse as any).data?.steps;
+    // If steps is missing or not an array, log the response and check for hashes
+    if (!steps || !Array.isArray(steps)) {
+      logger.warn('Relay swapResponse missing or invalid steps:', swapResponse);
+      // If hashes were somehow created, treat as success
+      if (hashes.length > 0) {
+        updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
+          originTxHash: hashes.at(-1),
+        });
+        setIsLoading(false);
+        if (onDone) onDone();
+        return;
+      } else {
+        updateTransferStatus(transferIndex, TransferStatus.Failed);
+        throw new Error('Invalid response structure from Relay API - no steps found');
+      }
     }
-    
-    for (const step of swapResponse.steps) {
-      logger.debug(`Processing step: ${step.id} - ${step.action}`);
-      logger.debug('DEBUG: Step structure:', {
-        hasItems: !!step.items,
-        itemsLength: step.items?.length || 0,
-        items: step.items
-      });
-      
+
+    for (const step of steps) {
       if (!step.items || !Array.isArray(step.items)) {
-        logger.debug('DEBUG: No items found in step or items is not an array');
         continue;
       }
-      
       for (const item of step.items) {
-        logger.debug('DEBUG: Processing item:', {
-          status: item.status,
-          hasData: !!item.data,
-          itemStructure: item
-        });
-        
         // Check if this is an incomplete transaction that needs to be executed
         if (item.status === 'incomplete' && item.data) {
-          logger.debug('DEBUG: Found incomplete transaction, preparing to send...');
-          
           const tx = {
             type: ProviderType.EthersV5,
             transaction: {
@@ -418,77 +310,68 @@ async function executeRelayTransfer({
               ...(item.data.maxPriorityFeePerGas && { maxPriorityFeePerGas: item.data.maxPriorityFeePerGas }),
             },
           };
-
-                    logger.debug('DEBUG: Transaction object prepared:', tx);
-          logger.debug('DEBUG: About to call sendTransaction...');
-          logger.debug('DEBUG: sendTransaction parameters:', {
+          const result = await sendTransaction({
+            tx,
             chainName: origin,
-            txType: tx.type,
-            hasTransactionData: !!tx.transaction
           });
-
-          try {
-            const result = await sendTransaction({
-              tx,
-              chainName: origin,
-            });
-            
-            logger.debug('DEBUG: sendTransaction returned:', result);
-            
-            const { hash } = result;
-            logger.debug('DEBUG: Transaction sent successfully, hash:', hash);
-            hashes.push(hash);
-            
-            // const receipt = await confirm();
-            logger.debug(`Relay transaction confirmed, hash:`, hash);
-            
-            // Show success toast
-            const { toastTxSuccess } = await import('../../components/toast/TxSuccessToast');
-            toastTxSuccess(`${step.action} completed!`, hash, origin);
-            
-            // Log the requestId for tracking if available
-            if (step.requestId) {
-              logger.debug(`Transaction request ID: ${step.requestId}`);
+          const { hash } = result;
+          hashes.push(hash);
+          // Show success toast
+          const { toastTxSuccess } = await import('../../components/toast/TxSuccessToast');
+          toastTxSuccess(`${step.action} completed!`, hash, origin);
+        } else if (item.status === 'complete') {
+          // Extract hashes from txHashes or internalTxHashes (handle string or object)
+          if (Array.isArray(item.txHashes)) {
+            for (const tx of item.txHashes) {
+              if (typeof tx === 'string') {
+                hashes.push(tx);
+              } else if (tx && tx.txHash) {
+                hashes.push(tx.txHash);
+              } else if (tx && tx.hash) {
+                hashes.push(tx.hash);
+              }
             }
-          } catch (txError) {
-            logger.debug('DEBUG: sendTransaction failed:', txError);
-            throw txError;
           }
-        } else {
-          logger.debug('DEBUG: Item skipped - not incomplete or no data:', {
-            status: item.status,
-            hasData: !!item.data
-          });
+          if (Array.isArray(item.internalTxHashes)) {
+            for (const tx of item.internalTxHashes) {
+              if (typeof tx === 'string') {
+                hashes.push(tx);
+              } else if (tx && tx.txHash) {
+                hashes.push(tx.txHash);
+              } else if (tx && tx.hash) {
+                hashes.push(tx.hash);
+              }
+            }
+          }
         }
       }
     }
-    
     if (hashes.length === 0) {
-      logger.debug('DEBUG: No transactions were executed - this explains why no wallet popup appeared');
+      updateTransferStatus(transferIndex, TransferStatus.Failed);
       throw new Error('No transactions found to execute in Relay response');
     }
-
+    // If we have hashes, always show success and clear error state
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
       originTxHash: hashes.at(-1),
     });
-
-    logger.debug('Relay transfer completed successfully');
+    setIsLoading(false);
+    if (onDone) onDone();
+    return;
     
   } catch (error) {
-    logger.error(`Error at stage ${transferStatus}`, error);
     updateTransferStatus(transferIndex, TransferStatus.Failed);
-    
+    // Log the error to the console
+    logger.error('Relay transfer error:', error);
     if (JSON.stringify(error).includes('ChainMismatchError')) {
       toast.error('Wallet must be connected to origin chain');
     } else if (error instanceof Error) {
-      toast.error(error.message || 'Unable to process Relay transfer');
+      toast.error(error.message || JSON.stringify(error));
     } else {
-      toast.error('Unable to process Relay transfer');
+      toast.error(JSON.stringify(error));
     }
+    setIsLoading(false);
+    if (onDone) onDone();
   }
-
-  setIsLoading(false);
-  if (onDone) onDone();
 }
 
 // Execute Hyperlane transfer (existing logic)
@@ -513,7 +396,6 @@ async function executeHyperlaneTransfer({
   setIsLoading: (b: boolean) => void;
   onDone?: () => void;
 }) {
-  logger.debug('Preparing Hyperlane transfer transaction(s)');
   setIsLoading(true);
   let transferStatus: TransferStatus = TransferStatus.Preparing;
   updateTransferStatus(transferIndex, transferStatus);
@@ -578,7 +460,6 @@ async function executeHyperlaneTransfer({
       updateTransferStatus(transferIndex, (transferStatus = txCategoryToStatuses[tx.category][1]));
       txReceipt = await confirm();
       const description = toTitleCase(tx.category);
-      logger.debug(`${description} transaction confirmed, hash:`, hash);
       toastTxSuccess(`${description} transaction sent!`, hash, origin);
       hashes.push(hash);
     }
@@ -590,7 +471,6 @@ async function executeHyperlaneTransfer({
       msgId,
     });
   } catch (error) {
-    logger.error(`Error at stage ${transferStatus}`, error);
     updateTransferStatus(transferIndex, TransferStatus.Failed);
     if (JSON.stringify(error).includes('ChainMismatchError')) {
       // Wagmi switchNetwork call helps prevent this but isn't foolproof

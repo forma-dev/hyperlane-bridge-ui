@@ -3,30 +3,29 @@ import { ComponentProps, useEffect, useMemo, useState } from 'react';
 
 import { ChainLogo as ChainLogoInner } from '@hyperlane-xyz/widgets';
 
+import { getRelayNativeTokenInfo, mapRelayChainToInternalName } from '../../features/chains/relayUtils';
 import { getChainDisplayName, tryGetChainMetadata } from '../../features/chains/utils';
 import { useRelaySupportedChains } from '../../features/wallet/context/RelayContext';
 
 // Custom fallback icons for Relay chains (used only if iconUrl from API fails)
-function createRelayChainIcon(chainName: string, _size: number) {
-  const chainConfig: Record<string, { symbol: string; color: string }> = {
-    'ethereum': { symbol: 'ETH', color: '#627EEA' },
-    'polygon': { symbol: 'MATIC', color: '#8247E5' },
-    'arbitrum': { symbol: 'ARB', color: '#28A0F0' },
-    'optimism': { symbol: 'OP', color: '#FF0420' },
-    'base': { symbol: 'BASE', color: '#0052FF' },
-    'bsc': { symbol: 'BNB', color: '#F3BA2F' },
-    'avalanche': { symbol: 'AVAX', color: '#E84142' },
+function createRelayChainIcon(chainName: string, _size: number, relayChains?: any[]) {
+  const currencyInfo = getRelayNativeTokenInfo(chainName, relayChains);
+  
+  // Use a color mapping for the fallback icons
+  const colorMap: Record<string, string> = {
+    'ETH': '#627EEA',
+    'ARB': '#28A0F0',
+    'OP': '#FF0420',
   };
-
-  const config = chainConfig[chainName.toLowerCase()];
-  if (!config) return undefined;
+  
+  const color = colorMap[currencyInfo?.symbol || 'ETH'] || '#6B7280';
 
   const RelayChainIcon = (props: { width: number; height: number; title?: string }) => (
     <div 
       style={{ 
         width: props.width, 
         height: props.height,
-        backgroundColor: config.color,
+        backgroundColor: color,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
@@ -38,47 +37,13 @@ function createRelayChainIcon(chainName: string, _size: number) {
       }}
       title={props.title}
     >
-      {config.symbol.slice(0, 3)}
+      {(currencyInfo?.symbol || 'ETH').slice(0, 3)}
     </div>
   );
 
-  RelayChainIcon.displayName = `RelayChainIcon-${config.symbol}`;
+  RelayChainIcon.displayName = `RelayChainIcon-${currencyInfo?.symbol || 'ETH'}`;
   
   return RelayChainIcon;
-}
-
-// Helper function to map Relay chain names to internal names
-function mapRelayChainToInternalName(relayChainName: string): string | null {
-  const mapping: { [key: string]: string } = {
-    // Full names (case-sensitive for display names)
-    'Ethereum': 'ethereum',
-    'Polygon': 'polygon', 
-    'Arbitrum': 'arbitrum',
-    'Optimism': 'optimism',
-    'Base': 'base',
-    'BNB Smart Chain': 'bsc',
-    'Avalanche': 'avalanche',
-    // Lowercase variants
-    'ethereum': 'ethereum',
-    'polygon': 'polygon',
-    'arbitrum': 'arbitrum',
-    'optimism': 'optimism',
-    'base': 'base',
-    'bsc': 'bsc',
-    'avalanche': 'avalanche',
-    // Short names/symbols
-    'ETH': 'ethereum',
-    'MATIC': 'polygon',
-    'OP': 'optimism',
-    'ARB': 'arbitrum',
-    'AVAX': 'avalanche',
-    'BNB': 'bsc',
-    // Other variations
-    'Arbitrum One': 'arbitrum',
-    'Binance Smart Chain': 'bsc',
-  };
-  
-  return mapping[relayChainName] || null;
 }
 
 // Component to handle image loading with fallback
@@ -130,14 +95,28 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
     
     let icon: ((props: { width: number; height: number; title?: string }) => JSX.Element) | undefined;
     
-    // First, check if this is a Relay chain and get its iconUrl from the API
+    // Check if this is a Relay chain and get its iconUrl from the API
     const relayChain = relayChains.find(chain => {
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName === chainName.toLowerCase();
     });
     
-    if (relayChain && (relayChain.iconUrl || relayChain.logoUrl)) {
-      // Use iconUrl from Relay API with fallback to logoUrl
+    // For Forma, prioritize local logo over Relay's logo
+    const shouldUseLocalLogo = chainName === 'forma' || chainName === 'sketchpad';
+    
+    if (shouldUseLocalLogo && chainMetadata?.logoURI) {
+      // Use local logo for Forma/Sketchpad
+      icon = (props: { width: number; height: number; title?: string }) => (
+        <Image 
+          src={chainMetadata.logoURI} 
+          alt={chainDisplayName || chainName}
+          width={props.width}
+          height={props.height}
+          title={props.title}
+        />
+      );
+    } else if (relayChain && (relayChain.iconUrl || relayChain.logoUrl)) {
+      // Use iconUrl from Relay API with fallback to logoUrl for other chains
       const imageUrl = relayChain.iconUrl || relayChain.logoUrl;
       icon = (props: { width: number; height: number; title?: string }) => (
         <ChainImage 
@@ -149,7 +128,7 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
         />
       );
     } else if (chainMetadata?.logoURI) {
-      // Use logoURI from Hyperlane metadata
+      // Use logoURI from Hyperlane metadata for other chains
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image 
           src={chainMetadata.logoURI} 
@@ -161,7 +140,7 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
       );
     } else {
       // Final fallback to custom icon for known Relay chains
-      icon = createRelayChainIcon(chainName, rest.size || 32);
+      icon = createRelayChainIcon(chainName, rest.size || 32, relayChains);
     }
     
     return {

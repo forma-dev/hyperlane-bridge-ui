@@ -31,12 +31,8 @@ export function useEvmAccount(): AccountInfo {
     
     const chainMapping: Record<number, string> = {
       1: 'ethereum',
-      137: 'polygon',
       42161: 'arbitrum',
       10: 'optimism',
-      8453: 'base',
-      56: 'bsc',
-      43114: 'avalanche',
       984122: 'forma', // Forma chain ID
       // Add more chain mappings as needed
     };

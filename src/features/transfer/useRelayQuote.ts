@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { logger } from '../../utils/logger';
+import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
-import { getNativeCurrency, getRelayChainId, RelayQuoteResponse } from './relayApi';
+import { getNativeCurrency, getRelayChainId, RelayQuoteResponse } from './relaySdk';
 
 interface UseRelayQuoteParams {
   originChain: string;
@@ -101,7 +102,7 @@ export function useRelayQuote({
     if (isFormaInvolved) {
       // Check supported chains
       try {
-        const { getRelaySupportedChains } = await import('./relayApi');
+        const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
         const formaSupported = supportedChains.find(chain => 
           chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma')
@@ -143,6 +144,8 @@ export function useRelayQuote({
       // TIA token on Forma has 18 decimals (same as ETH)
       const decimals = 18;
       const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+
+
 
       // Use SDK getQuote method with correct parameters
       const quote = await getQuote({
@@ -197,21 +200,4 @@ export function useRelayQuote({
     isLoading, 
     error,
   };
-}
-
-// Helper function to map Relay chain names (duplicated here for now)
-function mapRelayChainToInternalName(relayChainName: string): string {
-  const nameMapping: Record<string, string> = {
-    'ethereum': 'ethereum',
-    'polygon': 'polygon', 
-    'arbitrum-one': 'arbitrum',
-    'arbitrum': 'arbitrum', 
-    'optimism': 'optimism',
-    'base': 'base',
-    'binance-smart-chain': 'bsc',
-    'bsc': 'bsc',
-    'avalanche': 'avalanche',
-  };
-  
-  return nameMapping[relayChainName.toLowerCase()] || relayChainName.toLowerCase();
 } 

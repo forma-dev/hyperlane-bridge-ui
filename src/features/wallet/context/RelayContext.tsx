@@ -1,11 +1,11 @@
 import {
-    PropsWithChildren,
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
 } from 'react';
 import { logger } from '../../../utils/logger';
 import { getRelayClient, initializeRelayClient, isRelayClientReady, setupDynamicChains } from './RelayClient';
@@ -84,18 +84,18 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         viemChain: null 
       },
       { 
-        id: 137, 
-        name: 'polygon', 
-        displayName: 'Polygon',
+        id: 10, 
+        name: 'optimism', 
+        displayName: 'Optimism',
         iconUrl: undefined,
         logoUrl: undefined,
         enabled: true,
         depositEnabled: true,
         disabled: false,
         currency: {
-          id: 'polygon-native',
-          symbol: 'MATIC',
-          name: 'Polygon',
+          id: 'optimism-native',
+          symbol: 'ETH',
+          name: 'Optimism',
           address: '0x0000000000000000000000000000000000000000',
           decimals: 18,
           supportsBridging: true,
@@ -328,23 +328,14 @@ export function useRelaySupportedChains() {
   return { relayChains, isLoadingChains, refreshChains };
 }
 
+// Import centralized Relay utilities
+import { getRelayChainNames as relayGetChainNames, mapRelayChainToInternalName as relayMapChainName } from '../../chains/relayUtils';
+
 // Compatibility functions for existing code
 export function getRelayChainNames(relayChains: RelayChain[]): string[] {
-  return relayChains.map(chain => chain.name);
+  return relayGetChainNames(relayChains);
 }
 
 export function mapRelayChainToInternalName(relayChainName: string): string {
-  const nameMapping: Record<string, string> = {
-    'Ethereum': 'ethereum',
-    'Polygon': 'polygon', 
-    'Arbitrum': 'arbitrum',
-    'Arbitrum One': 'arbitrum',
-    'Optimism': 'optimism',
-    'Base': 'base',
-    'BSC': 'bsc',
-    'Binance Smart Chain': 'bsc',
-    'Avalanche': 'avalanche',
-    'Avalanche C-Chain': 'avalanche',
-  };
-  return nameMapping[relayChainName] || relayChainName.toLowerCase();
+  return relayMapChainName(relayChainName);
 } 

@@ -18,4 +18,4 @@ export function PolygonIcon(props: ComponentProps<'svg'>) {
       />
     </svg>
   );
-}
+} 

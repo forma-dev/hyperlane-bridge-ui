@@ -1,6 +1,7 @@
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Modal } from '../../components/layout/Modal';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
+import { mapRelayChainToInternalName } from './relayUtils';
 
 import { getChainDisplayName } from './utils';
 
@@ -25,40 +26,6 @@ export function ChainSelectListModal({
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName && internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
     });
-  };
-
-  // Helper function to map Relay chain names to internal names  
-  const mapRelayChainToInternalName = (relayChainName: string): string | null => {
-    const mapping: { [key: string]: string } = {
-      // Full names (case-sensitive for display names)
-      'Ethereum': 'ethereum',
-      'Polygon': 'polygon', 
-      'Arbitrum': 'arbitrum',
-      'Optimism': 'optimism',
-      'Base': 'base',
-      'BNB Smart Chain': 'bsc',
-      'Avalanche': 'avalanche',
-      // Lowercase variants
-      'ethereum': 'ethereum',
-      'polygon': 'polygon',
-      'arbitrum': 'arbitrum',
-      'optimism': 'optimism',
-      'base': 'base',
-      'bsc': 'bsc',
-      'avalanche': 'avalanche',
-      // Short names/symbols
-      'ETH': 'ethereum',
-      'MATIC': 'polygon',
-      'OP': 'optimism',
-      'ARB': 'arbitrum',
-      'AVAX': 'avalanche',
-      'BNB': 'bsc',
-      // Other variations
-      'Arbitrum One': 'arbitrum',
-      'Binance Smart Chain': 'bsc',
-    };
-    
-    return mapping[relayChainName] || null;
   };
 
   // Separate chains by protocol

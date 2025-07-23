@@ -15,16 +15,7 @@ const RELAY_CHAIN_METADATA: Record<string, any> = {
     nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }],
   },
-  polygon: {
-    name: 'polygon',
-    displayName: 'Polygon',
-    displayNameShort: 'MATIC',
-    protocol: ProtocolType.Ethereum,
-    chainId: 137,
-    domainId: 137,
-    nativeToken: { name: 'Polygon', symbol: 'MATIC', decimals: 18 },
-    rpcUrls: [{ http: 'https://polygon.rpc.hyperlane.xyz' }],
-  },
+
   arbitrum: {
     name: 'arbitrum',
     displayName: 'Arbitrum One',
@@ -45,55 +36,21 @@ const RELAY_CHAIN_METADATA: Record<string, any> = {
     nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: [{ http: 'https://optimism.rpc.hyperlane.xyz' }],
   },
-  base: {
-    name: 'base',
-    displayName: 'Base',
-    displayNameShort: 'BASE',
-    protocol: ProtocolType.Ethereum,
-    chainId: 8453,
-    domainId: 8453,
-    nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: [{ http: 'https://base.rpc.hyperlane.xyz' }],
-  },
-  bsc: {
-    name: 'bsc',
-    displayName: 'BNB Smart Chain',
-    displayNameShort: 'BSC',
-    protocol: ProtocolType.Ethereum,
-    chainId: 56,
-    domainId: 56,
-    nativeToken: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-    rpcUrls: [{ http: 'https://bsc.rpc.hyperlane.xyz' }],
-  },
-  avalanche: {
-    name: 'avalanche',
-    displayName: 'Avalanche',
-    displayNameShort: 'AVAX',
-    protocol: ProtocolType.Ethereum,
-    chainId: 43114,
-    domainId: 43114,
-    nativeToken: { name: 'Avalanche', symbol: 'AVAX', decimals: 18 },
-    rpcUrls: [{ http: 'https://avalanche.rpc.hyperlane.xyz' }],
-  },
+
 };
 
-// Helper function to map Relay chain names to internal names
+// Import centralized Relay utilities
+import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
+
+// Re-export for backward compatibility
 export function mapRelayChainToInternalName(relayChainName: string): string {
-  const chainName = relayChainName.toLowerCase();
-  
-  // Map common variations to our internal names
-  if (chainName === 'arbitrum one') return 'arbitrum';
-  if (chainName === 'bnb smart chain' || chainName === 'binance smart chain') return 'bsc';
-  if (chainName === 'avalanche c-chain') return 'avalanche';
-  
-  // Default: use the lowercase chain name directly
-  return chainName;
+  return relayMapChainName(relayChainName);
 }
 
 // Helper function to check if a chain is a Relay chain
 export function isRelayChain(chain: ChainNameOrId): boolean {
   const chainStr = typeof chain === 'string' ? chain : chain.toString();
-  const relayChains = ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche'];
+  const relayChains = ['ethereum', 'arbitrum', 'optimism'];
   
   // Check both hardcoded metadata and known Relay chains
   return chainStr.toLowerCase() in RELAY_CHAIN_METADATA || relayChains.includes(chainStr.toLowerCase());

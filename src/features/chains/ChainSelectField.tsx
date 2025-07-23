@@ -8,10 +8,10 @@ import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TextField } from '../../components/input/TextField';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
-  useDisconnectFns,
+    useAccountAddressForChain,
+    useAccounts,
+    useConnectFns,
+    useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 import { ChainSelectListModal } from './ChainSelectModal';
 import { formatAddress, getChainDisplayName, mapRelayChainToInternalName } from './utils';
@@ -240,45 +240,45 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             </div>
         ) : (
           // Show normal chain selection button
-          <button
-            type="button"
-            name={field.name}
-            className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
-              disabled
-                ? 'cursor-not-allowed bg-[#B5B5B5]'
-                : isLocked
-                ? 'bg-white cursor-not-allowed'
-                : 'bg-white cursor-pointer hover:border-border-hover'
-            }`}
-            onClick={onClick}
-          >
-            <div className="flex items-center">
-              <ChainLogo chainName={field.value} size={32} />
-              <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
-                <span
+        <button
+          type="button"
+          name={field.name}
+          className={`mt-1.5 w-9/12 h-[48px] rounded-card flex items-center justify-between px-3 border border-solid border-border transition-colors duration-200 ${
+            disabled
+              ? 'cursor-not-allowed bg-[#B5B5B5]'
+              : isLocked
+              ? 'bg-white cursor-not-allowed'
+              : 'bg-white cursor-pointer hover:border-border-hover'
+          }`}
+          onClick={onClick}
+        >
+          <div className="flex items-center">
+            <ChainLogo chainName={field.value} size={32} />
+            <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
+              <span
                   className={`font-bold text-base leading-5 truncate w-full text-left ${
+                  disabled ? 'text-secondary' : 'text-black'
+                }`}
+              >
+                {getChainDisplayName(field.value, false)}
+              </span>
+                {isWalletConnected && (
+                <span
+                    className={`font-medium text-xs leading-5 text-left ${
                     disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
-                  {getChainDisplayName(field.value, false)}
+                  {formatAddress(account || '')}
                 </span>
-                {isWalletConnected && (
-                  <span
-                    className={`font-medium text-xs leading-5 text-left ${
-                      disabled ? 'text-secondary' : 'text-black'
-                    }`}
-                  >
-                    {formatAddress(account || '')}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div>
-              {!disabled && !isLocked && (
-                <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
               )}
             </div>
-          </button>
+          </div>
+          <div>
+            {!disabled && !isLocked && (
+              <ChevronIcon className="w-[1.375rem] h-[1.375rem] text-arrow" />
+            )}
+          </div>
+        </button>
         )}
         
         {shouldShowInputField ? (
@@ -304,40 +304,40 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           // Show normal connect/disconnect buttons
           <>
             {!isWalletConnected && (
-              <button
-                disabled={disabled}
-                type="button"
-                onClick={onClickEnv()}
-                className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border-b border-solid border-black transition-colors duration-200 ${
-                  disabled ? 'cursor-not-allowed bg-gray-300' : 'bg-arrow hover:bg-[#FB9241]'
-                }`}
-                style={{ borderBottomWidth: '0.5px' }}
-              >
-                <span
-                  className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
-                    disabled ? 'text-secondary' : 'text-black'
-                  }`}
-                >
-                  CONNECT
-                </span>
-              </button>
-            )}
+          <button
+            disabled={disabled}
+            type="button"
+            onClick={onClickEnv()}
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border-b border-solid border-black transition-colors duration-200 ${
+              disabled ? 'cursor-not-allowed bg-gray-300' : 'bg-arrow hover:bg-[#FB9241]'
+            }`}
+            style={{ borderBottomWidth: '0.5px' }}
+          >
+            <span
+              className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
+                disabled ? 'text-secondary' : 'text-black'
+              }`}
+            >
+              CONNECT
+            </span>
+          </button>
+        )}
 
             {isWalletConnected && (
-              <button
-                disabled={disabled}
-                type="button"
-                onClick={onDisconnectEnv()}
-                className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
-                  disabled
-                    ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
-                    : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
-                }`}
-              >
-                <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
-                  DISCONNECT
-                </span>
-              </button>
+          <button
+            disabled={disabled}
+            type="button"
+            onClick={onDisconnectEnv()}
+            className={`w-4/12 h-[48px] flex items-center justify-center rounded-card border border-solid transition-colors duration-200 ${
+              disabled
+                ? 'cursor-not-allowed text-secondary border-border bg-[#B5B5B5]'
+                : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
+            }`}
+          >
+            <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
+              DISCONNECT
+            </span>
+          </button>
             )}
           </>
         )}
