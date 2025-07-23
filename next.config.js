@@ -19,25 +19,18 @@ const FRAME_SRC_HOSTS = [
 const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
 const IMG_SRC_HOSTS = [
   'https://*.walletconnect.com',
+  'https://*.walletconnect.org',
   'https://*.relay.network',
   'https://*.relay.link',
   'https://assets.relay.network',
   'https://assets.relay.link',
   'https://cdn.relay.network',
-  'https://*.amazonaws.com',
-  'https://*.cloudfront.net',
   'https://*.googleapis.com',
   'https://*.githubusercontent.com',
-  'https://*.chainlist.org',
   'https://*.trustwallet.com',
-  'https://*.coingecko.com',
-  'https://*.coinmarketcap.com',
   'https://*.reservoir.tools',
   'https://*.reservoir0x.com',
   'https://raw.githubusercontent.com',
-  'https://s3.amazonaws.com',
-  'https://assets.coingecko.com',
-  'https://logos.covalenthq.com',
 ];
 const cspHeader = `
   default-src 'self';

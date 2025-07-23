@@ -311,10 +311,8 @@ export function getRelayChainId(chainName: string): {
 } {
   const chainMaps = {
     ethereum: { mainnet: 1, testnet: 11155111 }, // Sepolia
-    polygon: { mainnet: 137, testnet: 80001 }, // Mumbai
     arbitrum: { mainnet: 42161, testnet: 421614 }, // Arbitrum Sepolia
     optimism: { mainnet: 10, testnet: 11155420 }, // OP Sepolia
-    base: { mainnet: 8453, testnet: 84532 }, // Base Sepolia
     forma: { mainnet: 984122, testnet: 984123 }, // Forma mainnet vs sketchpad testnet
     sketchpad: { mainnet: null, testnet: 984123 }, // Sketchpad is testnet only
   };
