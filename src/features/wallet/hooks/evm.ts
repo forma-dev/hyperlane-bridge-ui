@@ -124,13 +124,9 @@ export function useEvmTransactionFns(): ChainTransactionFns {
     async (chainName: ChainName) => {
       const chainId = getChainMetadata(chainName).chainId as number;
 
-      try {
-        await switchChainAsync({ chainId });
-        // Some wallets seem to require a brief pause after switch
-        await sleep(2000);
-      } catch (error) {
-        throw error;
-      }
+      await switchChainAsync({ chainId });
+      // Some wallets seem to require a brief pause after switch
+      await sleep(2000);
     },
     [switchChainAsync],
   );

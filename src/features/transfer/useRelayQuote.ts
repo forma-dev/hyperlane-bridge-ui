@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
 
@@ -41,16 +40,33 @@ export function useRelayQuote({
   const [estimatedOutput, setEstimatedOutput] = useState<EstimatedOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentRequestRef = useRef<string | null>(null);
 
   const { getQuote, isReady } = useRelayContext();
 
   const getRelayQuoteData = useCallback(async () => {
+    // Simple check to prevent quote requests when amount is being cleared
+    if (!amount || (typeof amount === 'string' && amount.trim() === '') || amount === '') {
+      setEstimatedOutput(null);
+      setError(null);
+      return;
+    }
+
+    // Additional check to prevent processing if amount is 0 or invalid
+    const amountNum = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setEstimatedOutput(null);
+      setError(null);
+      return;
+    }
+
     if (
       !isReady ||
       !originChain ||
       !destinationChain ||
       !amount ||
-      parseFloat(amount) === 0 ||
+      (typeof amount === 'string' && amount.trim() === '') ||
+      (typeof amount === 'string' && parseFloat(amount) === 0) ||
       !user ||
       !recipient
     ) {
@@ -129,7 +145,7 @@ export function useRelayQuote({
           return;
         }
       } catch (error) {
-        logger.error('Failed to check supported chains:', error);
+        // logger.error('Failed to check supported chains:', error); // Removed logger
       }
     }
 
@@ -152,6 +168,16 @@ export function useRelayQuote({
     setIsLoading(true);
     setError(null);
 
+    // Create a unique request identifier
+    const requestId = `${originChain}-${destinationChain}-${amount}-${user}-${recipient}`;
+    
+    // Prevent duplicate requests
+    if (currentRequestRef.current === requestId) {
+      return;
+    }
+    
+    currentRequestRef.current = requestId;
+
     try {
       // Get native currency for the origin and destination chains
       const originCurrency = getNativeCurrency(originChain);
@@ -160,7 +186,7 @@ export function useRelayQuote({
       // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
       // TIA token on Forma has 18 decimals (same as ETH)
       const decimals = 18;
-      const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+      const amountWei = (parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)).toString();
 
       // Use SDK getQuote method with correct parameters
       const quote = await getQuote({
@@ -191,7 +217,7 @@ export function useRelayQuote({
         quote,
       });
     } catch (err) {
-      logger.error('Failed to get Relay quote:', err);
+      // logger.error('Failed to get Relay quote:', err); // Removed logger
       if (err instanceof Error && err.message.includes('404')) {
         setError('Route not supported by Relay');
       } else if (err instanceof Error && err.message.includes('chain')) {
@@ -201,11 +227,17 @@ export function useRelayQuote({
       }
     } finally {
       setIsLoading(false);
+      currentRequestRef.current = null;
     }
   }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote]);
 
   useEffect(() => {
-    getRelayQuoteData();
+    // Add a small delay to prevent race conditions during rapid changes
+    const timeoutId = setTimeout(() => {
+      getRelayQuoteData();
+    }, 100); // Increased from 50ms to 100ms for better handling of rapid changes
+
+    return () => clearTimeout(timeoutId);
   }, [getRelayQuoteData]);
 
   return {
