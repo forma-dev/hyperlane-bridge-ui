@@ -123,16 +123,12 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const onSwitchNetwork = useCallback(
     async (chainName: ChainName) => {
       const chainId = getChainMetadata(chainName).chainId as number;
-      logger.debug(`DEBUG: Switching to chain ${chainName} (${chainId})`);
 
       try {
         await switchChainAsync({ chainId });
-        logger.debug(`DEBUG: Chain switch successful`);
         // Some wallets seem to require a brief pause after switch
         await sleep(2000);
-        logger.debug(`DEBUG: Sleep after chain switch completed`);
       } catch (error) {
-        logger.debug(`DEBUG: Chain switch failed:`, error);
         throw error;
       }
     },
@@ -158,31 +154,19 @@ export function useEvmTransactionFns(): ChainTransactionFns {
 
       // If the active chain is different from tx origin chain, try to switch network first
       if (activeChainName !== chainName) {
-        logger.debug(`DEBUG: Need to switch network from ${activeChainName} to ${chainName}`);
         await onSwitchNetwork(chainName);
-        logger.debug(`DEBUG: Network switch completed`);
       }
 
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
 
-      logger.debug(`DEBUG: Chain verification:`, {
-        chainName,
-        expectedChainId,
-        connectedChainId,
-        matches: connectedChainId === expectedChainId,
-      });
-
       assert(
         connectedChainId === expectedChainId,
         `Wallet not on chain ${chainName} (ChainMismatchError)`,
       );
 
-      logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
-      logger.debug(`DEBUG: Wagmi transaction object:`, wagmiTx);
-      logger.debug(`DEBUG: About to call sendTransactionAsync...`);
 
       let hash: `0x${string}`;
       try {
@@ -193,17 +177,13 @@ export function useEvmTransactionFns(): ChainTransactionFns {
 
         const txPromise = sendTransactionAsync(wagmiTx);
         hash = (await Promise.race([txPromise, timeout])) as `0x${string}`;
-        logger.debug(`DEBUG: Transaction sent successfully, hash:`, hash);
       } catch (error) {
-        logger.debug(`DEBUG: sendTransactionAsync failed:`, error);
         // Check if it's a user rejection
         if (error instanceof Error && error.message.includes('rejected')) {
-          logger.debug(`DEBUG: User rejected transaction`);
           throw error;
         }
         // Check if it's a timeout
         if (error instanceof Error && error.message.includes('timeout')) {
-          logger.debug(`DEBUG: Transaction timed out - wallet may not be responding`);
           throw new Error(
             'Transaction request timed out. Please ensure your wallet is connected and responsive.',
           );

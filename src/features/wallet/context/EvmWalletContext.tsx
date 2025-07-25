@@ -7,7 +7,6 @@ import { arbitrum, mainnet, optimism } from 'wagmi/chains';
 import { forma } from '../../../config/chain';
 import { wagmiConfig } from '../../../config/wagmi';
 import { config } from '../../../consts/config';
-import { logger } from '../../../utils/logger';
 
 const queryClient = new QueryClient();
 
@@ -28,7 +27,6 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
       } catch (error) {
         // Silently handle Privy analytics errors to prevent console spam
         if (args[0] && typeof args[0] === 'string' && args[0].includes('auth.privy.io')) {
-          logger.debug('Privy analytics request failed (expected in development):', error);
           return new Response('{}', { status: 200 });
         }
         throw error;
