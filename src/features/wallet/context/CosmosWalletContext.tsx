@@ -18,8 +18,8 @@ import { getCosmosKitConfig } from '../../chains/metadata';
 
 const theme = extendTheme({
   fonts: {
-    heading: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
-    body: `'IBM Plex Mono', 'Neue Haas Grotesk', 'Helvetica', 'sans-serif'`,
+    heading: `'Plus Jakarta Sans', 'Helvetica', 'sans-serif'`,
+    body: `'Plus Jakarta Sans', 'Helvetica', 'sans-serif'`,
   },
 });
 
@@ -71,10 +71,10 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
           isLazy: true,
         }}
         modalTheme={{
-          defaultTheme: 'dark',
+          defaultTheme: 'light',
           overrides: {
             'connect-modal': {
-              bg: { dark: '#000', light: '#000' },
+              bg: { dark: '#000000', light: '#FFFFFF' },
             },
           },
         }}

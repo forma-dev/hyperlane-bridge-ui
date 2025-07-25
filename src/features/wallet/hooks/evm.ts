@@ -21,18 +21,35 @@ type CompatibleTransactionReceipt = Omit<ViemTransactionReceipt, 'contractAddres
 export function useEvmAccount(): AccountInfo {
   const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
-  const { address: wagmiAddress, connector } = useAccount();
+  const { address: wagmiAddress, connector, chain } = useAccount();
   const isReady = ready && walletsReady && wallets.length > 0;
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
+
+  // Map wagmi chain names to internal chain names
+  const getInternalChainName = (chainId?: number): string => {
+    if (!chainId) return 'ethereum';
+
+    const chainMapping: Record<number, string> = {
+      1: 'ethereum',
+      42161: 'arbitrum',
+      10: 'optimism',
+      984122: 'forma', // Forma chain ID
+      // Add more chain mappings as needed
+    };
+
+    return chainMapping[chainId] || 'ethereum';
+  };
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
-      addresses: activeWallet ? [{ address: activeWallet.address }] : [],
+      addresses: activeWallet
+        ? [{ address: activeWallet.address, chainName: getInternalChainName(chain?.id) }]
+        : [],
       connectorName: connector?.name || 'Privy',
       isReady,
     }),
-    [activeWallet, isReady, connector],
+    [activeWallet, isReady, connector, chain],
   );
 }
 
@@ -46,7 +63,7 @@ export function useEvmConnectFn(): () => Promise<void> {
       }
       connectOrCreateWallet();
     } catch (error) {
-      console.error('Failed to login with Privy:', error);
+      logger.error('Failed to login with Privy:', error);
       throw error;
     }
   }, [connectOrCreateWallet, logout, authenticated]);
@@ -82,7 +99,7 @@ export function useEvmDisconnectFn(): () => Promise<void> {
         }
       }
     } catch (error) {
-      console.error('Failed to logout with Privy:', error);
+      logger.error('Failed to logout with Privy:', error);
     }
   }, [activeWallet, wallets, disconnect, logout]);
 }
@@ -103,12 +120,16 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const { sendTransactionAsync } = useSendTransaction();
   const config = useConfig();
 
-  const onSwitchNetwork = useCallback(async (chainName: ChainName) => {
-    const chainId = getChainMetadata(chainName).chainId as number;
-    await switchChainAsync({ chainId });
-    // Some wallets seem to require a brief pause after switch
-    await sleep(2000);
-  }, []);
+  const onSwitchNetwork = useCallback(
+    async (chainName: ChainName) => {
+      const chainId = getChainMetadata(chainName).chainId as number;
+
+      await switchChainAsync({ chainId });
+      // Some wallets seem to require a brief pause after switch
+      await sleep(2000);
+    },
+    [switchChainAsync],
+  );
 
   // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
   // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
@@ -135,11 +156,36 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
-      assert(connectedChainId === expectedChainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
 
-      logger.debug(`Sending tx on chain ${chainName}`);
+      assert(
+        connectedChainId === expectedChainId,
+        `Wallet not on chain ${chainName} (ChainMismatchError)`,
+      );
+
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
-      const hash = await sendTransactionAsync(wagmiTx);
+
+      let hash: `0x${string}`;
+      try {
+        // Add timeout to prevent hanging
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000),
+        );
+
+        const txPromise = sendTransactionAsync(wagmiTx);
+        hash = (await Promise.race([txPromise, timeout])) as `0x${string}`;
+      } catch (error) {
+        // Check if it's a user rejection
+        if (error instanceof Error && error.message.includes('rejected')) {
+          throw error;
+        }
+        // Check if it's a timeout
+        if (error instanceof Error && error.message.includes('timeout')) {
+          throw new Error(
+            'Transaction request timed out. Please ensure your wallet is connected and responsive.',
+          );
+        }
+        throw error;
+      }
 
       const confirm = async (): Promise<TypedTransactionReceipt> => {
         const receipt = await waitForTransactionReceipt(config, { hash });
@@ -150,7 +196,7 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       };
       return { hash, confirm };
     },
-    [onSwitchNetwork, sendTransactionAsync],
+    [onSwitchNetwork, sendTransactionAsync, config],
   );
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };

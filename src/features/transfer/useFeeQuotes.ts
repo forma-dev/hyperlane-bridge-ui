@@ -4,7 +4,6 @@ import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { HexString } from '@hyperlane-xyz/utils';
 
 import { getTokenByIndex, getWarpCore } from '../../context/context';
-import { logger } from '../../utils/logger';
 import { getAccountAddressAndPubKey, useAccounts } from '../wallet/hooks/multiProtocol';
 
 import { TransferFormValues } from './types';
@@ -36,7 +35,6 @@ async function fetchFeeQuotes(
 ): Promise<{ interchainQuote: TokenAmount; localQuote: TokenAmount } | null> {
   const originToken = getTokenByIndex(tokenIndex);
   if (!destination || !sender || !originToken) return null;
-  logger.debug('Fetching fee quotes');
   return getWarpCore().estimateTransferRemoteFees({
     originToken,
     destination,

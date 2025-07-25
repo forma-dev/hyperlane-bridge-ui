@@ -21,10 +21,26 @@ import {
   isTransferFailed,
   isTransferSent,
 } from '../../utils/transfer';
+import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { getChainDisplayName, hasPermissionlessChain } from '../chains/utils';
+import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import { useAccountForChain } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferStatus } from './types';
+
+// Helper function to get native currency symbol for Relay transfers
+function getNativeCurrencySymbol(chainName: string): string {
+  const symbolMap: Record<string, string> = {
+    ethereum: 'ETH',
+    arbitrum: 'ARB',
+    optimism: 'OP',
+    forma: 'TIA',
+    sketchpad: 'TIA',
+    celestia: 'TIA',
+    stride: 'STRD',
+  };
+  return symbolMap[chainName.toLowerCase()] || 'ETH';
+}
 
 export function TransfersDetailsModal({
   isOpen,
@@ -54,6 +70,7 @@ export function TransfersDetailsModal({
 
   const account = useAccountForChain(origin);
   const multiProvider = getMultiProvider();
+  const { relayChains } = useRelaySupportedChains();
 
   const getMessageUrls = useCallback(async () => {
     try {
@@ -81,7 +98,50 @@ export function TransfersDetailsModal({
 
   const isAccountReady = !!account?.isReady;
   const connectorName = account?.connectorName || 'wallet';
-  const token = getWarpCore().findToken(origin, originTokenAddressOrDenom);
+
+  // Check if this is a Relay transfer by checking known Relay token addresses and chain combinations
+  const isRelayTransfer = useMemo(() => {
+    if (!originTokenAddressOrDenom) return false;
+
+    // Check for known Relay token addresses (branded tokens)
+    const relayTokenAddresses = [
+      '0x0000000000000000000000000000000000000000', // Native tokens
+      '0x4200000000000000000000000000000000000042', // OP token
+      '0x912CE59144191C1204E64559FE8253a0e49E6548', // ARB token
+      'TIA', // TIA token
+    ];
+
+    const hasRelayToken = relayTokenAddresses.includes(originTokenAddressOrDenom);
+
+    // Check for known Relay chains
+    const relayChains = ['ethereum', 'arbitrum', 'optimism'];
+    const originIsRelay = relayChains.includes(origin.toLowerCase());
+    const destinationIsRelay = relayChains.includes(destination.toLowerCase());
+
+    // Check for Forma involvement (Relay bridge)
+    const isFormaInvolved =
+      origin === 'forma' ||
+      origin === 'sketchpad' ||
+      destination === 'forma' ||
+      destination === 'sketchpad';
+
+    return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
+  }, [origin, destination, originTokenAddressOrDenom]);
+
+  // For Relay transfers, get the native currency symbol
+  const relayTokenSymbol = isRelayTransfer ? getNativeCurrencySymbol(origin) : undefined;
+
+  // For non-Relay transfers, use warp core to find token with error handling
+  const token = useMemo(() => {
+    if (isRelayTransfer) return null;
+
+    try {
+      return getWarpCore().findToken(origin, originTokenAddressOrDenom);
+    } catch (error) {
+      // console.warn(`Could not find token for ${origin} with address ${originTokenAddressOrDenom}:`, error);
+      return null;
+    }
+  }, [isRelayTransfer, origin, originTokenAddressOrDenom]);
 
   const isPermissionlessRoute = hasPermissionlessChain([destination, origin]);
 
@@ -132,11 +192,60 @@ export function TransfersDetailsModal({
         </div>
       )}
 
-      <div className="mt-4 p-3 flex items-center justify-center w-full bg-toast">
-        <TokenIcon token={token} size={30} />
+      <div className="mt-4 p-3 flex items-center justify-center w-full bg-gray-150 border border-gray-400 rounded-md">
+        {isRelayTransfer ? (
+          // For Relay transfers, show a custom currency icon
+          (() => {
+            // For withdraws (Forma -> Relay chains), always show TIA logo
+            const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+
+            if (isWithdrawal) {
+              return (
+                <Image
+                  src="/logos/celestia.png"
+                  alt="TIA"
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                />
+              );
+            }
+
+            // For deposits (Relay chains -> Forma), use Relay API icon
+            const relayChain = relayChains.find((rc) => {
+              const internalName = mapRelayChainToInternalName(rc.name);
+              return internalName === origin.toLowerCase();
+            });
+
+            const getCurrencyIcon = (symbol: string) => {
+              // Use Relay API icon if available
+              if (relayChain?.iconUrl || relayChain?.logoUrl) {
+                const iconSrc = relayChain.iconUrl || relayChain.logoUrl;
+                return (
+                  <Image
+                    src={iconSrc!}
+                    alt={symbol}
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                  />
+                );
+              }
+
+              // No fallback icon - only use Relay API icons
+              return null;
+            };
+
+            return relayTokenSymbol ? getCurrencyIcon(relayTokenSymbol) : null;
+          })()
+        ) : (
+          <TokenIcon token={token} size={30} />
+        )}
         <div className="ml-2 flex items items-baseline">
           <span className="text-xl font-medium">{amount}</span>
-          <span className="text-xl font-medium ml-1">{token?.symbol}</span>
+          <span className="text-xl font-medium ml-1">
+            {isRelayTransfer ? relayTokenSymbol : token?.symbol}
+          </span>
         </div>
       </div>
 
@@ -144,7 +253,7 @@ export function TransfersDetailsModal({
         <div className="ml-2 flex flex-col items-center">
           <ChainLogo chainName={origin} size={64} background={false} />
           <span className="mt-1 font-medium tracking-wider">
-            {getChainDisplayName(origin, true)}
+            {getChainDisplayName(origin, false)}
           </span>
         </div>
         <div className="flex mb-5 sm:space-x-1.5">
@@ -154,7 +263,7 @@ export function TransfersDetailsModal({
         <div className="mr-2 flex flex-col items-center">
           <ChainLogo chainName={destination} size={64} background={false} />
           <span className="mt-1 font-medium tracking-wider">
-            {getChainDisplayName(destination, true)}
+            {getChainDisplayName(destination, false)}
           </span>
         </div>
       </div>
@@ -163,8 +272,11 @@ export function TransfersDetailsModal({
         <div className="mt-5 flex flex-col space-y-4">
           <TransferProperty name="Sender Address" value={sender} url={fromUrl} />
           <TransferProperty name="Recipient Address" value={recipient} url={toUrl} />
-          {token?.addressOrDenom && (
-            <TransferProperty name="Token Address or Denom" value={token.addressOrDenom} />
+          {(token?.addressOrDenom || (isRelayTransfer && originTokenAddressOrDenom)) && (
+            <TransferProperty
+              name="Token Address or Denom"
+              value={isRelayTransfer ? `Native ${relayTokenSymbol}` : token?.addressOrDenom || ''}
+            />
           )}
           {originTxHash && (
             <TransferProperty
@@ -174,7 +286,7 @@ export function TransfersDetailsModal({
             />
           )}
           {msgId && <TransferProperty name="Message ID" value={msgId} />}
-          {explorerLink && (
+          {explorerLink && !isRelayTransfer && (
             <div className="flex justify-between">
               <span className="text-gray-350 text-xs leading-normal tracking-wider">
                 <a
@@ -191,17 +303,17 @@ export function TransfersDetailsModal({
         </div>
       ) : (
         <div className="py-4 flex flex-col justify-center items-center">
-          <Spinner white={true} />
+          <Spinner />
           <div
-            className={`mt-5 text-white font-semibold text-sm text-center ${
-              status === TransferStatus.Failed ? 'text-red-600' : 'text-white'
+            className={`mt-5 font-semibold text-sm text-center ${
+              isFailed ? 'text-red-600' : 'text-primary'
             }`}
           >
             {statusDescription}
           </div>
           {showSignWarning && (
-            <div className="mt-3 text-white font-semibold text-sm text-center">
-              If your wallet does not show a transaction request, please try the transfer again.
+            <div className="mt-3 text-primary font-semibold text-sm text-center">
+              Relay transactions may take up to 1 minute to complete. <br /> <br /> If your wallet does not show a transaction request, please try the transfer again.
             </div>
           )}
         </div>

@@ -40,7 +40,7 @@ export function AppLayout({ children }: PropsWithChildren) {
       <div
         style={{ backgroundColor: Color.background }}
         id="app-content"
-        className="h-full min-h-screen w-full min-w-screen font-plex"
+        className="h-full min-h-screen w-full min-w-screen font-sans"
       >
         <Banner />
         <div className="max-w-screen-xl mx-auto flex flex-col justify-between min-h-screen px-4">

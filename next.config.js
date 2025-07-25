@@ -10,9 +10,28 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 // Sometimes useful to disable this during development
 const ENABLE_CSP_HEADER = true;
-const FRAME_SRC_HOSTS = ['https://*.walletconnect.com', 'https://*.walletconnect.org','https://*.solflare.com'];
+const FRAME_SRC_HOSTS = [
+  'https://*.walletconnect.com', 
+  'https://*.walletconnect.org',
+  'https://*.solflare.com',
+  'https://*.privy.io'
+];
 const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
-const IMG_SRC_HOSTS = ['https://*.walletconnect.com'];
+const IMG_SRC_HOSTS = [
+  'https://*.walletconnect.com',
+  'https://*.walletconnect.org',
+  'https://*.relay.network',
+  'https://*.relay.link',
+  'https://assets.relay.network',
+  'https://assets.relay.link',
+  'https://cdn.relay.network',
+  'https://*.googleapis.com',
+  'https://*.githubusercontent.com',
+  'https://*.trustwallet.com',
+  'https://*.reservoir.tools',
+  'https://*.reservoir0x.com',
+  'https://raw.githubusercontent.com',
+];
 const cspHeader = `
   default-src 'self';
   script-src 'self'${isDev ? " 'unsafe-eval'" : ''};

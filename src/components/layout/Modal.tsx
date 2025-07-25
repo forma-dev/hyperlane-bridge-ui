@@ -32,11 +32,11 @@ export function Modal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto bg-black bg-opacity-70">
-          <div className="flex min-h-full items-center justify-center p-4 text-center font-plex">
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center font-sans">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -47,18 +47,19 @@ export function Modal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className={`bg-black text-primary w-full ${
+                className={`bg-white text-black w-full ${
                   width || 'max-w-xs'
                 } md:min-h-[357px] mt-20 mr-2 max-h-[90vh] transform overflow-auto ${
                   padding || ''
                 } text-left transition-all 
-                border-2 border-solid border-white
+                border-border border-solid
                 `}
+                style={{ borderWidth: '0.5px', borderRadius: '5px' }}
               >
                 {title ? (
                   <Dialog.Title
                     as="h3"
-                    className="text text-primary font-bold text-lg leading-6 mt-6 ml-8"
+                    className="text text-black font-bold text-lg leading-6 mt-6 ml-8"
                   >
                     {title}
                   </Dialog.Title>
@@ -70,7 +71,7 @@ export function Modal({
                       imgSrc={XCircle}
                       onClick={close}
                       title="Close"
-                      classes="hover:rotate-90 bg-white invert"
+                      classes="hover:rotate-90 bg-white"
                     />
                   </div>
                 )}
