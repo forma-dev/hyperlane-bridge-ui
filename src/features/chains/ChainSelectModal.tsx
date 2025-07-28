@@ -30,9 +30,9 @@ export function ChainSelectListModal({
             className="pb-2 px-6  text-sm flex items-center"
             onClick={onSelectChain(c)}
           >
-            <div className="px-2 py-2 flex items-center w-full hover:bg-hoverForm ">
+            <div className="px-2 py-2 flex items-center w-full hover:bg-bg-button-main-disabled ">
               <ChainLogo chainName={c} size={32} background={false} />
-              <span className="ml-2  font-medium text-sm leading-5">
+              <span className="ml-2  font-medium text-sm leading-5 text-black">
                 {getChainDisplayName(c, true)}
               </span>
             </div>

@@ -46,7 +46,7 @@ export function useEvmConnectFn(): () => Promise<void> {
       }
       connectOrCreateWallet();
     } catch (error) {
-      console.error('Failed to login with Privy:', error);
+      logger.error('Failed to login with Privy:', error);
       throw error;
     }
   }, [connectOrCreateWallet, logout, authenticated]);
@@ -82,7 +82,7 @@ export function useEvmDisconnectFn(): () => Promise<void> {
         }
       }
     } catch (error) {
-      console.error('Failed to logout with Privy:', error);
+      logger.error('Failed to logout with Privy:', error);
     }
   }, [activeWallet, wallets, disconnect, logout]);
 }
@@ -103,12 +103,15 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const { sendTransactionAsync } = useSendTransaction();
   const config = useConfig();
 
-  const onSwitchNetwork = useCallback(async (chainName: ChainName) => {
-    const chainId = getChainMetadata(chainName).chainId as number;
-    await switchChainAsync({ chainId });
-    // Some wallets seem to require a brief pause after switch
-    await sleep(2000);
-  }, []);
+  const onSwitchNetwork = useCallback(
+    async (chainName: ChainName) => {
+      const chainId = getChainMetadata(chainName).chainId as number;
+      await switchChainAsync({ chainId });
+      // Some wallets seem to require a brief pause after switch
+      await sleep(2000);
+    },
+    [switchChainAsync],
+  );
 
   // Note, this doesn't use wagmi's prepare + send pattern because we're potentially sending two transactions
   // The prepare hooks are recommended to use pre-click downtime to run async calls, but since the flow
@@ -135,7 +138,10 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
-      assert(connectedChainId === expectedChainId, `Wallet not on chain ${chainName} (ChainMismatchError)`);
+      assert(
+        connectedChainId === expectedChainId,
+        `Wallet not on chain ${chainName} (ChainMismatchError)`,
+      );
 
       logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
@@ -150,7 +156,7 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       };
       return { hash, confirm };
     },
-    [onSwitchNetwork, sendTransactionAsync],
+    [onSwitchNetwork, sendTransactionAsync, config],
   );
 
   return { sendTransaction: onSendTx, switchNetwork: onSwitchNetwork };

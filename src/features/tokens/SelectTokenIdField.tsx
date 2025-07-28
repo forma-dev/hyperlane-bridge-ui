@@ -1,10 +1,9 @@
 import { useField } from 'formik';
-import Image from 'next/image';
 import { useState } from 'react';
 
 import { Spinner } from '../../components/animation/Spinner';
+import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { Modal } from '../../components/layout/Modal';
-import ChevronIcon from '../../images/icons/chevron-down.svg';
 
 type Props = {
   name: string;
@@ -37,7 +36,7 @@ export function SelectTokenIdField({ name, disabled }: Props) {
             {tokenId ? tokenId : 'Select Token Id'}
           </span>
         </div>
-        <Image src={ChevronIcon} width={12} height={8} alt="" />
+        <ChevronIcon className="w-4 h-4 text-arrow" />
       </button>
       <SelectTokenIdModal
         isOpen={isModalOpen}
