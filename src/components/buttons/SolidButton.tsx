@@ -37,9 +37,12 @@ export function SolidButton(
   let baseColors, border, onHover, onActive, style;
 
   if (color === 'button') {
-    baseColors = 'bg-button text-white';
-    onHover = 'hover:bg-[#FF9797]';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-button-active text-black';
+    onHover = 'hover:bg-button-hover';
+    border = 'border-b border-solid border-black';
+    style = {
+      borderBottomWidth: '0.5px',
+    };
   } else if (color === 'navBarButton') {
     baseColors = 'bg-button text-white';
     style = { width: '188px', height: '40px' };
@@ -52,9 +55,14 @@ export function SolidButton(
     onHover = 'hover:bg-green-600';
     onActive = 'active:bg-green-700';
   } else if (color === 'red') {
-    baseColors = 'bg-red-600 text-white';
-    onHover = 'hover:bg-red-500';
-    onActive = 'active:bg-red-400';
+    baseColors = 'text-white';
+    onHover = 'hover:opacity-90';
+    onActive = 'active:opacity-80';
+    border = 'border-b border-solid border-black';
+    style = {
+      backgroundColor: '#FF4D3D',
+      borderBottomWidth: '0.5px',
+    };
   } else if (color === 'white') {
     baseColors = 'bg-white text-black';
     onHover = 'hover:bg-gray-100';
@@ -64,11 +72,19 @@ export function SolidButton(
     onHover = 'hover:bg-gray-200';
     onActive = 'active:bg-gray-300';
   } else if (color === 'black') {
-    baseColors = 'bg-black text-secondary';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-white text-black';
+    border = 'border border-solid border-black';
+    onHover = 'hover:bg-bg-button-main-disabled';
+    style = {
+      borderWidth: '0.5px',
+    };
   } else if (color === 'disabled') {
-    baseColors = 'bg-black text-secondary cursor-auto opacity-40';
-    border = 'border-[1px] border-solid border-white';
+    baseColors = 'bg-bg-button-main-disabled text-black opacity-50 cursor-not-allowed';
+    border = 'border-b border-solid border-black';
+    onHover = 'hover:bg-bg-button-main-disabled';
+    style = {
+      borderBottomWidth: '0.5px',
+    };
   }
   const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
   const weight = bold ? 'font-semibold' : '';
@@ -81,7 +97,9 @@ export function SolidButton(
       type={type ?? 'button'}
       disabled={disabled ?? false}
       title={title}
-      className={allClasses}
+      className={`py-2 px-4 flex items-center justify-center font-bold text-sm leading-6 whitespace-nowrap transition-all duration-200 rounded-card ${allClasses} ${
+        disabled ? 'disabled:bg-gray-300 disabled:text-gray-500' : ''
+      }`}
       {...passThruProps}
     >
       {icon ? (
