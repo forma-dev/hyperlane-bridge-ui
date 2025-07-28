@@ -170,12 +170,12 @@ export function useRelayQuote({
 
     // Create a unique request identifier
     const requestId = `${originChain}-${destinationChain}-${amount}-${user}-${recipient}`;
-    
+
     // Prevent duplicate requests
     if (currentRequestRef.current === requestId) {
       return;
     }
-    
+
     currentRequestRef.current = requestId;
 
     try {
@@ -186,7 +186,9 @@ export function useRelayQuote({
       // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
       // TIA token on Forma has 18 decimals (same as ETH)
       const decimals = 18;
-      const amountWei = (parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)).toString();
+      const amountWei = (
+        parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
+      ).toString();
 
       // Use SDK getQuote method with correct parameters
       const quote = await getQuote({

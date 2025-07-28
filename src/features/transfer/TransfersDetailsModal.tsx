@@ -313,7 +313,8 @@ export function TransfersDetailsModal({
           </div>
           {showSignWarning && (
             <div className="mt-3 text-primary font-semibold text-sm text-center">
-              Relay transactions may take up to 1 minute to complete. <br /> <br /> If your wallet does not show a transaction request, please try the transfer again.
+              Relay transactions may take up to 1 minute to complete. <br /> <br /> If your wallet
+              does not show a transaction request, please try the transfer again.
             </div>
           )}
         </div>

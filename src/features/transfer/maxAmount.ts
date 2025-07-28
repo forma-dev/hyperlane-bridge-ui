@@ -31,27 +31,27 @@ async function fetchMaxAmount({ accounts, balance, destination, origin }: FetchM
 
     // Get the token for fee estimation
     const token = balance.token;
-    
+
     // Check if destination is a Relay chain by checking if it's available in Hyperlane
     const warpCore = getWarpCore();
     const hyperlaneChains = warpCore.getTokenChains();
     const isRelayDestination = !hyperlaneChains.includes(destination);
-    
+
     // If destination is a Relay chain, use a simpler calculation
     if (isRelayDestination) {
       // For Relay destinations, use the full balance since Relay subtracts fees directly from the tx amount
       // Use the same 1% fee calculation as Relay deposits
       const balanceAmount = balance.amount;
-      const estimatedFees = balanceAmount * 1n / 100n;
+      const estimatedFees = (balanceAmount * 1n) / 100n;
       const maxAmountAfterFees = balanceAmount - estimatedFees;
-      
+
       if (maxAmountAfterFees <= 0n) {
         return token.amount(0n);
       }
-      
+
       return token.amount(maxAmountAfterFees);
     }
-    
+
     // Get estimated fees for Hyperlane destinations
     const feeQuotes = await getWarpCore().estimateTransferRemoteFees({
       originToken: token,
@@ -75,9 +75,9 @@ async function fetchMaxAmount({ accounts, balance, destination, origin }: FetchM
     const localFee = feeQuotes.localQuote.amount;
     const interchainFee = feeQuotes.interchainQuote.amount;
     const hyperlaneFee = localFee + interchainFee;
-    
+
     // Add 20% to the Hyperlane fee: Submitted fee = hyperlane fee + hyperlane fee x 20%
-    const feeBuffer = hyperlaneFee * 20n / 100n;
+    const feeBuffer = (hyperlaneFee * 20n) / 100n;
     const totalFee = hyperlaneFee + feeBuffer;
 
     // Calculate max amount by subtracting the total fee from balance
