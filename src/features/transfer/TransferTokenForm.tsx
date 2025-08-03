@@ -289,7 +289,7 @@ function RecipientSection({ isReview }: { isReview: boolean }) {
     } else {
       setPlaceholder(defaultPlaceholder);
     }
-  }, [cosmosAddress, evmAddress, values.destination, accounts, setFieldValue]);
+  }, [cosmosAddress, evmAddress, values.destination]);
 
   return (
     <div>

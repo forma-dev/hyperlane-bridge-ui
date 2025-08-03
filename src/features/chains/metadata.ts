@@ -20,12 +20,13 @@ export function getCosmosKitConfig(): { chains: CosmosChain[]; assets: AssetList
   );
   const chains = cosmosChains.map((c) => ({
     chain_name: c.name,
-    status: 'live',
-    network_type: c.isTestnet ? 'testnet' : 'mainnet',
+    status: 'live' as const,
+    network_type: c.isTestnet ? ('testnet' as const) : ('mainnet' as const),
     pretty_name: c.displayName || c.name,
     chain_id: c.chainId as string,
     bech32_prefix: c.bech32Prefix!,
     slip44: c.slip44!,
+    chain_type: 'cosmos' as const,
     apis: {
       rpc: [
         {
@@ -74,6 +75,7 @@ export function getCosmosKitConfig(): { chains: CosmosChain[]; assets: AssetList
           name: 'token',
           display: 'token',
           symbol: 'token',
+          type_asset: 'sdk.coin' as const,
         },
         {
           description: `The native token of ${c.displayName || c.name} chain.`,
@@ -87,6 +89,7 @@ export function getCosmosKitConfig(): { chains: CosmosChain[]; assets: AssetList
           name: 'stake',
           display: 'stake',
           symbol: 'stake',
+          type_asset: 'sdk.coin' as const,
         },
       ],
     };
