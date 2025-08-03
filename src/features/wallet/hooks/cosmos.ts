@@ -20,7 +20,7 @@ function convertLongToString(obj: any): any {
   // Check if this is a Long object (has low, high, unsigned properties)
   if (typeof obj === 'object' && 'low' in obj && 'high' in obj && 'unsigned' in obj) {
     // Convert Long object to string
-    const long = obj.unsigned 
+    const long = obj.unsigned
       ? (BigInt(obj.high >>> 0) << 32n) | BigInt(obj.low >>> 0)
       : (BigInt(obj.high | 0) << 32n) | BigInt(obj.low >>> 0);
     return long.toString();
@@ -121,7 +121,11 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
         txDetails = await client.getTx(result.transactionHash);
       } else if (tx.type === ProviderType.CosmJs) {
         const client = await getSigningStargateClient();
-        result = await client.signAndBroadcast(chainContext.address, [processedTransaction], 'auto');
+        result = await client.signAndBroadcast(
+          chainContext.address,
+          [processedTransaction],
+          'auto',
+        );
         txDetails = await client.getTx(result.transactionHash);
       } else {
         throw new Error(`Invalid cosmos provider type ${tx.type}`);
