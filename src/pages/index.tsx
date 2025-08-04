@@ -7,7 +7,7 @@ import { TransferTokenCard } from '../features/transfer/TransferTokenCard';
 const Home: NextPage = () => {
   const maintenance = false;
   const relayEnabled = true;
-  const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+  const isTestnet = process.env.NEXT_PUBLIC_NETWORK !== 'mainnet';
 
   if (isTestnet) {
     return (

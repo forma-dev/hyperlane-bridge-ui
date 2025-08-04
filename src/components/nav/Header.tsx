@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
-  const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+  const isTestnet = process.env.NEXT_PUBLIC_NETWORK !== 'mainnet';
 
   const handleHeaderClick = (e) => {
     const clickX = e.clientX;

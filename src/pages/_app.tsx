@@ -22,7 +22,7 @@ export default function App({ Component, pageProps }: AppProps) {
     return <div></div>;
   }
 
-  const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+  const isTestnet = process.env.NEXT_PUBLIC_NETWORK !== 'mainnet';
 
   // If testnet, skip wallet contexts since we only show a simple notice
   if (isTestnet) {
