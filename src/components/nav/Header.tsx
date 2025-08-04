@@ -10,6 +10,8 @@ interface Props {
 }
 
 export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
+  const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+
   const handleHeaderClick = (e) => {
     const clickX = e.clientX;
     // Calculate the width in pixels (22 rem)
@@ -32,9 +34,11 @@ export function Header({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
         <Link href="/" className={`py-2 flex items-center ${isSideBarOpen ? 'opacity-50' : ''} `}>
           <Image src={Logo} height={40} alt="Forma Bridge" />
         </Link>
-        <div className="flex flex-col items-end md:flex-row-reverse md:items-start gap-2">
-          <WalletControlBar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
-        </div>
+        {!isTestnet && (
+          <div className="flex flex-col items-end md:flex-row-reverse md:items-start gap-2">
+            <WalletControlBar isSideBarOpen={isSideBarOpen} setIsSideBarOpen={setIsSideBarOpen} />
+          </div>
+        )}
       </div>
     </header>
   );

@@ -12,8 +12,7 @@ const Home: NextPage = () => {
   if (isTestnet) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold mb-4 text-white">Testnet Bridge</h2>
-        <p className="text-lg mb-6 text-gray-300">
+        <p className="text-lg mb-6 text-black">
           Need testnet tokens? Contact us on Discord for assistance.
         </p>
         <a
