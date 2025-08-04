@@ -22,6 +22,20 @@ export default function App({ Component, pageProps }: AppProps) {
     return <div></div>;
   }
 
+  const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+
+  // If testnet, skip wallet contexts since we only show a simple notice
+  if (isTestnet) {
+    return (
+      <ErrorBoundary>
+        <AppLayout>
+          <Component {...pageProps} />
+        </AppLayout>
+        <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <EvmWalletContext>
