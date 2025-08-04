@@ -20,6 +20,44 @@ export interface RelayChain {
     decimals: number;
     supportsBridging: boolean;
   };
+  featuredTokens?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    withdrawalFee?: number;
+    depositFee?: number;
+  }>;
+  erc20Currencies?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    withdrawalFee?: number;
+    depositFee?: number;
+  }>;
+  additionalTokens?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    source?: string;
+  }>;
   viemChain: any;
 }
 
@@ -28,31 +66,18 @@ export interface RelayChain {
  * This is the single source of truth for chain name mapping
  */
 export function mapRelayChainToInternalName(relayChainName: string): string {
-  const nameMapping: Record<string, string> = {
-    // Standard Relay chain names
-    Ethereum: 'ethereum',
-    Arbitrum: 'arbitrum',
-    'Arbitrum One': 'arbitrum',
-    Optimism: 'optimism',
-
-    // Lowercase variations
-    ethereum: 'ethereum',
-    'arbitrum-one': 'arbitrum',
-    arbitrum: 'arbitrum',
-    optimism: 'optimism',
-
-    // Additional variations
-    'arbitrum one': 'arbitrum',
-  };
-
-  return nameMapping[relayChainName] || relayChainName.toLowerCase();
+  // Use the chain name directly as the internal name, but ensure it's lowercase
+  // This allows all Relay chains to be used without hardcoded mappings
+  return relayChainName.toLowerCase();
 }
 
 /**
  * Extracts chain names from an array of Relay chain objects
  */
 export function getRelayChainNames(relayChains: RelayChain[]): string[] {
-  return relayChains.map((chain) => chain.name);
+  return relayChains
+    .filter((chain) => chain.enabled && chain.depositEnabled && !chain.disabled)
+    .map((chain) => chain.name.toLowerCase());
 }
 
 /**
@@ -117,21 +142,5 @@ export function getRelayCurrencySymbol(chainName: string): string {
   return tokenInfo?.symbol || 'ETH'; // Default to ETH
 }
 
-/**
- * List of verified working chains for Forma bridging
- */
-export const VERIFIED_WORKING_RELAY_CHAINS = ['ethereum', 'optimism', 'arbitrum'];
-
-/**
- * Filters relay chains to only include verified working ones
- */
-export function getVerifiedWorkingRelayChains(relayChains: RelayChain[]): RelayChain[] {
-  return relayChains.filter((chain) => {
-    const internalName = mapRelayChainToInternalName(chain.name);
-    return (
-      VERIFIED_WORKING_RELAY_CHAINS.includes(internalName) &&
-      chain.depositEnabled &&
-      !chain.disabled
-    );
-  });
-}
+// Removed VERIFIED_WORKING_RELAY_CHAINS constant and getVerifiedWorkingRelayChains function
+// to allow all available Relay chains to be displayed

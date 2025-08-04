@@ -28,10 +28,10 @@ import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  getAccountAddressAndPubKey,
-  getAccountAddressForChain,
-  useAccountAddressForChain,
-  useAccounts,
+    getAccountAddressAndPubKey,
+    getAccountAddressForChain,
+    useAccountAddressForChain,
+    useAccounts,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -42,8 +42,7 @@ import { useRelayMaxAmount } from './useRelayMaxAmount';
 import { useRelayQuote } from './useRelayQuote';
 import { useTokenTransfer } from './useTokenTransfer';
 
-// Verified working chains for Relay transfers
-const VERIFIED_WORKING_CHAINS = ['ethereum', 'optimism', 'arbitrum'];
+// Removed VERIFIED_WORKING_CHAINS constant since we're now using all available Relay chains
 
 function ChainChangeWatcher() {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
@@ -850,11 +849,6 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
     return false;
   }
 
-  // First check if the chain is in our verified working list
-  if (!VERIFIED_WORKING_CHAINS.includes(chainName.toLowerCase())) {
-    return false;
-  }
-
   const result = relayChains.some((chain) => {
     const internalName = mapRelayChainToInternalName(chain.name);
     return internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
@@ -938,12 +932,8 @@ function isUsingRelayForTransfer(
 
 // Helper function to map Relay chain names to internal names
 function mapRelayChainToInternalName(relayChainName: string): string {
-  const nameMapping: Record<string, string> = {
-    Ethereum: 'ethereum',
-    Arbitrum: 'arbitrum',
-    Optimism: 'optimism',
-  };
-  return nameMapping[relayChainName] || relayChainName.toLowerCase();
+  // Use the chain name directly as the internal name, but ensure it's lowercase
+  return relayChainName.toLowerCase();
 }
 
 // Relay-specific validation
@@ -1005,19 +995,14 @@ async function validateRelayTransfer({
 function getRelayChainNames(relayChains: any[]): string[] {
   const chainNames: string[] = [];
 
-  // Add only Relay supported chains that are in our verified working list
+  // Add all Relay supported chains that are enabled and support deposits
   relayChains.forEach((chain) => {
     if (chain.name && chain.depositEnabled && !chain.disabled) {
-      const internalName = mapRelayChainToInternalName(chain.name);
+      // Use the chain name directly as the internal name
+      const internalName = chain.name.toLowerCase();
 
-      // Only include chains that:
-      // 1. Map to a verified working chain name
-      // 2. Are not already in the list
-      if (
-        internalName &&
-        VERIFIED_WORKING_CHAINS.includes(internalName) &&
-        !chainNames.includes(internalName)
-      ) {
+      // Include all chains that are not already in the list
+      if (internalName && !chainNames.includes(internalName)) {
         chainNames.push(internalName);
       }
     }

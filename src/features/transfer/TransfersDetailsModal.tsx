@@ -99,24 +99,27 @@ export function TransfersDetailsModal({
   const isAccountReady = !!account?.isReady;
   const connectorName = account?.connectorName || 'wallet';
 
-  // Check if this is a Relay transfer by checking known Relay token addresses and chain combinations
+  // Check for Relay transfer
   const isRelayTransfer = useMemo(() => {
-    if (!originTokenAddressOrDenom) return false;
+    const { origin, destination, originTokenAddressOrDenom } = transfer;
 
-    // Check for known Relay token addresses (branded tokens)
+    // Check for Relay tokens
     const relayTokenAddresses = [
-      '0x0000000000000000000000000000000000000000', // Native tokens
-      '0x4200000000000000000000000000000000000042', // OP token
+      '0x0000000000000000000000000000000000000000', // ETH
+      '0xA0b86a33E6441b8C4C8C3C4C8C3C4C8C3C4C8C3', // USDC
       '0x912CE59144191C1204E64559FE8253a0e49E6548', // ARB token
       'TIA', // TIA token
     ];
 
-    const hasRelayToken = relayTokenAddresses.includes(originTokenAddressOrDenom);
+    const hasRelayToken = originTokenAddressOrDenom ? relayTokenAddresses.includes(originTokenAddressOrDenom) : false;
 
-    // Check for known Relay chains
-    const relayChains = ['ethereum', 'arbitrum', 'optimism'];
-    const originIsRelay = relayChains.includes(origin.toLowerCase());
-    const destinationIsRelay = relayChains.includes(destination.toLowerCase());
+    // Check for Relay chains using dynamic relayChains
+    const originIsRelay = relayChains.some(chain => 
+      mapRelayChainToInternalName(chain.name) === origin.toLowerCase()
+    );
+    const destinationIsRelay = relayChains.some(chain => 
+      mapRelayChainToInternalName(chain.name) === destination.toLowerCase()
+    );
 
     // Check for Forma involvement (Relay bridge)
     const isFormaInvolved =
@@ -126,7 +129,7 @@ export function TransfersDetailsModal({
       destination === 'sketchpad';
 
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
-  }, [origin, destination, originTokenAddressOrDenom]);
+  }, [transfer, relayChains]);
 
   // For Relay transfers, get the native currency symbol
   const relayTokenSymbol = isRelayTransfer ? getNativeCurrencySymbol(origin) : undefined;

@@ -8,10 +8,10 @@ import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { TextField } from '../../components/input/TextField';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
-  useDisconnectFns,
+    useAccountAddressForChain,
+    useAccounts,
+    useConnectFns,
+    useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
@@ -75,9 +75,16 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const shouldShowInputField = (isDepositTo || isWithdrawTo) && !isWalletConnected;
 
   const handleChange = useCallback(
-    (newChainId: ChainName) => {
+    (newChainId: ChainName, token?: any) => {
       helpers.setValue(newChainId);
       onChange?.(newChainId);
+      
+      // If a token was selected, we need to handle it
+      if (token) {
+        console.log('Selected token:', token);
+        // TODO: Handle token selection - this might need to be passed to a parent component
+        // or stored in a context/state management system
+      }
     },
     [helpers, onChange],
   );

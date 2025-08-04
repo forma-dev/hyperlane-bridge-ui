@@ -49,20 +49,26 @@ export function mapRelayChainToInternalName(relayChainName: string): string {
 // Helper function to check if a chain is a Relay chain
 export function isRelayChain(chain: ChainNameOrId): boolean {
   const chainStr = typeof chain === 'string' ? chain : chain.toString();
-  const relayChains = ['ethereum', 'arbitrum', 'optimism'];
 
   // Check both hardcoded metadata and known Relay chains
   return (
-    chainStr.toLowerCase() in RELAY_CHAIN_METADATA || relayChains.includes(chainStr.toLowerCase())
+    chainStr.toLowerCase() in RELAY_CHAIN_METADATA
   );
 }
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';
+  
+  // First try to get from Hyperlane
   const metadata = tryGetChainMetadata(chain);
-  if (!metadata) return 'Unknown';
-  const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
-  return displayName || metadata.displayName || toTitleCase(metadata.name);
+  if (metadata) {
+    const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
+    return displayName || metadata.displayName || toTitleCase(metadata.name);
+  }
+  
+  // If not found in Hyperlane, try to get from Relay data
+  // This will be handled by the component that has access to relayChains
+  return toTitleCase(chain);
 }
 
 export function isPermissionlessChain(chain: ChainName) {

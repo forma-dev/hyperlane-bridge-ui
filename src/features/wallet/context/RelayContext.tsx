@@ -1,25 +1,27 @@
 import {
-  PropsWithChildren,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    PropsWithChildren,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react';
 
 import { logger } from '../../../utils/logger';
 // Import centralized Relay utilities
 import {
-  getRelayChainNames as relayGetChainNames,
-  mapRelayChainToInternalName as relayMapChainName,
+    getRelayChainNames as relayGetChainNames,
+    mapRelayChainToInternalName as relayMapChainName,
 } from '../../chains/relayUtils';
 
 import {
-  getRelayClient,
-  initializeRelayClient,
-  isRelayClientReady,
-  setupDynamicChains,
+    getAllAvailableChains,
+    getCurrenciesV2,
+    getRelayClient,
+    initializeRelayClient,
+    isRelayClientReady,
+    setupDynamicChains,
 } from './RelayClient';
 
 // Types for chain configuration (keeping existing interface for compatibility)
@@ -40,6 +42,44 @@ interface RelayChain {
     decimals: number;
     supportsBridging: boolean;
   };
+  featuredTokens?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    withdrawalFee?: number;
+    depositFee?: number;
+  }>;
+  erc20Currencies?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    withdrawalFee?: number;
+    depositFee?: number;
+  }>;
+  additionalTokens?: Array<{
+    id: string;
+    symbol: string;
+    name: string;
+    address: string;
+    decimals: number;
+    supportsBridging: boolean;
+    metadata?: {
+      logoURI: string;
+    };
+    source?: string;
+  }>;
   viemChain: any;
 }
 
@@ -64,14 +104,12 @@ const RelayContext = createContext<RelayContextType | null>(null);
 // Provider component
 export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   const [client, setClient] = useState<ReturnType<typeof getRelayClient> | null>(null);
-  const [supportedChains, setSupportedChains] = useState<number[]>([]);
   const [relayChains, setRelayChains] = useState<RelayChain[]>([]);
   const [isLoadingChains, setIsLoadingChains] = useState(false);
+  const [apiUrl] = useState<string>('');
   const [isReady, setIsReady] = useState(false);
 
-  // Environment configuration
   const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
-  const apiUrl = client?.baseApiUrl || '';
 
   // Fallback chain configuration (moved before useEffect to fix dependencies)
   const setFallbackChains = useCallback(() => {
@@ -135,8 +173,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       },
     ];
 
-    const chainIds = fallbackChains.map((chain) => chain.id);
-    setSupportedChains(chainIds);
     setRelayChains(fallbackChains);
   }, []);
 
@@ -148,40 +184,105 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         const relayClient = initializeRelayClient();
         setClient(relayClient);
 
+        // Wait a bit for the client to fully initialize
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // Setup dynamic chains with error handling
         try {
           await setupDynamicChains();
+          setIsReady(true);
         } catch (chainError) {
-          logger.warn('Failed to setup dynamic chains, continuing with static config:', chainError);
-          // Continue without dynamic chains - this shouldn't break the app
+          logger.warn('Failed to setup dynamic chains, using fallback', chainError);
+          setFallbackChains();
+          setIsReady(true);
         }
-
-        setIsReady(true);
       } catch (error) {
-        logger.error('Failed to initialize Relay client:', error);
-        // Don't let Relay client failure break the entire app
-        setIsReady(false);
-        // Set fallback chains so Relay functionality has some basic config
+        logger.error('Failed to initialize Relay client', error);
         setFallbackChains();
+        setIsReady(true);
       }
     };
 
     initClient();
   }, [setFallbackChains]);
 
-  // Setup fallback chains on error or when client fails
-  useEffect(() => {
-    if (!isReady && !isLoadingChains && relayChains.length === 0) {
-      setFallbackChains();
-    }
-  }, [isReady, isLoadingChains, relayChains.length, setFallbackChains]);
-
   // Fetch supported chains using SDK
   const fetchDynamicChains = useCallback(async () => {
     try {
       setIsLoadingChains(true);
 
-      // First try to get chains from the initialized client
+      // First try to get chains directly from the Relay API
+      const directChains = await getAllAvailableChains();
+      
+      // Get currencies from v2 API
+      const currenciesV2 = await getCurrenciesV2();
+      
+      if (directChains && directChains.length > 0) {
+        // Convert direct API chains to our format
+        const directFormattedChains: RelayChain[] = directChains
+          .filter((chain: any) => {
+            const isEnabled = !chain.disabled && chain.enabled !== false;
+            const supportsDeposits =
+              chain.depositEnabled === true || chain.depositEnabled !== false;
+            const hasValidName = chain.name && chain.name.trim().length > 0;
+
+            return isEnabled && supportsDeposits && hasValidName;
+          })
+          .map((chain: any) => {
+            // Get currencies for this specific chain from the v2 API
+            const chainCurrencies = currenciesV2.filter((currency: any) => 
+              currency.chainId === chain.id
+            );
+            
+            // Remove duplicates by address
+            const uniqueCurrencies = chainCurrencies.filter((currency, index, self) => 
+              index === self.findIndex(c => c.address.toLowerCase() === currency.address.toLowerCase())
+            );
+            
+
+            
+            return {
+              id: chain.id,
+              name: chain.name,
+              displayName: chain.displayName || chain.name,
+              iconUrl: chain.iconUrl,
+              logoUrl: chain.logoUrl,
+              enabled: !chain.disabled && chain.enabled !== false,
+              depositEnabled: chain.depositEnabled === true || chain.depositEnabled !== false,
+              disabled: chain.disabled || chain.enabled === false,
+              currency: {
+                id: `${chain.name}-native`,
+                symbol: chain.currency?.symbol || 'ETH',
+                name: chain.currency?.name || chain.displayName || chain.name,
+                address: chain.currency?.address || '0x0000000000000000000000000000000000000000',
+                decimals: chain.currency?.decimals || 18,
+                supportsBridging: true,
+              },
+              featuredTokens: chain.featuredTokens || [],
+              erc20Currencies: chain.erc20Currencies || [],
+              // Add the currencies from v2 API as additional tokens
+              additionalTokens: uniqueCurrencies.map((currency: any) => ({
+                id: currency.address,
+                symbol: currency.symbol,
+                name: currency.name,
+                address: currency.address,
+                decimals: currency.decimals,
+                supportsBridging: true, // Assume they support bridging
+                metadata: currency.metadata,
+                source: 'v2-api'
+              })),
+              viemChain: null,
+              
+
+            };
+          });
+
+
+        setRelayChains(directFormattedChains);
+        return;
+      }
+
+      // Fallback to SDK chains if direct API fails
       if (client && client.chains && Array.isArray(client.chains) && client.chains.length > 0) {
         const chains = client.chains;
 
@@ -197,50 +298,47 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
             return isEnabled && supportsDeposits && hasValidName;
           })
           .map((chain: any) => ({
-            id: chain.id || chain.chainId,
-            name: (chain.name || '').toLowerCase(),
-            displayName: chain.displayName || chain.name || '',
+            id: chain.id,
+            name: chain.name,
+            displayName: chain.displayName || chain.name,
             iconUrl: chain.iconUrl,
             logoUrl: chain.logoUrl,
-            enabled: chain.enabled !== false,
-            depositEnabled: chain.depositEnabled === true || chain.depositEnabled !== false, // Use actual API data
-            disabled: chain.disabled || false,
+            enabled: !chain.disabled && chain.enabled !== false,
+            depositEnabled: chain.depositEnabled === true || chain.depositEnabled !== false,
+            disabled: chain.disabled || chain.enabled === false,
             currency: {
-              id: chain.nativeCurrency?.id || '',
-              symbol: chain.nativeCurrency?.symbol || '',
-              name: chain.nativeCurrency?.name || '',
-              address:
-                chain.nativeCurrency?.address || '0x0000000000000000000000000000000000000000',
-              decimals: chain.nativeCurrency?.decimals || 18,
+              id: `${chain.name}-native`,
+              symbol: chain.currency?.symbol || 'ETH',
+              name: chain.currency?.name || chain.displayName || chain.name,
+              address: chain.currency?.address || '0x0000000000000000000000000000000000000000',
+              decimals: chain.currency?.decimals || 18,
               supportsBridging: true,
             },
-            viemChain: chain.viemChain || null,
+            featuredTokens: chain.featuredTokens || [],
+            erc20Currencies: chain.erc20Currencies || [],
+            viemChain: null,
           }));
 
-        const chainIds = formattedChains.map((chain) => chain.id);
-        setSupportedChains(chainIds);
         setRelayChains(formattedChains);
-      } else {
-        // If no chains available from client, try dynamic configuration
-        await setupDynamicChains();
-
-        // After dynamic setup, check if we now have chains
-        if (client && client.chains && client.chains.length > 0) {
-          // Recursive call to process the newly configured chains
-          return fetchDynamicChains();
-        } else {
-          logger.warn('No chains available from SDK, using fallback configuration');
-          setFallbackChains();
-        }
+        return;
       }
+
+      // If no chains from either source, use fallback
+      setFallbackChains();
     } catch (error) {
-      logger.error('Failed to fetch chains from SDK:', error);
-      // Fallback to basic chains
+      logger.error('Failed to fetch dynamic chains', error);
       setFallbackChains();
     } finally {
       setIsLoadingChains(false);
     }
   }, [client, setFallbackChains]);
+
+  // Setup fallback chains on error or when client fails
+  useEffect(() => {
+    if (!isReady && !isLoadingChains && relayChains.length === 0) {
+      setFallbackChains();
+    }
+  }, [isReady, isLoadingChains, relayChains.length, setFallbackChains]);
 
   // Refresh chains
   const refreshChains = useCallback(async () => {
@@ -299,7 +397,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       isReady: isReady && isRelayClientReady(),
       isMainnet,
       apiUrl,
-      supportedChains,
+      supportedChains: client?.chains?.map((chain: any) => chain.id) || [],
       relayChains,
       isLoadingChains,
       refreshChains,
@@ -311,7 +409,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       isReady,
       isMainnet,
       apiUrl,
-      supportedChains,
       relayChains,
       isLoadingChains,
       refreshChains,

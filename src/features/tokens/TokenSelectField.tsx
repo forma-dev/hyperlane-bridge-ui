@@ -24,21 +24,20 @@ type Props = {
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName) return false;
 
-  // First check against known Relay chain names (hardcoded list)
-  const knownRelayChains = ['ethereum', 'arbitrum', 'optimism'];
-  if (knownRelayChains.includes(chainName.toLowerCase())) {
-    return true;
-  }
-
-  // Also check against the dynamic Relay chains list if available
+  // Check against the dynamic Relay chains list if available
   if (relayChains?.length) {
     return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
+      console.log('Checking Relay chain:', {
+        chainName,
+        relayChainName: chain.name,
+        internalName,
+        matches: internalName === chainName.toLowerCase()
+      });
       return (
         internalName &&
-        internalName === chainName.toLowerCase() &&
-        chain.depositEnabled &&
-        !chain.disabled
+        internalName === chainName.toLowerCase()
+        // Removed depositEnabled and disabled checks as they might be preventing detection
       );
     });
   }
@@ -69,14 +68,21 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   useEffect(() => {
     // Check if origin is a Relay chain
     const isOriginRelay = isRelayChain(origin, relayChains);
+    
+    console.log('TokenSelectField useEffect:', {
+      origin,
+      relayChainsCount: relayChains?.length,
+      isOriginRelay,
+      relayChains: relayChains?.map(c => c.name)
+    });
 
     if (isOriginRelay) {
-      // For pure Relay chains, automatically select the native token
-      // Since we don't have actual Hyperlane tokens for Relay chains,
-      // we'll use a special token index of -1 to indicate Relay native token
+      // For Relay chains, allow manual token selection
+      // We'll use a special token index of -1 to indicate Relay native token as default
       helpers.setValue(-1);
-      setIsAutomaticSelection(true);
+      setIsAutomaticSelection(false); // Allow manual selection
       setIsNft(false); // Native tokens are never NFTs
+      console.log('Set Relay chain token selection to manual');
     } else if (origin === 'forma' || origin === 'sketchpad') {
       // Special case: Forma/Sketchpad withdrawals to ANY destination
       // We need to find the Forma TIA token in the Hyperlane token list
@@ -153,7 +159,22 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   };
 
   const onClickField = () => {
-    if (!disabled && !isAutomaticSelection) setIsModalOpen(true);
+    console.log('TokenSelectField onClickField:', {
+      disabled,
+      isAutomaticSelection,
+      origin,
+      isRelayChain: isRelayChain(origin, relayChains),
+      willOpenModal: !disabled && !isAutomaticSelection
+    });
+    if (!disabled && !isAutomaticSelection) {
+      console.log('Opening token selection modal for Relay chain');
+      setIsModalOpen(true);
+    } else {
+      console.log('Modal not opened because:', {
+        disabled,
+        isAutomaticSelection
+      });
+    }
   };
 
   // Get the token to display

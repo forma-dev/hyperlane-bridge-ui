@@ -17,15 +17,7 @@ import { useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName) return false;
 
-  // First check against known Relay chain names (hardcoded list)
-  const knownRelayChains = ['ethereum', 'arbitrum', 'optimism'];
-  const isKnownRelay = knownRelayChains.includes(chainName.toLowerCase());
-
-  if (isKnownRelay) {
-    return true;
-  }
-
-  // Also check against the dynamic Relay chains list if available
+  // Check against the dynamic Relay chains list if available
   if (relayChains?.length) {
     const dynamicMatch = relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
