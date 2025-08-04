@@ -8,17 +8,15 @@ const Home: NextPage = () => {
   const maintenance = false;
   const relayEnabled = true;
   const isTestnet = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
-  
+
   if (isTestnet) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold mb-4 text-white">
-          Testnet Bridge
-        </h2>
+        <h2 className="text-2xl font-semibold mb-4 text-white">Testnet Bridge</h2>
         <p className="text-lg mb-6 text-gray-300">
           Need testnet tokens? Contact us on Discord for assistance.
         </p>
-        <a 
+        <a
           href="https://discord.gg/P6tEY8d7De"
           target="_blank"
           rel="noopener noreferrer"
@@ -29,7 +27,7 @@ const Home: NextPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="pt-5 space-y-3">
       {maintenance ? (
