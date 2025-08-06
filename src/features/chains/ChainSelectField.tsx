@@ -35,6 +35,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const connectFns = useConnectFns();
   const disconnectFns = useDisconnectFns();
   const { relayChains } = useRelaySupportedChains();
+  const { setFieldValue } = useFormikContext<any>();
 
   // Dynamic chain protocol detection
   const chainProtocols = useMemo(() => {
@@ -79,14 +80,22 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       helpers.setValue(newChainId);
       onChange?.(newChainId);
       
-      // If a token was selected, we need to handle it
+      // If a token was selected, update the form with token details
       if (token) {
-        console.log('Selected token:', token);
-        // TODO: Handle token selection - this might need to be passed to a parent component
-        // or stored in a context/state management system
+        const tokenData = {
+          address: token.address,
+          symbol: token.symbol,
+          name: token.name,
+          decimals: token.decimals,
+          logoURI: token.metadata?.logoURI,
+          chainId: relayChains.find(rc => 
+            mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase()
+          )?.id
+        };
+        setFieldValue('selectedToken', tokenData);
       }
     },
-    [helpers, onChange],
+    [helpers, onChange, setFieldValue, relayChains],
   );
 
   const onClick = () => {
@@ -197,7 +206,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     }
   }, [transferType, label, handleChange]);
 
-  const { values, setFieldValue } = useFormikContext<any>();
+  const { values } = useFormikContext<any>();
   const recipientValue = values.recipient;
   const [isFocused, setIsFocused] = useState(false);
 

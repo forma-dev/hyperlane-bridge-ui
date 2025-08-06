@@ -25,6 +25,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({
 }: Props) {
   const { values } = useFormikContext<TransferFormValues>();
   // Flag for if form is in input vs review mode
+
   const [isReview, setIsReview] = useState(false);
 
   const protocol = tryGetChainProtocol(chainName) || ProtocolType.Ethereum;

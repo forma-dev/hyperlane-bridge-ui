@@ -6,54 +6,19 @@ import { getMultiProvider } from '../../context/context';
 // Import centralized Relay utilities
 import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
 
-// Fallback metadata for Relay chains that aren't in Hyperlane
-const RELAY_CHAIN_METADATA: Record<string, any> = {
-  ethereum: {
-    name: 'ethereum',
-    displayName: 'Ethereum',
-    displayNameShort: 'ETH',
-    protocol: ProtocolType.Ethereum,
-    chainId: 1,
-    domainId: 1,
-    nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }],
-  },
-
-  arbitrum: {
-    name: 'arbitrum',
-    displayName: 'Arbitrum One',
-    displayNameShort: 'ARB',
-    protocol: ProtocolType.Ethereum,
-    chainId: 42161,
-    domainId: 42161,
-    nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: [{ http: 'https://arbitrum.rpc.hyperlane.xyz' }],
-  },
-  optimism: {
-    name: 'optimism',
-    displayName: 'Optimism',
-    displayNameShort: 'OP',
-    protocol: ProtocolType.Ethereum,
-    chainId: 10,
-    domainId: 10,
-    nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: [{ http: 'https://optimism.rpc.hyperlane.xyz' }],
-  },
-};
-
-// Re-export for backward compatibility
 export function mapRelayChainToInternalName(relayChainName: string): string {
   return relayMapChainName(relayChainName);
 }
 
 // Helper function to check if a chain is a Relay chain
 export function isRelayChain(chain: ChainNameOrId): boolean {
-  const chainStr = typeof chain === 'string' ? chain : chain.toString();
 
-  // Check both hardcoded metadata and known Relay chains
-  return (
-    chainStr.toLowerCase() in RELAY_CHAIN_METADATA
-  );
+  try {
+    getMultiProvider().getChainMetadata(chain);
+    return false; // If Hyperlane has metadata, it's not a Relay chain
+  } catch (error) {
+    return true; // If Hyperlane doesn't have metadata, assume it's a Relay chain
+  }
 }
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
@@ -66,8 +31,6 @@ export function getChainDisplayName(chain: ChainName, shortName = false) {
     return displayName || metadata.displayName || toTitleCase(metadata.name);
   }
   
-  // If not found in Hyperlane, try to get from Relay data
-  // This will be handled by the component that has access to relayChains
   return toTitleCase(chain);
 }
 
@@ -95,10 +58,21 @@ export function tryGetChainMetadata(chain: ChainNameOrId) {
     return hyperlaneMetadata;
   }
 
-  // Fallback to Relay chain metadata if available
+  // If Hyperlane doesn't have it, check if it's a Relay chain and provide fallback metadata
   if (isRelayChain(chain)) {
     const chainStr = typeof chain === 'string' ? chain : chain.toString();
-    return RELAY_CHAIN_METADATA[chainStr];
+    
+    // Create dynamic metadata for any Relay chain
+    return {
+      name: chainStr,
+      displayName: toTitleCase(chainStr),
+      displayNameShort: chainStr.toUpperCase().slice(0, 3),
+      protocol: ProtocolType.Ethereum,
+      chainId: 1, // Default fallback - will be overridden by API data
+      domainId: 1, // Default fallback - will be overridden by API data
+      nativeToken: { name: 'Unknown', symbol: 'Unknown', decimals: 18 },
+      rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
+    };
   }
 
   return null;
@@ -109,10 +83,21 @@ export function getChainMetadata(chain: ChainNameOrId) {
   try {
     return getMultiProvider().getChainMetadata(chain);
   } catch (error) {
-    // If Hyperlane doesn't have it, try Relay fallback
+    // If Hyperlane doesn't have it, create dynamic Relay chain metadata
     if (isRelayChain(chain)) {
       const chainStr = typeof chain === 'string' ? chain : chain.toString();
-      return RELAY_CHAIN_METADATA[chainStr];
+      
+      // Create dynamic metadata for any Relay chain
+      return {
+        name: chainStr,
+        displayName: toTitleCase(chainStr),
+        displayNameShort: chainStr.toUpperCase().slice(0, 3),
+        protocol: ProtocolType.Ethereum,
+        chainId: 1, // Default fallback - will be overridden by API data
+        domainId: 1, // Default fallback - will be overridden by API data
+        nativeToken: { name: 'Unknown', symbol: 'Unknown', decimals: 18 },
+        rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
+      };
     }
     // Re-throw the original error if no fallback is available
     throw error;

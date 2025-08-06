@@ -16,10 +16,10 @@ import { getHypExplorerLink } from '../../utils/links';
 import { logger } from '../../utils/logger';
 import { useTimeout } from '../../utils/timeout';
 import {
-  getIconByTransferStatus,
-  getTransferStatusLabel,
-  isTransferFailed,
-  isTransferSent,
+    getIconByTransferStatus,
+    getTransferStatusLabel,
+    isTransferFailed,
+    isTransferSent,
 } from '../../utils/transfer';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { getChainDisplayName, hasPermissionlessChain } from '../chains/utils';
@@ -31,15 +31,12 @@ import { TransferContext, TransferStatus } from './types';
 // Helper function to get native currency symbol for Relay transfers
 function getNativeCurrencySymbol(chainName: string): string {
   const symbolMap: Record<string, string> = {
-    ethereum: 'ETH',
-    arbitrum: 'ARB',
-    optimism: 'OP',
     forma: 'TIA',
     sketchpad: 'TIA',
     celestia: 'TIA',
     stride: 'STRD',
   };
-  return symbolMap[chainName.toLowerCase()] || 'ETH';
+  return symbolMap[chainName.toLowerCase()] || 'Unknown';
 }
 
 export function TransfersDetailsModal({
@@ -103,13 +100,8 @@ export function TransfersDetailsModal({
   const isRelayTransfer = useMemo(() => {
     const { origin, destination, originTokenAddressOrDenom } = transfer;
 
-    // Check for Relay tokens
-    const relayTokenAddresses = [
-      '0x0000000000000000000000000000000000000000', // ETH
-      '0xA0b86a33E6441b8C4C8C3C4C8C3C4C8C3C4C8C3', // USDC
-      '0x912CE59144191C1204E64559FE8253a0e49E6548', // ARB token
-      'TIA', // TIA token
-    ];
+    // Check for Relay tokens - now dynamic from API
+    const relayTokenAddresses: string[] = [];
 
     const hasRelayToken = originTokenAddressOrDenom ? relayTokenAddresses.includes(originTokenAddressOrDenom) : false;
 

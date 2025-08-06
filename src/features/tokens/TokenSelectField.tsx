@@ -226,16 +226,11 @@ function TokenButton({
     return styles.enabled;
   };
 
-  // Custom token icon for Relay native tokens
+  // Generic token icon for Relay native tokens
   const renderNativeTokenIcon = (tokenInfo: { symbol: string; decimals: number; name: string }) => {
-    // Create a simple token icon based on the symbol
+    // Create a simple token icon with generic color
     const getTokenColor = (symbol: string) => {
-      const colors: Record<string, string> = {
-        ETH: '#627EEA',
-        ARB: '#28A0F0',
-        OP: '#FF0420',
-      };
-      return colors[symbol] || '#6B7280';
+      return '#6B7280'; // Generic color for all tokens
     };
 
     return (

@@ -6,16 +6,7 @@ import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import { mapRelayChainToInternalName } from './relayUtils';
 import { getChainDisplayName } from './utils';
 
-// Helper function to test if an image URL is accessible
-const testImageAccessibility = async (url: string): Promise<boolean> => {
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
-  } catch (error) {
-    console.log(`Image accessibility test failed for ${url}:`, error);
-    return false;
-  }
-};
+
 
 // Helper function to get reliable token icons
 const getTokenIconUrl = (token: any): string | null => {
@@ -24,9 +15,7 @@ const getTokenIconUrl = (token: any): string | null => {
     return `/api/proxy-image?url=${encodeURIComponent(url)}`
   };
 
-  const symbol = token.symbol?.toUpperCase();
   
-
   
   // First priority: Use the token's logoURI if it exists and looks valid
   if (token.metadata?.logoURI) {
@@ -87,7 +76,7 @@ export function ChainSelectListModal({
   // Function to fetch tokens for a specific network with pagination
   const fetchTokensForNetwork = async (chainId: number, offset: number = 0) => {
     try {
-      const { getCurrenciesV2 } = await import('../wallet/context/RelayClient');
+      const { getCurrenciesV2: _getCurrenciesV2 } = await import('../wallet/context/RelayClient');
       
       // Create a custom request with offset for pagination
       const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
@@ -360,7 +349,7 @@ export function ChainSelectListModal({
 
     const isSelected = selectedChain === chain;
     const tokenData = getTokensForChain(chain);
-    const totalTokens = tokenData.featuredTokens.length + tokenData.displayTokens.length;
+            const _totalTokens = tokenData.featuredTokens.length + tokenData.displayTokens.length;
 
     return (
       <button
@@ -384,7 +373,7 @@ export function ChainSelectListModal({
     );
   };
 
-  const renderTokenItem = (token: any) => {
+  const _renderTokenItem = (token: any) => {
     const handleTokenSelect = () => {
       if (selectedChain) {
         onSelect(selectedChain, token);
@@ -412,7 +401,7 @@ export function ChainSelectListModal({
                 src={iconUrl} 
                 alt={token.symbol}
                 className={`w-8 h-8 rounded-full ${hasLoaded ? 'opacity-100' : 'opacity-0'}`}
-                onError={(e) => {
+                onError={(_e) => {
                   handleImageError(token.address);
                 }}
                 onLoad={() => {
@@ -495,21 +484,21 @@ export function ChainSelectListModal({
                 </>
               ) : (
                 <>
-                  {/* Hyperlane Chains Section */}
-                  {hyperlaneChains.length > 0 && (
-                    <>
-                      <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
-                        Hyperlane Networks
-                      </div>
-                      {hyperlaneChains.map((chain) => renderChainItem(chain, 'hyperlane'))}
-                    </>
-                  )}
+              {/* Hyperlane Chains Section */}
+              {hyperlaneChains.length > 0 && (
+                <>
+                  <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
+                    Hyperlane Networks
+                  </div>
+                  {hyperlaneChains.map((chain) => renderChainItem(chain, 'hyperlane'))}
+                </>
+              )}
 
                   {/* Popular Chains Section */}
                   {popularChainsList.length > 0 && (
-                    <>
-                      {hyperlaneChains.length > 0 && <div className="border-t border-gray-200 my-2" />}
-                      <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
+                <>
+                  {hyperlaneChains.length > 0 && <div className="border-t border-gray-200 my-2" />}
+                  <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
                         Popular Chains
                       </div>
                       {popularChainsList.map((chain) => renderChainItem(chain, 'relay'))}
@@ -522,22 +511,22 @@ export function ChainSelectListModal({
                       {(hyperlaneChains.length > 0 || popularChainsList.length > 0) && <div className="border-t border-gray-200 my-2" />}
                       <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
                         Chains A-Z
-                      </div>
+                  </div>
                       {otherChainsList.map((chain) => renderChainItem(chain, 'relay'))}
-                    </>
-                  )}
+                </>
+              )}
 
-                  {/* No separation needed if only one type */}
+              {/* No separation needed if only one type */}
                   {(hyperlaneChains.length === 0 && popularChainsList.length === 0 && otherChainsList.length === 0) &&
                     chains.length > 0 && (
-                      <>
-                        {chains.map((chain) =>
-                          renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane'),
+                  <>
+                    {chains.map((chain) =>
+                      renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane'),
                         )}
                       </>
                     )}
-                </>
-              )}
+                  </>
+                )}
             </div>
           </div>
         </div>
@@ -776,8 +765,8 @@ export function ChainSelectListModal({
                                       )}
                                     </button>
                                   ))}
-                                </div>
-                                
+                </div>
+                
 
                               </div>
                             ) : null;

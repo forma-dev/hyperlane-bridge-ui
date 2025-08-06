@@ -22,34 +22,21 @@ export function useEvmAccount(): AccountInfo {
   const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address: wagmiAddress, connector, chain } = useAccount();
-  const isReady = ready && walletsReady && wallets.length > 0;
+  const isReady = ready && walletsReady && wallets.length > 0 && !!wagmiAddress;
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
 
-  // Map wagmi chain names to internal chain names
-  const getInternalChainName = (chainId?: number): string => {
-    if (!chainId) return 'ethereum';
 
-    const chainMapping: Record<number, string> = {
-      1: 'ethereum',
-      42161: 'arbitrum',
-      10: 'optimism',
-      984122: 'forma', // Forma chain ID
-      // Add more chain mappings as needed
-    };
-
-    return chainMapping[chainId] || 'ethereum';
-  };
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
       addresses: activeWallet
-        ? [{ address: activeWallet.address, chainName: getInternalChainName(chain?.id) }]
+        ? [{ address: activeWallet.address }]
         : [],
       connectorName: connector?.name || 'Privy',
       isReady,
     }),
-    [activeWallet, isReady, connector, chain],
+    [activeWallet, isReady, connector],
   );
 }
 

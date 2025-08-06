@@ -1,8 +1,8 @@
 import {
-  MAINNET_RELAY_API,
-  TESTNET_RELAY_API,
-  configureDynamicChains,
-  createClient,
+    MAINNET_RELAY_API,
+    TESTNET_RELAY_API,
+    configureDynamicChains,
+    createClient,
 } from '@reservoir0x/relay-sdk';
 
 // Environment-based configuration
@@ -128,4 +128,92 @@ export function getRelayClient() {
 // Helper to check if client is ready
 export function isRelayClientReady(): boolean {
   return relayClient !== null;
+}
+
+// Dynamic balance fetching using Relay SDK's configureDynamicChains
+export async function getRelayBalance(
+  chainId: number,
+  address: string,
+  tokenAddress?: string
+): Promise<{
+  balance: string;
+  decimals: number;
+  symbol: string;
+  name: string;
+} | null> {
+  try {
+    // Use Relay SDK's configureDynamicChains to get all supported chains with their RPC URLs
+    const { configureDynamicChains } = await import('@reservoir0x/relay-sdk');
+    const { ethers } = await import('ethers');
+    
+    // Get all dynamically configured chains
+    const dynamicChains = await configureDynamicChains();
+    
+    // Find the chain for this chainId
+    const chain = dynamicChains.find(chain => chain.viemChain?.id === chainId);
+    
+    if (!chain || !chain.viemChain) {
+      console.error('No dynamic chain found for chainId:', chainId);
+      return null;
+    }
+    
+    // Get the RPC URL from the viemChain
+    const rpcUrl = chain.viemChain.rpcUrls.default.http[0];
+    
+    if (!rpcUrl) {
+      console.error('No RPC URL found in dynamic chain for chainId:', chainId);
+      return null;
+    }
+    
+
+    
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    let balance: string;
+    let decimals: number;
+    let symbol: string;
+    let name: string;
+
+    if (tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000') {
+      // ERC20 token balance
+      const tokenContract = new ethers.Contract(
+        tokenAddress,
+        [
+          'function balanceOf(address owner) view returns (uint256)',
+          'function decimals() view returns (uint8)',
+          'function symbol() view returns (string)',
+          'function name() view returns (string)',
+        ],
+        provider
+      );
+
+      const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([
+        tokenContract.balanceOf(address),
+        tokenContract.decimals(),
+        tokenContract.symbol(),
+        tokenContract.name(),
+      ]);
+
+      balance = balanceResult.toString();
+      decimals = decimalsResult;
+      symbol = symbolResult;
+      name = nameResult;
+    } else {
+      // Native token balance
+      balance = (await provider.getBalance(address)).toString();
+      decimals = 18;
+      symbol = 'ETH';
+      name = 'Ether';
+    }
+
+    return {
+      balance,
+      decimals,
+      symbol,
+      name,
+    };
+  } catch (error) {
+    console.error('Failed to fetch Relay balance:', error);
+    return null;
+  }
 }

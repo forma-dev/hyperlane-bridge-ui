@@ -1,27 +1,27 @@
 import {
-    PropsWithChildren,
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 
 import { logger } from '../../../utils/logger';
 // Import centralized Relay utilities
 import {
-    getRelayChainNames as relayGetChainNames,
-    mapRelayChainToInternalName as relayMapChainName,
+  getRelayChainNames as relayGetChainNames,
+  mapRelayChainToInternalName as relayMapChainName,
 } from '../../chains/relayUtils';
 
 import {
-    getAllAvailableChains,
-    getCurrenciesV2,
-    getRelayClient,
-    initializeRelayClient,
-    isRelayClientReady,
-    setupDynamicChains,
+  getAllAvailableChains,
+  getCurrenciesV2,
+  getRelayClient,
+  initializeRelayClient,
+  isRelayClientReady,
+  setupDynamicChains,
 } from './RelayClient';
 
 // Types for chain configuration (keeping existing interface for compatibility)
@@ -111,70 +111,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
   const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
 
-  // Fallback chain configuration (moved before useEffect to fix dependencies)
-  const setFallbackChains = useCallback(() => {
-    const fallbackChains: RelayChain[] = [
-      {
-        id: 1,
-        name: 'ethereum',
-        displayName: 'Ethereum',
-        iconUrl: undefined,
-        logoUrl: undefined,
-        enabled: true,
-        depositEnabled: true,
-        disabled: false,
-        currency: {
-          id: 'ethereum-native',
-          symbol: 'ETH',
-          name: 'Ethereum',
-          address: '0x0000000000000000000000000000000000000000',
-          decimals: 18,
-          supportsBridging: true,
-        },
-        viemChain: null,
-      },
-      {
-        id: 10,
-        name: 'optimism',
-        displayName: 'Optimism',
-        iconUrl: undefined,
-        logoUrl: undefined,
-        enabled: true,
-        depositEnabled: true,
-        disabled: false,
-        currency: {
-          id: 'optimism-native',
-          symbol: 'ETH',
-          name: 'Optimism',
-          address: '0x0000000000000000000000000000000000000000',
-          decimals: 18,
-          supportsBridging: true,
-        },
-        viemChain: null,
-      },
-      {
-        id: 42161,
-        name: 'arbitrum',
-        displayName: 'Arbitrum',
-        iconUrl: undefined,
-        logoUrl: undefined,
-        enabled: true,
-        depositEnabled: true,
-        disabled: false,
-        currency: {
-          id: 'arbitrum-native',
-          symbol: 'ETH',
-          name: 'Arbitrum',
-          address: '0x0000000000000000000000000000000000000000',
-          decimals: 18,
-          supportsBridging: true,
-        },
-        viemChain: null,
-      },
-    ];
 
-    setRelayChains(fallbackChains);
-  }, []);
 
   // Initialize Relay client
   useEffect(() => {
@@ -192,19 +129,17 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           await setupDynamicChains();
           setIsReady(true);
         } catch (chainError) {
-          logger.warn('Failed to setup dynamic chains, using fallback', chainError);
-          setFallbackChains();
+          logger.warn('Failed to setup dynamic chains', chainError);
           setIsReady(true);
         }
       } catch (error) {
         logger.error('Failed to initialize Relay client', error);
-        setFallbackChains();
         setIsReady(true);
       }
     };
 
     initClient();
-  }, [setFallbackChains]);
+  }, []);
 
   // Fetch supported chains using SDK
   const fetchDynamicChains = useCallback(async () => {
@@ -323,22 +258,16 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         return;
       }
 
-      // If no chains from either source, use fallback
-      setFallbackChains();
+      // If no chains from either source, log error
+      logger.warn('No chains available from API or SDK');
     } catch (error) {
       logger.error('Failed to fetch dynamic chains', error);
-      setFallbackChains();
     } finally {
       setIsLoadingChains(false);
     }
-  }, [client, setFallbackChains]);
+  }, [client]);
 
-  // Setup fallback chains on error or when client fails
-  useEffect(() => {
-    if (!isReady && !isLoadingChains && relayChains.length === 0) {
-      setFallbackChains();
-    }
-  }, [isReady, isLoadingChains, relayChains.length, setFallbackChains]);
+  // No fallback chains needed - all chains come from API
 
   // Refresh chains
   const refreshChains = useCallback(async () => {

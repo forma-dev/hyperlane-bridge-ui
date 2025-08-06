@@ -4,24 +4,18 @@ import { ComponentProps, useEffect, useMemo, useState } from 'react';
 import { ChainLogo as ChainLogoInner } from '@hyperlane-xyz/widgets';
 
 import {
-  getRelayNativeTokenInfo,
-  mapRelayChainToInternalName,
+    getRelayNativeTokenInfo,
+    mapRelayChainToInternalName,
 } from '../../features/chains/relayUtils';
 import { getChainDisplayName, tryGetChainMetadata } from '../../features/chains/utils';
 import { useRelaySupportedChains } from '../../features/wallet/context/RelayContext';
 
-// Custom fallback icons for Relay chains (used only if iconUrl from API fails)
+// Generic fallback icons for Relay chains (used only if iconUrl from API fails)
 function createRelayChainIcon(chainName: string, _size: number, relayChains?: any[]) {
   const currencyInfo = getRelayNativeTokenInfo(chainName, relayChains);
 
-  // Use a color mapping for the fallback icons
-  const colorMap: Record<string, string> = {
-    ETH: '#627EEA',
-    ARB: '#28A0F0',
-    OP: '#FF0420',
-  };
-
-  const color = colorMap[currencyInfo?.symbol || 'ETH'] || '#6B7280';
+  // Use a generic color for all fallback icons
+  const color = '#6B7280';
 
   const RelayChainIcon = (props: { width: number; height: number; title?: string }) => (
     <div
@@ -40,11 +34,11 @@ function createRelayChainIcon(chainName: string, _size: number, relayChains?: an
       }}
       title={props.title}
     >
-      {(currencyInfo?.symbol || 'ETH').slice(0, 3)}
+              {(currencyInfo?.symbol || 'Unknown').slice(0, 3)}
     </div>
   );
 
-  RelayChainIcon.displayName = `RelayChainIcon-${currencyInfo?.symbol || 'ETH'}`;
+      RelayChainIcon.displayName = `RelayChainIcon-${currencyInfo?.symbol || 'Unknown'}`;
 
   return RelayChainIcon;
 }
@@ -113,7 +107,7 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
       // Use local logo for Forma/Sketchpad
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image
-          src={chainMetadata.logoURI}
+          src={chainMetadata.logoURI!}
           alt={chainDisplayName || chainName}
           width={props.width}
           height={props.height}
@@ -136,7 +130,7 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
       // Use logoURI from Hyperlane metadata for other chains
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image
-          src={chainMetadata.logoURI}
+          src={chainMetadata.logoURI!}
           alt={chainDisplayName || chainName}
           width={props.width}
           height={props.height}

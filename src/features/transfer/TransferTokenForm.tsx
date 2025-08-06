@@ -361,11 +361,13 @@ function AmountSection({
             }`}
             style={{ borderLeftWidth: '0.5px' }}
           ></div>
-          {isRelayTransfer ? (
-            <ChainLogoSection chain={values.origin} isRelay={true} />
-          ) : (
-            <ChainLogoSection chain={values.origin} isRelay={false} />
-          )}
+          <TokenDisplaySection 
+            chain={values.origin} 
+            isRelay={isRelayTransfer}
+            selectedToken={transferType === 'deposit' ? values.selectedToken : undefined}
+            transferType={transferType}
+            section="convert"
+          />
         </div>
       )}
       <div className="pt-1 text-right">
@@ -376,6 +378,18 @@ function AmountSection({
           transferType={transferType}
         />
       </div>
+      {/* Error display for quote failures */}
+      {isRelayTransfer && (
+        <div className="mt-2">
+          <QuoteErrorDisplay 
+            originChain={values.origin}
+            destinationChain={values.destination}
+            amount={values.amount}
+            transferType={transferType}
+            selectedToken={values.selectedToken}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -497,6 +511,40 @@ function ButtonSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { data: wallet } = useWalletClient();
   const { switchChainAsync } = useSwitchChain();
+  const { relayChains } = useRelaySupportedChains();
+  const { accounts } = useAccounts();
+
+  // Check if this is a Relay transfer
+  const isRelayTransfer = isUsingRelayForTransfer(
+    values.origin,
+    values.destination,
+    relayChains,
+    accounts,
+  );
+
+  // Get user address for origin chain
+  const userAddress = useAccountAddressForChain(values.origin) || '';
+  
+  // Get recipient address - always call the hook, handle errors in the quote
+  const destinationAddress = useAccountAddressForChain(values.destination) || '';
+  const recipientAddress = destinationAddress || userAddress;
+
+  // Get quote error for Relay transfers
+  const { error: quoteError } = useRelayQuote({
+    originChain: values.origin,
+    destinationChain: values.destination,
+    amount: values.amount,
+    transferType,
+    relayChains,
+    user: userAddress,
+    recipient: recipientAddress,
+    selectedToken: values.selectedToken,
+  });
+
+  // Disable button if there's a quote error for Relay transfers
+  const isDisabled = isRelayTransfer && !!quoteError;
+  
+
 
   const onDoneTransactions = () => {
     setIsReview(false);
@@ -511,19 +559,9 @@ function ButtonSection({
 
   const triggerTransactionsHandler = async () => {
     setTransferLoading(true);
-    // Automatic network switching before transfer
     try {
-      const originChainIdMap: Record<string, number> = {
-        ethereum: 1,
-        optimism: 10,
-        arbitrum: 42161,
-        forma: 984122,
-        sketchpad: 984123,
-      };
-      const originChainId = originChainIdMap[values.origin.toLowerCase()];
-      if (wallet && wallet.chain && originChainId && wallet.chain.id !== originChainId) {
-        await switchChainAsync({ chainId: originChainId });
-      }
+      // For Relay transfers, let the Relay SDK handle wallet connection and chain switching
+      // The Relay SDK will automatically handle switching to the correct network
       await triggerTransactions(values, wallet);
     } catch (err: any) {
       setTransferLoading(false);
@@ -542,6 +580,7 @@ function ButtonSection({
         text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
         classes="py-3 px-8 w-full"
         isValidating={isValidating}
+        disabled={isDisabled}
       />
     );
   }
@@ -562,6 +601,7 @@ function ButtonSection({
         color="button"
         onClick={triggerTransactionsHandler}
         classes="flex-1 px-3 py-8 text-sm max-h-16 font-bold uppercase"
+        disabled={isDisabled}
       >
         {transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
       </SolidButton>
@@ -619,7 +659,10 @@ function ReviewDetails({ visible }: { visible: boolean }) {
 
   // For Relay transfers, get fee information from Relay quote
   const user = useAccountAddressForChain(values.origin);
-  const destinationUser = useAccountAddressForChain(values.destination);
+  
+  // Get destination user - always call the hook
+  const destinationUser = useAccountAddressForChain(values.destination) || user;
+  
   const recipient = values.recipient || destinationUser || '';
 
   const { estimatedOutput } = useRelayQuote({
@@ -677,7 +720,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
                 <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
                   {(() => {
                     const amount = parseFloat(relayFees.gas.amountFormatted);
-                    const symbol = relayFees.gas.currency?.symbol || 'ETH';
+                    const symbol = relayFees.gas.currency?.symbol || 'Unknown';
                     const formattedAmount = amount.toFixed(6);
                     const usdValue = relayFees.gas.amountUsd
                       ? `(~$${parseFloat(relayFees.gas.amountUsd).toFixed(2)})`
@@ -697,7 +740,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
                 <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
                   {(() => {
                     const amount = parseFloat(relayFees.relayer.amountFormatted);
-                    const symbol = relayFees.relayer.currency?.symbol || 'ETH';
+                                          const symbol = relayFees.relayer.currency?.symbol || 'Unknown';
                     const formattedAmount = amount.toFixed(6);
                     const usdValue = relayFees.relayer.amountUsd
                       ? `(~$${parseFloat(relayFees.relayer.amountUsd).toFixed(2)})`
@@ -1018,8 +1061,8 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
   // Get user address for the origin chain
   const user = useAccountAddressForChain(values.origin);
 
-  // Get user address for the destination chain (for both deposits and withdraws)
-  const destinationUser = useAccountAddressForChain(values.destination);
+  // Get user address for the destination chain (for both deposits and withdraws) - always call the hook
+  const destinationUser = useAccountAddressForChain(values.destination) || user;
 
   // For both deposits and withdraws, use destination user address as recipient if no recipient is set
   const recipient = values.recipient || destinationUser || '';
@@ -1042,6 +1085,7 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
     relayChains,
     user: user || '',
     recipient: recipient || '',
+    selectedToken: values.selectedToken,
   });
 
   // For Hyperlane transfers, use the same amount as input
@@ -1090,69 +1134,13 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
           className={`h-full border-l border-[#8C8D8F] ${!isReview && 'group-hover:border-black'}`}
           style={{ borderLeftWidth: '0.5px' }}
         ></div>
-        <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
-          {/* Show destination currency for withdrawals, origin currency for deposits */}
-          {(() => {
-            let currencySymbol = 'TIA';
-            let logoSrc = '/logos/celestia.png';
-
-            if (transferType === 'withdraw') {
-              // For withdrawals, show destination currency
-
-              // Check if destination is a Relay chain
-              const relayChain = relayChains.find((rc) => {
-                const internalName = mapRelayChainToInternalName(rc.name);
-                return internalName === values.destination.toLowerCase();
-              });
-
-              // If it's a Hyperlane chain (like Stride), always show TIA
-              if (
-                ['stride', 'celestia', 'forma', 'sketchpad'].includes(
-                  values.destination.toLowerCase(),
-                )
-              ) {
-                currencySymbol = 'TIA';
-                logoSrc = '/logos/celestia.png';
-              } else if (relayChain) {
-                // Use centralized currency info mapping for Relay chains
-                const currencyInfo = getRelayNativeTokenInfo(values.destination, relayChains);
-                currencySymbol = currencyInfo?.symbol || 'ETH';
-
-                // Use Relay API icon if available, otherwise show no icon
-                if (relayChain.iconUrl || relayChain.logoUrl) {
-                  logoSrc = relayChain.iconUrl || relayChain.logoUrl || '';
-                } else {
-                  logoSrc = '/logos/celestia.png';
-                }
-              } else {
-                // Fallback for unknown chains
-                currencySymbol = 'TIA';
-                logoSrc = '/logos/celestia.png';
-              }
-            } else if (transferType === 'deposit') {
-              // For deposits, show Forma TIA (destination currency)
-              currencySymbol = 'TIA';
-              logoSrc = '/logos/celestia.png';
-            } else {
-              // For Hyperlane transfers, show TIA
-              currencySymbol = 'TIA';
-              logoSrc = '/logos/celestia.png';
-            }
-
-            return (
-              <>
-                <Image
-                  src={logoSrc}
-                  alt={currencySymbol}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-                <span className="text-sm font-medium text-gray-700">{currencySymbol}</span>
-              </>
-            );
-          })()}
-        </div>
+        <TokenDisplaySection 
+          chain={values.destination}
+          isRelay={isUsingRelay}
+          selectedToken={transferType === 'withdraw' ? values.selectedToken : undefined}
+          transferType={transferType}
+          section="receive"
+        />
       </div>
       <div className="pt-1 text-right">
         <TokenBalance
@@ -1162,6 +1150,216 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
           transferType={transferType}
         />
       </div>
+    </div>
+  );
+}
+
+function TokenDisplaySection({ 
+  chain, 
+  isRelay, 
+  selectedToken, 
+  transferType,
+  section
+}: { 
+  chain: string; 
+  isRelay: boolean; 
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+  };
+  transferType: string;
+  section: 'convert' | 'receive';
+}) {
+  const { relayChains } = useRelaySupportedChains();
+
+  // For deposits: only the receive section should always show Forma TIA
+  if (transferType === 'deposit' && section === 'receive') {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        <Image
+          src="/logos/celestia.png"
+          alt="TIA"
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+        <span className="text-sm font-medium text-gray-700">TIA</span>
+      </div>
+    );
+  }
+
+  // For withdrawals: only the receive section should show selected token (but only for Relay chains)
+  if (transferType === 'withdraw' && section === 'receive' && selectedToken && selectedToken.symbol && isRelay) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        {selectedToken.logoURI ? (
+          <Image
+            src={`/api/proxy-image?url=${encodeURIComponent(selectedToken.logoURI)}`}
+            alt={selectedToken.symbol}
+            width={24}
+            height={24}
+            className="rounded-full"
+          />
+        ) : (
+          <ChainLogo chainName={chain} size={24} />
+        )}
+        <span className="text-sm font-medium text-gray-700">{selectedToken.symbol}</span>
+      </div>
+    );
+  }
+
+  // For withdrawals: receive section should default to TIA if no token is selected
+  if (transferType === 'withdraw' && section === 'receive') {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        <Image
+          src="/logos/celestia.png"
+          alt="TIA"
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+        <span className="text-sm font-medium text-gray-700">TIA</span>
+      </div>
+    );
+  }
+
+  // For withdrawals: convert section should always show TIA
+  if (transferType === 'withdraw' && section === 'convert') {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        <Image
+          src="/logos/celestia.png"
+          alt="TIA"
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+        <span className="text-sm font-medium text-gray-700">TIA</span>
+      </div>
+    );
+  }
+
+  // Always show TIA for Forma/Sketchpad chains regardless of transfer type
+  if (chain === 'forma' || chain === 'sketchpad') {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        <Image
+          src="/logos/celestia.png"
+          alt="TIA"
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+        <span className="text-sm font-medium text-gray-700">TIA</span>
+      </div>
+    );
+  }
+
+  // For Hyperlane chains (non-Relay), always show TIA
+  if (!isRelay) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        <Image
+          src="/logos/celestia.png"
+          alt="TIA"
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+        <span className="text-sm font-medium text-gray-700">TIA</span>
+      </div>
+    );
+  }
+
+  // For Relay transfers, show selected token if available, otherwise fall back to chain logo
+  if (selectedToken && selectedToken.symbol) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+        {selectedToken.logoURI ? (
+          <Image
+            src={`/api/proxy-image?url=${encodeURIComponent(selectedToken.logoURI)}`}
+            alt={selectedToken.symbol}
+            width={24}
+            height={24}
+            className="rounded-full"
+          />
+        ) : (
+          <ChainLogo chainName={chain} size={24} />
+        )}
+        <span className="text-sm font-medium text-gray-700">{selectedToken.symbol}</span>
+      </div>
+    );
+  }
+
+  // Fallback to chain logo and native token symbol
+  const currencyInfo = getRelayNativeTokenInfo(chain, relayChains);
+  const currencySymbol = currencyInfo?.symbol || 'Unknown';
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <ChainLogo chainName={chain} size={24} />
+      <span className="text-sm font-medium text-gray-700">{currencySymbol}</span>
+    </div>
+  );
+}
+
+function QuoteErrorDisplay({ 
+  originChain, 
+  destinationChain, 
+  amount, 
+  transferType, 
+  selectedToken 
+}: { 
+  originChain: string; 
+  destinationChain: string; 
+  amount: string; 
+  transferType: string; 
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+  };
+}) {
+  const { relayChains } = useRelaySupportedChains();
+  const { accounts } = useAccounts();
+  
+  // Get user address for the origin chain
+  const user = useAccountAddressForChain(originChain);
+  
+  // Get user address for the destination chain - always call the hook
+  const destinationUser = useAccountAddressForChain(destinationChain) || user;
+  
+  // For both deposits and withdraws, use destination user address as recipient if no recipient is set
+  const recipient = destinationUser || '';
+
+  // Use the same quote hook to get error information
+  const { error } = useRelayQuote({
+    originChain,
+    destinationChain,
+    amount,
+    transferType,
+    relayChains,
+    user: user || '',
+    recipient: recipient || '',
+    selectedToken,
+    // Note: wallet is not passed here as it's optional for quotes
+  });
+
+  if (!error) {
+    return null;
+  }
+
+  return (
+    <div className="text-red-500 text-sm">
+      {error}
     </div>
   );
 }
@@ -1202,7 +1400,7 @@ function ChainLogoSection({ chain, isRelay }: { chain: string; isRelay: boolean 
   }
 
   const currencyInfo = getRelayNativeTokenInfo(chain, relayChains);
-  const currencySymbol = currencyInfo?.symbol || 'ETH';
+  const currencySymbol = currencyInfo?.symbol || 'Unknown';
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">

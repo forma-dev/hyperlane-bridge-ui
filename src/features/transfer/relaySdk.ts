@@ -58,6 +58,7 @@ export interface RelayQuoteParams {
   destinationCurrency: string;
   amount: string; // in wei for EVM chains
   tradeType?: string;
+  wallet?: any; // Optional wallet client
 }
 
 export interface RelayQuoteResponse {
@@ -212,6 +213,8 @@ export async function getRelayQuote(params: RelayQuoteParams): Promise<RelayQuot
       | 'EXPECTED_OUTPUT',
     user: params.user,
     recipient: params.recipient,
+    includeDefaultParameters: true, // Include default user and recipient parameters
+    ...(params.wallet && { wallet: params.wallet }), // Include wallet if provided
   });
 
   // Convert SDK response to our expected format
@@ -304,36 +307,51 @@ export async function executeRelaySwapSingleOrigin({
 /**
  * Map internal chain names to Relay chain IDs
  * Returns both mainnet and testnet options
+ * Note: This function is deprecated - chain IDs should come from API data
  */
 export function getRelayChainId(chainName: string): {
   mainnet: number | null;
   testnet: number | null;
 } {
-  const chainMaps = {
-    ethereum: { mainnet: 1, testnet: 11155111 }, // Sepolia
-    arbitrum: { mainnet: 42161, testnet: 421614 }, // Arbitrum Sepolia
-    optimism: { mainnet: 10, testnet: 11155420 }, // OP Sepolia
-    forma: { mainnet: 984122, testnet: 984123 }, // Forma mainnet vs sketchpad testnet
-    sketchpad: { mainnet: null, testnet: 984123 }, // Sketchpad is testnet only
+  // Hardcoded chain mappings for now - these should come from API data
+  const chainIdMap: Record<string, { mainnet: number | null; testnet: number | null }> = {
+    'ethereum': { mainnet: 1, testnet: 1 },
+    'optimism': { mainnet: 10, testnet: 10 },
+    'arbitrum': { mainnet: 42161, testnet: 42161 },
+    'forma': { mainnet: 984122, testnet: 984123 },
+    'sketchpad': { mainnet: 984122, testnet: 984123 },
+    'linea': { mainnet: 59144, testnet: 59144 },
+    'bob': { mainnet: 60808, testnet: 60808 },
+    'animechain': { mainnet: 69000, testnet: 69000 },
+    'apex': { mainnet: 70700, testnet: 70700 },
+    'boss': { mainnet: 70701, testnet: 70701 },
+    'berachain': { mainnet: 80085, testnet: 80085 },
+    'blast': { mainnet: 81457, testnet: 81457 },
+    'plume': { mainnet: 16116, testnet: 16116 },
+    'taiko': { mainnet: 167008, testnet: 167008 },
+    'scroll': { mainnet: 534352, testnet: 534352 },
+    'zero-network': { mainnet: 12052, testnet: 12052 },
+    'xai': { mainnet: 660279, testnet: 660279 },
+    'katana': { mainnet: 1261120, testnet: 1261120 },
   };
 
-  const chainName_lower = chainName.toLowerCase();
-  return chainMaps[chainName_lower] || { mainnet: null, testnet: null };
+  return chainIdMap[chainName.toLowerCase()] || { mainnet: null, testnet: null };
 }
 
 /**
  * Get the currency address for a chain as expected by Relay API
+ * Note: This function is deprecated - currency addresses should come from API data
  */
 export function getNativeCurrency(chainName: string): string {
-  // For Relay API, use the actual token addresses for branded tokens
-  // This matches what Relay expects for each chain
-  const currencyMap: Record<string, string> = {
-    ethereum: '0x0000000000000000000000000000000000000000', // Native ETH
-    optimism: '0x4200000000000000000000000000000000000042', // OP token
-    arbitrum: '0x912CE59144191C1204E64559FE8253a0e49E6548', // ARB token
-    forma: '0x0000000000000000000000000000000000000000', // Native TIA
-    sketchpad: '0x0000000000000000000000000000000000000000', // Native TIA
-  };
-
-  return currencyMap[chainName.toLowerCase()] || '0x0000000000000000000000000000000000000000';
+  const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
+  
+  // For Forma/Sketchpad, return TIA token address
+  if (chainName === 'forma' || chainName === 'sketchpad') {
+    return isMainnet 
+      ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'  // Mainnet TIA
+      : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53'; // Testnet TIA
+  }
+  
+  // For other chains, return native token address
+  return '0x0000000000000000000000000000000000000000'; // Native token
 }

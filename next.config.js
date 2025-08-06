@@ -13,28 +13,20 @@ const ENABLE_CSP_HEADER = true;
 const FRAME_SRC_HOSTS = [
   'https://*.walletconnect.com', 
   'https://*.walletconnect.org',
-  'https://*.solflare.com',
   'https://*.privy.io'
 ];
 const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
 const IMG_SRC_HOSTS = [
   'https://*.walletconnect.com',
   'https://*.walletconnect.org',
-  'https://*.relay.network',
-  'https://*.relay.link',
-  'https://assets.relay.network',
-  'https://assets.relay.link',
-  'https://cdn.relay.network',
   'https://*.googleapis.com',
-  'https://*.githubusercontent.com',
-  'https://*.trustwallet.com',
-  'https://*.reservoir.tools',
-  'https://*.reservoir0x.com',
-  'https://raw.githubusercontent.com',
+  'https://*.relay.link',
+  'https://*.relay.network',
+  'https://*.hyperlane.xyz',
 ];
 const cspHeader = `
   default-src 'self';
-  script-src 'self'${isDev ? " 'unsafe-eval'" : ''};
+  script-src 'self' https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ''};
   style-src 'self' 'unsafe-inline' ${STYLE_SRC_HOSTS.join(' ')};
   connect-src *;
   img-src 'self' blob: data: ${IMG_SRC_HOSTS.join(' ')};

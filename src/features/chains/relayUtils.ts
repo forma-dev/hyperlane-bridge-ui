@@ -98,23 +98,10 @@ export function isRelayChain(chainName: string, relayChains: RelayChain[]): bool
 
 /**
  * Gets native token information for Relay chains from the Relay API
- * Falls back to hardcoded values only if API data is unavailable
+ * No hardcoded values - all data comes from API
  */
 export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) {
-  // Hardcoded values for known chains (prioritized for correct symbols)
-  const nativeTokens: Record<string, { symbol: string; decimals: number; name: string }> = {
-    ethereum: { symbol: 'ETH', decimals: 18, name: 'Ethereum' },
-    arbitrum: { symbol: 'ARB', decimals: 18, name: 'Arbitrum' },
-    optimism: { symbol: 'OP', decimals: 18, name: 'Optimism' },
-  };
-
-  // Check if we have hardcoded values for this chain
-  const hardcodedInfo = nativeTokens[chainName.toLowerCase()];
-  if (hardcodedInfo) {
-    return hardcodedInfo;
-  }
-
-  // If we have Relay API data and no hardcoded values, use it
+  // Get from Relay API data
   if (relayChains && relayChains.length > 0) {
     const relayChain = relayChains.find((rc) => {
       const internalName = mapRelayChainToInternalName(rc.name);
@@ -123,15 +110,15 @@ export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) 
 
     if (relayChain?.currency) {
       return {
-        symbol: relayChain.currency.symbol || 'ETH',
+        symbol: relayChain.currency.symbol || 'Unknown',
         decimals: relayChain.currency.decimals || 18,
         name: relayChain.currency.name || relayChain.name || 'Unknown',
       };
     }
   }
 
-  // Final fallback
-  return { symbol: 'ETH', decimals: 18, name: 'Unknown' };
+  // Fallback for when API data is not available
+  return { symbol: 'Unknown', decimals: 18, name: 'Unknown' };
 }
 
 /**
@@ -139,7 +126,7 @@ export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) 
  */
 export function getRelayCurrencySymbol(chainName: string): string {
   const tokenInfo = getRelayNativeTokenInfo(chainName);
-  return tokenInfo?.symbol || 'ETH'; // Default to ETH
+  return tokenInfo?.symbol || 'Unknown'; // Default to Unknown
 }
 
 // Removed VERIFIED_WORKING_RELAY_CHAINS constant and getVerifiedWorkingRelayChains function

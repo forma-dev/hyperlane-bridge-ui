@@ -4,6 +4,15 @@ export interface TransferFormValues {
   tokenIndex: number | undefined;
   amount: string;
   recipient: Address;
+  // Relay token selection
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+  };
 }
 
 export enum TransferStatus {

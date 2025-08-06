@@ -13,6 +13,15 @@ interface UseRelayQuoteParams {
   relayChains: any[]; // Array of relay chain objects with full metadata
   user?: string;
   recipient?: string;
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+  };
+  wallet?: any; // Optional wallet client for quote
 }
 
 interface EstimatedOutput {
@@ -32,10 +41,12 @@ export function useRelayQuote({
   originChain,
   destinationChain,
   amount,
-  transferType: _transferType,
+  transferType,
   relayChains,
   user,
   recipient,
+  selectedToken,
+  wallet,
 }: UseRelayQuoteParams): UseRelayQuoteResult {
   const [estimatedOutput, setEstimatedOutput] = useState<EstimatedOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,19 +86,39 @@ export function useRelayQuote({
       return;
     }
 
-    // Check if this is a Relay-supported transfer (either deposit or withdrawal)
-    const isDeposit = destinationChain === 'forma' || destinationChain === 'sketchpad'; // TO Forma
-    const isWithdrawal = originChain === 'forma' || originChain === 'sketchpad'; // FROM Forma
+    // Check if this is a Relay-supported transfer based on the current transfer type
+    let isRelayTransfer = false;
+    
+    if (transferType === 'deposit') {
+      // For deposits: Check if destination is Forma and origin is a Relay chain
+      const isToForma = destinationChain === 'forma' || destinationChain === 'sketchpad';
+      const isFromRelay = relayChains.some((chain) => {
+        const internalName = mapRelayChainToInternalName(chain.name);
+        return internalName === originChain.toLowerCase();
+      });
+      isRelayTransfer = isToForma && isFromRelay;
+    } else if (transferType === 'withdraw') {
+      // For withdrawals: Check if origin is Forma and destination is a Relay chain
+      const isFromForma = originChain === 'forma' || originChain === 'sketchpad';
+      const isToRelay = relayChains.some((chain) => {
+        const internalName = mapRelayChainToInternalName(chain.name);
+        return internalName === destinationChain.toLowerCase();
+      });
+      isRelayTransfer = isFromForma && isToRelay;
+    }
 
-    // Only get quotes for Relay transfers involving Forma
-    if (!isDeposit && !isWithdrawal) {
+    // Only get quotes for Relay transfers
+    if (!isRelayTransfer) {
       setEstimatedOutput(null);
       setError(null);
       return;
     }
 
-    // For deposits: Check if origin chain is supported by Relay
-    if (isDeposit) {
+
+
+    // Check if the specific transfer is supported by Relay
+    if (transferType === 'deposit') {
+      // For deposits: Check if origin chain is supported by Relay
       const relayChain = relayChains.find((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         return (
@@ -100,10 +131,8 @@ export function useRelayQuote({
         setError(null);
         return;
       }
-    }
-
-    // For withdrawals: Check if destination chain is supported by Relay
-    if (isWithdrawal) {
+    } else if (transferType === 'withdraw') {
+      // For withdrawals: Check if destination chain is supported by Relay
       const relayChain = relayChains.find((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         const matches = internalName === destinationChain.toLowerCase();
@@ -131,9 +160,10 @@ export function useRelayQuote({
       destinationChain === 'sketchpad';
 
     if (isFormaInvolved) {
-      // Check supported chains
-      try {
-        const { getRelaySupportedChains } = await import('./relaySdk');
+              // Check supported chains
+        try {
+
+          const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
         const formaSupported = supportedChains.find(
           (chain) => chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma'),
@@ -179,39 +209,108 @@ export function useRelayQuote({
     currentRequestRef.current = requestId;
 
     try {
-      // Get native currency for the origin and destination chains
-      const originCurrency = getNativeCurrency(originChain);
-      const destinationCurrency = getNativeCurrency(destinationChain);
 
-      // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
-      // TIA token on Forma has 18 decimals (same as ETH)
-      const decimals = 18;
-      const amountWei = (
-        parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
-      ).toString();
+      
+      // Determine currencies based on transfer type
+      let originCurrency, destinationCurrency;
+      
+      if (transferType === 'deposit') {
+        // Deposit: Relay token -> Forma TIA
+        originCurrency = selectedToken?.address || 
+                        selectedToken?.currency || 
+                        selectedToken?.contractAddress ||
+                        getNativeCurrency(originChain);
+        
+        // Only use zero address for actual native tokens (ETH), not ERC20 tokens
+        if (selectedToken?.symbol === 'ETH' && selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+          originCurrency = '0x0000000000000000000000000000000000000000';
+        }
+        
+        // Destination is always TIA on Forma
+        destinationCurrency = '0x0000000000000000000000000000000000000000';
+      } else {
+        // Withdraw: Forma TIA -> Relay token
+        // For withdrawals, we're sending TIA from Forma to get OP on Optimism
+        originCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
+        
+        destinationCurrency = selectedToken?.address || 
+                             selectedToken?.currency || 
+                             selectedToken?.contractAddress ||
+                             getNativeCurrency(destinationChain);
+        
+        // Only use zero address for actual native tokens (ETH), not ERC20 tokens
+        if (selectedToken?.symbol === 'ETH' && selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+          destinationCurrency = '0x0000000000000000000000000000000000000000';
+        }
+      }
+      
+      // Calculate amount in wei
+      let amountWei;
+      if (transferType === 'deposit') {
+        // For deposits: user specifies how much Relay token to send
+        const decimals = selectedToken?.decimals || 18;
+        amountWei = (
+          parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
+        ).toString();
+      } else {
+        // For withdrawals: user specifies how much TIA to send (not OP to receive)
+        // The amount should be the TIA amount, not a calculated estimate
+        const decimals = 18; // TIA has 18 decimals
+        amountWei = (
+          parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
+        ).toString();
+      }
+      
+
+      
+
+      
+
+
+
+
+      // Determine trade type - both deposits and withdrawals use EXACT_INPUT
+      // For deposits: user specifies how much Relay token to send
+      // For withdrawals: user specifies how much TIA to send
+      const tradeType = 'EXACT_INPUT';
 
       // Use SDK getQuote method with correct parameters
-      const quote = await getQuote({
+      const quoteParams = {
         chainId: originChainId,
         currency: originCurrency,
         toChainId: destinationChainId,
         toCurrency: destinationCurrency,
-        tradeType: 'EXACT_INPUT',
+        tradeType,
         user,
         amount: amountWei,
         recipient,
-      });
+        includeDefaultParameters: true, // Include default user and recipient parameters
+        ...(wallet && { wallet }), // Include wallet if provided
+      };
+
+
+
+
+
+      const quote = await getQuote(quoteParams);
+      
+      // Debug: Log the quote response
+      
 
       // Parse the quote response to extract the estimated output
       const outputAmount = quote.details.currencyOut.amount;
       const outputDecimals = quote.details.currencyOut.currency.decimals;
 
-      // Convert from wei to human readable
-      const formattedOutput = (parseFloat(outputAmount) / Math.pow(10, outputDecimals)).toFixed(4);
+      // Use the formatted amount from the API response instead of calculating it
+      const formattedOutput = quote.details.currencyOut.amountFormatted || 
+                             (parseFloat(outputAmount) / Math.pow(10, outputDecimals)).toFixed(4);
 
-      // Calculate USD value (assuming TIA price of ~$8.50 for now)
-      const usdValue = (parseFloat(formattedOutput) * 8.5).toFixed(2);
+      // Calculate USD value from the API response
+      const usdValue = quote.details.currencyOut.amountUsd || 
+                      (parseFloat(formattedOutput) * 8.5).toFixed(2);
 
+
+      
       setEstimatedOutput({
         formatted: formattedOutput,
         usd: usdValue,
@@ -221,17 +320,17 @@ export function useRelayQuote({
     } catch (err) {
       // logger.error('Failed to get Relay quote:', err); // Removed logger
       if (err instanceof Error && err.message.includes('404')) {
-        setError('Route not supported by Relay');
+        setError('Not a valid token combo. Select a different token and try again.');
       } else if (err instanceof Error && err.message.includes('chain')) {
-        setError('Chain not supported by Relay');
+        setError('Not a valid token combo. Select a different token and try again.');
       } else {
-        setError('Failed to get conversion rate from Relay');
+        setError('Not a valid token combo. Select a different token and try again.');
       }
     } finally {
       setIsLoading(false);
       currentRequestRef.current = null;
     }
-  }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote]);
+  }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote, transferType, selectedToken]);
 
   useEffect(() => {
     // Add a small delay to prevent race conditions during rapid changes

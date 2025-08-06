@@ -1,14 +1,13 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 
-import { ProviderType, TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
-import { ProtocolType, toTitleCase, toWei } from '@hyperlane-xyz/utils';
+import { TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
+import { toTitleCase, toWei } from '@hyperlane-xyz/utils';
 
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { getTokenByIndex, getWarpCore } from '../../context/context';
 import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
-import { tryGetChainProtocol } from '../chains/utils';
 import { AppState, useStore } from '../store';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
@@ -217,13 +216,27 @@ async function executeRelayTransfer({
       throw new Error(`Unsupported chain for Relay: ${origin} -> ${destination}`);
     }
 
+    // Determine if this is a deposit or withdrawal
+    const isDeposit = destination === 'forma' || destination === 'sketchpad';
+    const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+    
+    // DEBUG: Log transfer type and chain information
+    logger.info('=== RELAY TRANSFER DEBUG ===');
+    logger.info('Transfer Type:', isDeposit ? 'DEPOSIT' : isWithdrawal ? 'WITHDRAWAL' : 'UNKNOWN');
+    logger.info('Origin:', origin, 'Destination:', destination);
+    logger.info('Origin Chain ID:', originChainId, 'Destination Chain ID:', destinationChainId);
+    logger.info('Wallet chainId:', wallet?.chainId);
+    logger.info('Wallet address:', wallet?.address);
+    logger.info('Sender:', sender);
+    logger.info('Is Deposit:', isDeposit, 'Is Withdrawal:', isWithdrawal);
+
     addTransfer({
       timestamp: new Date().getTime(),
       status: TransferStatus.Preparing,
       origin,
       destination,
-      originTokenAddressOrDenom: getNativeCurrency(origin),
-      destTokenAddressOrDenom: 'TIA',
+      originTokenAddressOrDenom: isDeposit ? (values.selectedToken?.symbol || 'OP') : 'TIA',
+      destTokenAddressOrDenom: isWithdrawal ? (values.selectedToken?.symbol || 'OP') : 'TIA',
       sender,
       recipient,
       amount,
@@ -232,13 +245,53 @@ async function executeRelayTransfer({
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.CreatingTxs));
 
     // Step 1: Get a quote from Relay
-    const originCurrency = getNativeCurrency(origin);
-    const destinationCurrency = getNativeCurrency(destination);
+    // Determine currencies based on transfer type (same logic as quote function)
+    let originCurrency, destinationCurrency;
+    
+    if (isDeposit) {
+      // Deposit: Relay token -> Forma TIA
+      originCurrency = values.selectedToken?.address || 
+                      getNativeCurrency(origin);
+      
+      // Only use zero address for actual native tokens (ETH), not ERC20 tokens
+      if (values.selectedToken?.symbol === 'ETH' && values.selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+        originCurrency = '0x0000000000000000000000000000000000000000';
+      }
+      
+      // Destination is always TIA on Forma
+      destinationCurrency = '0x0000000000000000000000000000000000000000';
+    } else if (isWithdrawal) {
+      // Withdraw: Forma TIA -> Relay token
+      originCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
+      
+      destinationCurrency = values.selectedToken?.address || 
+                           getNativeCurrency(destination);
+      
+      // Only use zero address for actual native tokens (ETH), not ERC20 tokens
+      if (values.selectedToken?.symbol === 'ETH' && values.selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+        destinationCurrency = '0x0000000000000000000000000000000000000000';
+      }
+    } else {
+      // Fallback to old logic
+      originCurrency = getNativeCurrency(origin);
+      destinationCurrency = getNativeCurrency(destination);
+    }
 
-    // CRITICAL: Both ETH and TIA tokens use 18 decimals for Relay API
-    // TIA token on Forma has 18 decimals (same as ETH)
-    const decimals = 18;
-    const amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+    // Calculate amount in wei
+    let amountWei;
+    if (isDeposit) {
+      // For deposits: user specifies how much Relay token to send
+      const decimals = values.selectedToken?.decimals || 18;
+      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+    } else if (isWithdrawal) {
+      // For withdrawals: user specifies how much TIA to send
+      const decimals = 18; // TIA has 18 decimals
+      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+    } else {
+      // Fallback
+      const decimals = 18;
+      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+    }
 
     await getRelayQuote({
       user: sender,
@@ -251,116 +304,110 @@ async function executeRelayTransfer({
       tradeType: 'EXACT_INPUT',
     });
 
-    // Step 2: Execute the swap using NEW API format
+    // Step 2: Execute the swap using Relay SDK's execute method
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.SigningTransfer));
 
-    // For now, pass null wallet to let Relay SDK handle wallet detection
-    const walletToUse = wallet || null;
-
-    const swapResponse = await executeRelaySwapSingleOrigin({
-      user: sender,
-      recipient,
-      originChainId,
-      destinationChainId,
-      originCurrency,
-      destinationCurrency,
-      amount: amountWei,
-      tradeType: 'EXACT_INPUT',
-      wallet: walletToUse,
-    });
-
-    // Step 3: Execute the transactions from the swap response
-    updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmingTransfer));
-
-    const originProtocol = tryGetChainProtocol(origin) || ProtocolType.Ethereum;
-    const sendTransaction = transactionFns[originProtocol].sendTransaction;
-
-    // Execute each step from the Relay response (NEW STRUCTURE)
-    const hashes: string[] = [];
-
-    // Use the correct path for steps (swapResponse.data.steps)
-    const steps = (swapResponse as any).data?.steps;
-    // If steps is missing or not an array, log the response and check for hashes
-    if (!steps || !Array.isArray(steps)) {
-      logger.warn('Relay swapResponse missing or invalid steps:', swapResponse);
-      // If hashes were somehow created, treat as success
-      if (hashes.length > 0) {
-        updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
-          originTxHash: hashes.at(-1),
-        });
-        setIsLoading(false);
-        if (onDone) onDone();
-        return;
-      } else {
-        updateTransferStatus(transferIndex, TransferStatus.Failed);
-        throw new Error('Invalid response structure from Relay API - no steps found');
-      }
+    // Import Relay SDK client
+    const { getClient } = await import('@reservoir0x/relay-sdk');
+    const client = getClient();
+    
+    if (!client) {
+      throw new Error('Relay client not initialized');
     }
 
-    for (const step of steps) {
-      if (!step.items || !Array.isArray(step.items)) {
-        continue;
+    // First get a quote
+    logger.info('=== QUOTE REQUEST ===');
+    logger.info('Quote Parameters:', {
+      user: sender,
+      recipient,
+      chainId: originChainId,
+      toChainId: destinationChainId,
+      currency: originCurrency,
+      toCurrency: destinationCurrency,
+      amount: amountWei,
+      tradeType: 'EXACT_INPUT',
+    });
+    
+    const quote = await client.actions.getQuote({
+      user: sender,
+      recipient,
+      chainId: originChainId,
+      toChainId: destinationChainId,
+      currency: originCurrency,
+      toCurrency: destinationCurrency,
+      amount: amountWei,
+      tradeType: 'EXACT_INPUT',
+    });
+    
+    logger.info('=== QUOTE RESPONSE ===');
+    logger.info('Quote received:', quote);
+
+    // For deposits, we need to ensure the wallet is on the origin chain before executing
+    // because deposits require approval transactions on the origin chain
+    if (isDeposit && wallet?.switchChain) {
+      logger.info('=== SWITCHING CHAIN FOR DEPOSIT ===');
+      logger.info('Switching from chainId:', wallet?.chainId, 'to:', originChainId);
+      try {
+        await wallet.switchChain(originChainId);
+        logger.info('Chain switch successful');
+      } catch (error) {
+        logger.error('Chain switch failed:', error);
+        // Continue anyway - the Relay SDK might handle it
       }
-      for (const item of step.items) {
-        // Check if this is an incomplete transaction that needs to be executed
-        if (item.status === 'incomplete' && item.data) {
-          const tx = {
-            type: ProviderType.EthersV5,
-            transaction: {
-              to: item.data.to,
-              data: item.data.data,
-              value: item.data.value,
-              from: item.data.from,
-              // CRITICAL: Set chainId from the transaction data
-              chainId: item.data.chainId,
-              // Include gas fields if provided by new API
-              ...(item.data.maxFeePerGas && { maxFeePerGas: item.data.maxFeePerGas }),
-              ...(item.data.maxPriorityFeePerGas && {
-                maxPriorityFeePerGas: item.data.maxPriorityFeePerGas,
-              }),
-            },
-          };
-          const result = await sendTransaction({
-            tx,
-            chainName: origin,
-          });
-          const { hash } = result;
-          hashes.push(hash);
-          // Show success toast
-          const { toastTxSuccess } = await import('../../components/toast/TxSuccessToast');
-          toastTxSuccess(`${step.action} completed!`, hash, origin);
-        } else if (item.status === 'complete') {
-          // Extract hashes from txHashes or internalTxHashes (handle string or object)
-          if (Array.isArray(item.txHashes)) {
-            for (const tx of item.txHashes) {
-              if (typeof tx === 'string') {
-                hashes.push(tx);
-              } else if (tx && tx.txHash) {
-                hashes.push(tx.txHash);
-              } else if (tx && tx.hash) {
-                hashes.push(tx.hash);
-              }
-            }
-          }
-          if (Array.isArray(item.internalTxHashes)) {
-            for (const tx of item.internalTxHashes) {
-              if (typeof tx === 'string') {
-                hashes.push(tx);
-              } else if (tx && tx.txHash) {
-                hashes.push(tx.txHash);
-              } else if (tx && tx.hash) {
-                hashes.push(tx.hash);
-              }
-            }
+    }
+    
+    // Then execute the quote - this handles chain switching automatically
+    logger.info('=== EXECUTE REQUEST ===');
+    logger.info('Execute Parameters:', { quote: quote, wallet: !!wallet });
+    logger.info('Wallet before execute:', {
+      chainId: wallet?.chainId,
+      address: wallet?.address,
+      connected: !!wallet
+    });
+    
+    const result = await client.actions.execute({
+      quote,
+      wallet,
+    });
+    
+    logger.info('=== EXECUTE RESPONSE ===');
+    logger.info('Execute result:', result);
+
+    // Extract transaction hash from the result
+    const hashes: string[] = [];
+    if (result?.data?.steps) {
+      for (const step of result.data.steps) {
+        if (step.items) {
+          for (const item of step.items) {
+                         if (item.txHashes) {
+               for (const tx of item.txHashes) {
+                 if (typeof tx === 'string') {
+                   hashes.push(tx);
+                 } else if (tx && tx.txHash) {
+                   hashes.push(tx.txHash);
+                 }
+               }
+             }
+             if (item.internalTxHashes) {
+               for (const tx of item.internalTxHashes) {
+                 if (typeof tx === 'string') {
+                   hashes.push(tx);
+                 } else if (tx && tx.txHash) {
+                   hashes.push(tx.txHash);
+                 }
+               }
+             }
           }
         }
       }
     }
+
     if (hashes.length === 0) {
       updateTransferStatus(transferIndex, TransferStatus.Failed);
       throw new Error('No transactions found to execute in Relay response');
     }
-    // If we have hashes, always show success and clear error state
+
+    // Show success and clear error state
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
       originTxHash: hashes.at(-1),
     });
@@ -370,7 +417,13 @@ async function executeRelayTransfer({
   } catch (error) {
     updateTransferStatus(transferIndex, TransferStatus.Failed);
     // Log the error to the console
-    logger.error('Relay transfer error:', error);
+    logger.error('=== RELAY TRANSFER ERROR ===', error);
+    logger.error('Error type:', typeof error);
+    logger.error('Error message:', error instanceof Error ? error.message : 'No message');
+    logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    logger.error('Full error object:', error);
+    logger.error('Error JSON:', JSON.stringify(error));
+    
     if (JSON.stringify(error).includes('ChainMismatchError')) {
       toast.error('Wallet must be connected to origin chain');
     } else if (error instanceof Error) {
