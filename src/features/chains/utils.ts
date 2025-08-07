@@ -4,6 +4,7 @@ import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 import { getMultiProvider } from '../../context/context';
 
 // Import centralized Relay utilities
+import { getRelayChainId } from '../transfer/relaySdk';
 import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
 
 export function mapRelayChainToInternalName(relayChainName: string): string {
@@ -12,7 +13,6 @@ export function mapRelayChainToInternalName(relayChainName: string): string {
 
 // Helper function to check if a chain is a Relay chain
 export function isRelayChain(chain: ChainNameOrId): boolean {
-
   try {
     getMultiProvider().getChainMetadata(chain);
     return false; // If Hyperlane has metadata, it's not a Relay chain
@@ -62,15 +62,19 @@ export function tryGetChainMetadata(chain: ChainNameOrId) {
   if (isRelayChain(chain)) {
     const chainStr = typeof chain === 'string' ? chain : chain.toString();
     
+    // Get the correct chain ID from Relay mapping
+    const relayChainIds = getRelayChainId(chainStr);
+    const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+    
     // Create dynamic metadata for any Relay chain
     return {
       name: chainStr,
       displayName: toTitleCase(chainStr),
       displayNameShort: chainStr.toUpperCase().slice(0, 3),
       protocol: ProtocolType.Ethereum,
-      chainId: 1, // Default fallback - will be overridden by API data
-      domainId: 1, // Default fallback - will be overridden by API data
-      nativeToken: { name: 'Unknown', symbol: 'Unknown', decimals: 18 },
+      chainId,
+      domainId: chainId,
+      nativeToken: { name: 'ETH', symbol: 'ETH', decimals: 18 },
       rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
     };
   }
@@ -87,15 +91,19 @@ export function getChainMetadata(chain: ChainNameOrId) {
     if (isRelayChain(chain)) {
       const chainStr = typeof chain === 'string' ? chain : chain.toString();
       
+      // Get the correct chain ID from Relay mapping
+      const relayChainIds = getRelayChainId(chainStr);
+      const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+      
       // Create dynamic metadata for any Relay chain
       return {
         name: chainStr,
         displayName: toTitleCase(chainStr),
         displayNameShort: chainStr.toUpperCase().slice(0, 3),
         protocol: ProtocolType.Ethereum,
-        chainId: 1, // Default fallback - will be overridden by API data
-        domainId: 1, // Default fallback - will be overridden by API data
-        nativeToken: { name: 'Unknown', symbol: 'Unknown', decimals: 18 },
+        chainId,
+        domainId: chainId,
+        nativeToken: { name: 'ETH', symbol: 'ETH', decimals: 18 },
         rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
       };
     }

@@ -1,27 +1,28 @@
 import {
-  PropsWithChildren,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    PropsWithChildren,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react';
 
+import { updateWagmiConfigWithRelayChains } from '../../../config/wagmi';
 import { logger } from '../../../utils/logger';
 // Import centralized Relay utilities
 import {
-  getRelayChainNames as relayGetChainNames,
-  mapRelayChainToInternalName as relayMapChainName,
+    getRelayChainNames as relayGetChainNames,
+    mapRelayChainToInternalName as relayMapChainName,
 } from '../../chains/relayUtils';
 
 import {
-  getAllAvailableChains,
-  getCurrenciesV2,
-  getRelayClient,
-  initializeRelayClient,
-  isRelayClientReady,
-  setupDynamicChains,
+    getAllAvailableChains,
+    getCurrenciesV2,
+    getRelayClient,
+    initializeRelayClient,
+    isRelayClientReady,
+    setupDynamicChains,
 } from './RelayClient';
 
 // Types for chain configuration (keeping existing interface for compatibility)
@@ -98,6 +99,58 @@ interface RelayContextType {
   executeSwap: (request: any) => Promise<any>;
 }
 
+// Helper function to convert RelayChain to Wagmi format
+function convertRelayChainToWagmiFormat(chain: RelayChain) {
+  // For Relay chains, we need to construct a proper RPC URL
+  // Most Relay chains will have their RPC URLs available through the Relay SDK
+  let rpcUrl = 'https://rpc.ankr.com/eth'; // Default fallback
+  
+  // Map known chain IDs to their proper RPC URLs
+  const chainRpcMap: Record<number, string> = {
+    1: 'https://rpc.ankr.com/eth',
+    10: 'https://rpc.ankr.com/optimism', 
+    56: 'https://rpc.ankr.com/bsc',
+    137: 'https://rpc.ankr.com/polygon',
+    250: 'https://rpc.ankr.com/fantom',
+    8453: 'https://rpc.ankr.com/base',
+    43114: 'https://rpc.ankr.com/avalanche',
+    42161: 'https://rpc.ankr.com/arbitrum',
+  };
+  
+  if (chainRpcMap[chain.id]) {
+    rpcUrl = chainRpcMap[chain.id];
+  }
+  
+  return {
+    id: chain.id,
+    name: chain.name,
+    network: chain.name.toLowerCase().replace(/\s+/g, '-'),
+    nativeCurrency: {
+      decimals: chain.currency?.decimals || 18,
+      name: chain.currency?.name || 'ETH',
+      symbol: chain.currency?.symbol || 'ETH',
+    },
+    rpcUrls: {
+      default: {
+        http: [rpcUrl],
+        webSocket: [],
+      },
+      public: {
+        http: [rpcUrl],
+        webSocket: [],
+      },
+    },
+    ...(chain.iconUrl && {
+      blockExplorers: {
+        default: {
+          name: 'Explorer',
+          url: chain.iconUrl.includes('http') ? chain.iconUrl : `https://etherscan.io`,
+        },
+      },
+    }),
+  };
+}
+
 // Create context
 const RelayContext = createContext<RelayContextType | null>(null);
 
@@ -127,6 +180,8 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         // Setup dynamic chains with error handling
         try {
           await setupDynamicChains();
+          // Also fetch chains for Wagmi config
+          await fetchDynamicChains();
           setIsReady(true);
         } catch (chainError) {
           logger.warn('Failed to setup dynamic chains', chainError);
@@ -214,6 +269,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
 
         setRelayChains(directFormattedChains);
+        
+        // Update Wagmi config with the fetched chains
+        updateWagmiConfigWithRelayChains(directFormattedChains.map(convertRelayChainToWagmiFormat));
         return;
       }
 
@@ -255,6 +313,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           }));
 
         setRelayChains(formattedChains);
+        
+        // Update Wagmi config with the fetched chains
+        updateWagmiConfigWithRelayChains(formattedChains.map(convertRelayChainToWagmiFormat));
         return;
       }
 

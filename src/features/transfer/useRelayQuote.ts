@@ -20,6 +20,8 @@ interface UseRelayQuoteParams {
     decimals: number;
     logoURI?: string;
     chainId: number;
+    currency?: string; // Optional for compatibility with Relay token objects
+    contractAddress?: string; // Optional for compatibility with Relay token objects
   };
   wallet?: any; // Optional wallet client for quote
 }
@@ -56,8 +58,10 @@ export function useRelayQuote({
   const { getQuote, isReady } = useRelayContext();
 
   const getRelayQuoteData = useCallback(async () => {
+    
     // Simple check to prevent quote requests when amount is being cleared
     if (!amount || (typeof amount === 'string' && amount.trim() === '') || amount === '') {
+      console.log('DEBUG: useRelayQuote - Early return: amount is empty');
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -66,6 +70,7 @@ export function useRelayQuote({
     // Additional check to prevent processing if amount is 0 or invalid
     const amountNum = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
+      console.log('DEBUG: useRelayQuote - Early return: amount is invalid:', amountNum);
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -81,6 +86,8 @@ export function useRelayQuote({
       !user ||
       !recipient
     ) {
+      console.log('DEBUG: useRelayQuote - Early return: missing required parameters');
+      console.log('DEBUG: useRelayQuote - Check results:', { isReady, originChain, destinationChain, amount, user, recipient });
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -89,26 +96,43 @@ export function useRelayQuote({
     // Check if this is a Relay-supported transfer based on the current transfer type
     let isRelayTransfer = false;
     
+    console.log('DEBUG: useRelayQuote - Checking transfer type:', transferType);
+    console.log('DEBUG: useRelayQuote - originChain:', originChain);
+    console.log('DEBUG: useRelayQuote - destinationChain:', destinationChain);
+    console.log('DEBUG: useRelayQuote - relayChains:', relayChains.map(c => c.name));
+    
     if (transferType === 'deposit') {
       // For deposits: Check if destination is Forma and origin is a Relay chain
       const isToForma = destinationChain === 'forma' || destinationChain === 'sketchpad';
       const isFromRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
-        return internalName === originChain.toLowerCase();
+        const matches = internalName === originChain.toLowerCase();
+        console.log('DEBUG: useRelayQuote - deposit check:', { chainName: chain.name, internalName, originChain, matches });
+        return matches;
       });
       isRelayTransfer = isToForma && isFromRelay;
+      console.log('DEBUG: useRelayQuote - deposit result:', { isToForma, isFromRelay, isRelayTransfer });
     } else if (transferType === 'withdraw') {
       // For withdrawals: Check if origin is Forma and destination is a Relay chain
       const isFromForma = originChain === 'forma' || originChain === 'sketchpad';
       const isToRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
-        return internalName === destinationChain.toLowerCase();
+        const matches = internalName === destinationChain.toLowerCase();
+        console.log('DEBUG: useRelayQuote - withdraw check:', { chainName: chain.name, internalName, destinationChain, matches });
+        return matches;
       });
       isRelayTransfer = isFromForma && isToRelay;
+      console.log('DEBUG: useRelayQuote - withdraw result:', { isFromForma, isToRelay, isRelayTransfer });
     }
 
     // Only get quotes for Relay transfers
+    console.log('DEBUG: useRelayQuote - isRelayTransfer:', isRelayTransfer);
+    console.log('DEBUG: useRelayQuote - transferType:', transferType);
+    console.log('DEBUG: useRelayQuote - originChain:', originChain);
+    console.log('DEBUG: useRelayQuote - destinationChain:', destinationChain);
+    
     if (!isRelayTransfer) {
+      console.log('DEBUG: useRelayQuote - Not a Relay transfer, returning');
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -226,8 +250,10 @@ export function useRelayQuote({
           originCurrency = '0x0000000000000000000000000000000000000000';
         }
         
-        // Destination is always TIA on Forma
-        destinationCurrency = '0x0000000000000000000000000000000000000000';
+        // Destination is Forma/Sketchpad native TIA -> use zero address per Relay expectations
+        destinationCurrency = (destinationChain === 'forma' || destinationChain === 'sketchpad')
+          ? '0x0000000000000000000000000000000000000000'
+          : getNativeCurrency(destinationChain);
       } else {
         // Withdraw: Forma TIA -> Relay token
         // For withdrawals, we're sending TIA from Forma to get OP on Optimism
@@ -288,9 +314,8 @@ export function useRelayQuote({
         ...(wallet && { wallet }), // Include wallet if provided
       };
 
-
-
-
+      // Minimal inspect of params to verify currency and chain IDs
+      try { console.log('Relay getQuote params:', { chainId: quoteParams.chainId, currency: quoteParams.currency, toChainId: quoteParams.toChainId, toCurrency: quoteParams.toCurrency, amount: quoteParams.amount }); } catch {}
 
       const quote = await getQuote(quoteParams);
       
@@ -333,13 +358,17 @@ export function useRelayQuote({
   }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote, transferType, selectedToken]);
 
   useEffect(() => {
+    console.log('DEBUG: useRelayQuote - useEffect triggered');
+    console.log('DEBUG: useRelayQuote - useEffect dependencies:', { originChain, destinationChain, amount, transferType });
+    
     // Add a small delay to prevent race conditions during rapid changes
     const timeoutId = setTimeout(() => {
+      console.log('DEBUG: useRelayQuote - Calling getRelayQuoteData');
       getRelayQuoteData();
     }, 100); // Increased from 50ms to 100ms for better handling of rapid changes
 
     return () => clearTimeout(timeoutId);
-  }, [getRelayQuoteData]);
+  }, [getRelayQuoteData, transferType]);
 
   return {
     estimatedOutput,

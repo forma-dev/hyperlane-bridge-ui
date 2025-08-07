@@ -1,20 +1,29 @@
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PropsWithChildren, useEffect, useMemo } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 
 import { forma } from '../../../config/chain';
-import { wagmiConfig } from '../../../config/wagmi';
+import { getCurrentWagmiConfig, onConfigUpdate } from '../../../config/wagmi';
 import { config } from '../../../consts/config';
 
 const queryClient = new QueryClient();
 
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
+  const [wagmiConfig, setWagmiConfig] = useState(getCurrentWagmiConfig());
+  
   const privyAppId = useMemo(() => {
     if (typeof window !== 'undefined' && window.location.hostname.endsWith('bridge.forma.art')) {
       return process.env.NEXT_PUBLIC_PRIVY_APP_ID_PROD;
     }
     return process.env.NEXT_PUBLIC_PRIVY_APP_ID_DEV;
+  }, []);
+
+  useEffect(() => {
+    // Listen for config updates and re-render with new config
+    onConfigUpdate(() => {
+      setWagmiConfig(getCurrentWagmiConfig());
+    });
   }, []);
 
   // Add error boundary for Privy analytics errors
@@ -55,7 +64,7 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
           createOnLogin: 'users-without-wallets',
         },
         defaultChain: forma,
-        supportedChains: [forma],
+        supportedChains: [forma], // Will be updated dynamically by RelayContext
       }}
     >
       <QueryClientProvider client={queryClient}>

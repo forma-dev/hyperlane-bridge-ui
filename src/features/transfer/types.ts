@@ -12,6 +12,8 @@ export interface TransferFormValues {
     decimals: number;
     logoURI?: string;
     chainId: number;
+    currency?: string; // Optional for compatibility with Relay token objects
+    contractAddress?: string; // Optional for compatibility with Relay token objects
   };
 }
 
@@ -44,4 +46,18 @@ export interface TransferContext {
   originTxHash?: string;
   msgId?: string;
   timestamp: number;
+  fees?: {
+    gas?: {
+      amountFormatted: string;
+      currency?: {
+        symbol: string;
+      };
+    };
+    relayer?: {
+      amountFormatted: string;
+      currency?: {
+        symbol: string;
+      };
+    };
+  };
 }

@@ -28,15 +28,27 @@ import { useAccountForChain } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferStatus } from './types';
 
-// Helper function to get native currency symbol for Relay transfers
-function getNativeCurrencySymbol(chainName: string): string {
-  const symbolMap: Record<string, string> = {
+// Helper function to get native currency symbol for Relay transfers using Relay API data
+function getNativeCurrencySymbol(chainName: string, relayChains: any[]): string {
+  // Use Relay API data first
+  const relayChain = relayChains.find((rc) => {
+    const internalName = rc.name.toLowerCase();
+    const searchName = chainName.toLowerCase();
+    return internalName === searchName || rc.name.toLowerCase() === searchName;
+  });
+
+  if (relayChain?.currency?.symbol) {
+    return relayChain.currency.symbol;
+  }
+
+  // Fallback for chains not in Relay API
+  const fallbackSymbols: Record<string, string> = {
     forma: 'TIA',
     sketchpad: 'TIA',
     celestia: 'TIA',
     stride: 'STRD',
   };
-  return symbolMap[chainName.toLowerCase()] || 'Unknown';
+  return fallbackSymbols[chainName.toLowerCase()] || 'Unknown';
 }
 
 export function TransfersDetailsModal({
@@ -123,8 +135,9 @@ export function TransfersDetailsModal({
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
   }, [transfer, relayChains]);
 
-  // For Relay transfers, get the native currency symbol
-  const relayTokenSymbol = isRelayTransfer ? getNativeCurrencySymbol(origin) : undefined;
+  // For Relay transfers, get the token symbol from the transfer context
+  // This should match what's shown in the convert input (selectedToken.symbol)
+  const relayTokenSymbol = isRelayTransfer ? transfer.originTokenAddressOrDenom : undefined;
 
   // For non-Relay transfers, use warp core to find token with error handling
   const token = useMemo(() => {
@@ -281,6 +294,25 @@ export function TransfersDetailsModal({
             />
           )}
           {msgId && <TransferProperty name="Message ID" value={msgId} />}
+          
+          {/* Show fee information for Relay transfers */}
+          {isRelayTransfer && transfer.fees && (
+            <>
+              {transfer.fees.gas && (
+                <TransferProperty
+                  name="Gas Fee"
+                  value={`${transfer.fees.gas.amountFormatted || '0'} ${transfer.fees.gas.currency?.symbol || 'Unknown'}`}
+                />
+              )}
+              {transfer.fees.relayer && (
+                <TransferProperty
+                  name="Relay Fee"
+                  value={`${transfer.fees.relayer.amountFormatted || '0'} ${transfer.fees.relayer.currency?.symbol || 'Unknown'}`}
+                />
+              )}
+            </>
+          )}
+          
           {explorerLink && !isRelayTransfer && (
             <div className="flex justify-between">
               <span className="text-gray-350 text-xs leading-normal tracking-wider">

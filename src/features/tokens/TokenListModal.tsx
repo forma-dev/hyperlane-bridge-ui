@@ -76,13 +76,6 @@ export function TokenList({
 }) {
   const { relayChains } = useRelaySupportedChains();
   
-  console.log('TokenList called with:', {
-    origin,
-    destination,
-    searchQuery,
-    relayChainsCount: relayChains?.length
-  });
-  
   const tokens = useMemo(() => {
     const q = searchQuery?.trim().toLowerCase();
     
@@ -118,14 +111,6 @@ export function TokenList({
           } as IToken,
           disabled: false, // All Relay tokens are bridgeable
         }));
-        
-        // Debug: Log the Relay tokens being returned
-        console.log(`Relay tokens for ${origin}:`, relayTokens.map(t => ({
-          symbol: t.token.symbol,
-          name: t.token.name,
-          address: t.token.addressOrDenom,
-          logoURI: t.token.logoURI
-        })));
         
         // Filter by search query
         const filteredTokens = relayTokens.filter((t) => {

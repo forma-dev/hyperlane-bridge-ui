@@ -28,12 +28,6 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (relayChains?.length) {
     return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
-      console.log('Checking Relay chain:', {
-        chainName,
-        relayChainName: chain.name,
-        internalName,
-        matches: internalName === chainName.toLowerCase()
-      });
       return (
         internalName &&
         internalName === chainName.toLowerCase()
@@ -69,20 +63,12 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
     // Check if origin is a Relay chain
     const isOriginRelay = isRelayChain(origin, relayChains);
     
-    console.log('TokenSelectField useEffect:', {
-      origin,
-      relayChainsCount: relayChains?.length,
-      isOriginRelay,
-      relayChains: relayChains?.map(c => c.name)
-    });
-
     if (isOriginRelay) {
       // For Relay chains, allow manual token selection
       // We'll use a special token index of -1 to indicate Relay native token as default
       helpers.setValue(-1);
       setIsAutomaticSelection(false); // Allow manual selection
       setIsNft(false); // Native tokens are never NFTs
-      console.log('Set Relay chain token selection to manual');
     } else if (origin === 'forma' || origin === 'sketchpad') {
       // Special case: Forma/Sketchpad withdrawals to ANY destination
       // We need to find the Forma TIA token in the Hyperlane token list
@@ -159,21 +145,8 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   };
 
   const onClickField = () => {
-    console.log('TokenSelectField onClickField:', {
-      disabled,
-      isAutomaticSelection,
-      origin,
-      isRelayChain: isRelayChain(origin, relayChains),
-      willOpenModal: !disabled && !isAutomaticSelection
-    });
     if (!disabled && !isAutomaticSelection) {
-      console.log('Opening token selection modal for Relay chain');
       setIsModalOpen(true);
-    } else {
-      console.log('Modal not opened because:', {
-        disabled,
-        isAutomaticSelection
-      });
     }
   };
 

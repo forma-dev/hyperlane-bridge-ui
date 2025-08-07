@@ -105,7 +105,8 @@ export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) 
   if (relayChains && relayChains.length > 0) {
     const relayChain = relayChains.find((rc) => {
       const internalName = mapRelayChainToInternalName(rc.name);
-      return internalName === chainName.toLowerCase();
+      const searchName = chainName.toLowerCase();
+      return internalName === searchName || rc.name.toLowerCase() === searchName;
     });
 
     if (relayChain?.currency) {
@@ -118,7 +119,11 @@ export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) 
   }
 
   // Fallback for when API data is not available
-  return { symbol: 'Unknown', decimals: 18, name: 'Unknown' };
+  return { 
+    symbol: 'Unknown', 
+    decimals: 18, 
+    name: chainName 
+  };
 }
 
 /**

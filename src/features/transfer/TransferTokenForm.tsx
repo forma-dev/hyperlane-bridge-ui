@@ -36,6 +36,7 @@ import {
 import { AccountInfo } from '../wallet/hooks/types';
 
 import { useFetchMaxAmount } from './maxAmount';
+import { getNativeCurrency, getRelayChainId } from './relaySdk';
 import { TransferFormValues } from './types';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useRelayMaxAmount } from './useRelayMaxAmount';
@@ -665,19 +666,89 @@ function ReviewDetails({ visible }: { visible: boolean }) {
   
   const recipient = values.recipient || destinationUser || '';
 
+  // Determine transfer type based on origin and destination
+  const transferType = (() => {
+    if (values.destination === 'forma' || values.destination === 'sketchpad') {
+      return 'deposit';
+    } else if (values.origin === 'forma' || values.origin === 'sketchpad') {
+      return 'withdraw';
+    }
+    return '';
+  })();
+  
+  
+  
   const { estimatedOutput } = useRelayQuote({
     originChain: values.origin,
     destinationChain: values.destination,
     amount: values.amount,
-    transferType: '', // Not needed for fee display
+    transferType: transferType,
     relayChains,
     user: user || '',
     recipient: recipient || '',
+    selectedToken: values.selectedToken,
   });
 
   // Extract fee information from Relay quote if available
   const relayQuote = estimatedOutput?.quote;
   const relayFees = relayQuote?.fees;
+  
+  // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
+  const [depositFees, setDepositFees] = useState(null);
+  
+  useEffect(() => {
+    if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
+      const fetchDepositFees = async () => {
+        try {
+          const { getClient } = await import('@reservoir0x/relay-sdk');
+          const client = getClient();
+          if (client) {
+            // Resolve dynamic chainIds
+            const originIds = getRelayChainId(values.origin);
+            const destIds = getRelayChainId(values.destination);
+            const originChainId = originIds.mainnet ?? originIds.testnet ?? undefined;
+            const destinationChainId = destIds.mainnet ?? destIds.testnet ?? undefined;
+            if (!originChainId || !destinationChainId) return;
+
+            // Resolve currencies
+            const originCurrency =
+              values.selectedToken?.address ||
+              (values.selectedToken as any)?.currency ||
+              (values.selectedToken as any)?.contractAddress ||
+              getNativeCurrency(values.origin);
+
+            const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
+
+            const decimals = values.selectedToken?.decimals ?? 18;
+            const amountWei = (
+              parseFloat(typeof values.amount === 'string' ? values.amount : String(values.amount)) *
+              Math.pow(10, decimals)
+            ).toString();
+
+            const quote = await client.actions.getQuote({
+              chainId: originChainId,
+              toChainId: destinationChainId,
+              currency: originCurrency,
+              toCurrency,
+              amount: amountWei,
+              tradeType: 'EXACT_INPUT',
+              user,
+              recipient,
+              includeDefaultParameters: true,
+            });
+
+            if (quote?.fees) setDepositFees(quote.fees as any);
+          }
+        } catch (err) {
+          // Swallow and keep UI minimal; user will still be able to proceed
+        }
+      };
+      fetchDepositFees();
+    }
+  }, [transferType, values.amount, values.origin, values.destination, values.selectedToken, user, recipient, estimatedOutput]);
+  
+  // Use depositFees for deposits if relayFees is not available
+  const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
 
   return (
     <div
@@ -708,42 +779,42 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       )}
 
       {/* Show Relay fees for Relay transfers */}
-      {isUsingRelay && relayFees && (
+      {isUsingRelay && finalRelayFees && (
         <>
-          {relayFees.gas &&
-            relayFees.gas.amountFormatted &&
-            parseFloat(relayFees.gas.amountFormatted) > 0 && (
+          {finalRelayFees.gas &&
+            finalRelayFees.gas.amountFormatted &&
+            parseFloat(finalRelayFees.gas.amountFormatted) > 0 && (
               <p className="flex justify-between">
                 <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
                   Gas Fee (est.)
                 </span>
                 <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
                   {(() => {
-                    const amount = parseFloat(relayFees.gas.amountFormatted);
-                    const symbol = relayFees.gas.currency?.symbol || 'Unknown';
+                    const amount = parseFloat(finalRelayFees.gas.amountFormatted);
+                    const symbol = finalRelayFees.gas.currency?.symbol || 'Unknown';
                     const formattedAmount = amount.toFixed(6);
-                    const usdValue = relayFees.gas.amountUsd
-                      ? `(~$${parseFloat(relayFees.gas.amountUsd).toFixed(2)})`
+                    const usdValue = finalRelayFees.gas.amountUsd
+                      ? `(~$${parseFloat(finalRelayFees.gas.amountUsd).toFixed(2)})`
                       : '';
                     return `${formattedAmount} ${symbol} ${usdValue}`;
                   })()}
                 </span>
               </p>
             )}
-          {relayFees.relayer &&
-            relayFees.relayer.amountFormatted &&
-            parseFloat(relayFees.relayer.amountFormatted) > 0 && (
+          {finalRelayFees.relayer &&
+            finalRelayFees.relayer.amountFormatted &&
+            parseFloat(finalRelayFees.relayer.amountFormatted) > 0 && (
               <p className="flex justify-between">
                 <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
                   Relay Fee
                 </span>
                 <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
                   {(() => {
-                    const amount = parseFloat(relayFees.relayer.amountFormatted);
-                                          const symbol = relayFees.relayer.currency?.symbol || 'Unknown';
+                    const amount = parseFloat(finalRelayFees.relayer.amountFormatted);
+                                          const symbol = finalRelayFees.relayer.currency?.symbol || 'Unknown';
                     const formattedAmount = amount.toFixed(6);
-                    const usdValue = relayFees.relayer.amountUsd
-                      ? `(~$${parseFloat(relayFees.relayer.amountUsd).toFixed(2)})`
+                    const usdValue = finalRelayFees.relayer.amountUsd
+                      ? `(~$${parseFloat(finalRelayFees.relayer.amountUsd).toFixed(2)})`
                       : '';
                     return `${formattedAmount} ${symbol} ${usdValue}`;
                   })()}

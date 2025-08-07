@@ -1,8 +1,8 @@
 import {
-    MAINNET_RELAY_API,
-    TESTNET_RELAY_API,
-    configureDynamicChains,
-    createClient,
+  MAINNET_RELAY_API,
+  TESTNET_RELAY_API,
+  configureDynamicChains,
+  createClient,
 } from '@reservoir0x/relay-sdk';
 
 // Environment-based configuration

@@ -22,9 +22,8 @@ export function useEvmAccount(): AccountInfo {
   const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address: wagmiAddress, connector, chain } = useAccount();
-  const isReady = ready && walletsReady && wallets.length > 0 && !!wagmiAddress;
+  const isReady = ready && (walletsReady || !!wagmiAddress) && wallets.length > 0 && !!wagmiAddress;
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
-
 
 
   return useMemo<AccountInfo>(
