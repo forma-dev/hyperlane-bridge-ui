@@ -2,6 +2,7 @@ import { MAINNET_RELAY_API, TESTNET_RELAY_API } from '@reservoir0x/relay-sdk';
 import { useState } from 'react';
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Modal } from '../../components/layout/Modal';
+import { logger } from '../../utils/logger';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import { mapRelayChainToInternalName } from './relayUtils';
 import { getChainDisplayName } from './utils';
@@ -100,11 +101,11 @@ export function ChainSelectListModal({
         const data = await response.json();
         return data || [];
       } else {
-        console.error('Failed to fetch tokens:', response.status, response.statusText);
+        logger.error('Failed to fetch tokens', new Error(`${response.status} ${response.statusText}`));
         return [];
       }
     } catch (error) {
-      console.error('Failed to fetch tokens for network:', error);
+      logger.error('Failed to fetch tokens for network', error);
       return [];
     }
   };
@@ -149,7 +150,7 @@ export function ChainSelectListModal({
       }));
       
     } catch (error) {
-      console.error('Failed to fetch tokens for network:', error);
+      logger.error('Failed to fetch tokens for network', error);
     } finally {
       setIsLoadingTokens(false);
     }
@@ -195,11 +196,11 @@ export function ChainSelectListModal({
           [chainId]: validTokens
         }));
       } else {
-        console.error('Failed to search tokens:', response.status, response.statusText);
+        logger.error('Failed to search tokens', new Error(`${response.status} ${response.statusText}`));
         setSearchResults(prev => ({ ...prev, [chainId]: [] }));
       }
     } catch (error) {
-      console.error('Failed to search tokens:', error);
+      logger.error('Failed to search tokens', error);
       setSearchResults(prev => ({ ...prev, [chainId]: [] }));
     } finally {
       setIsSearching(false);

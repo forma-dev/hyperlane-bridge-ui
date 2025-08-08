@@ -4,7 +4,7 @@ import { Form, Formik, useFormikContext } from 'formik';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useSwitchChain, useWalletClient } from 'wagmi';
+import { useWalletClient } from 'wagmi';
 
 import { TokenAmount } from '@hyperlane-xyz/sdk';
 import { ProtocolType, errorToString, isNullish, toWei } from '@hyperlane-xyz/utils';
@@ -28,10 +28,10 @@ import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    getAccountAddressAndPubKey,
-    getAccountAddressForChain,
-    useAccountAddressForChain,
-    useAccounts,
+  getAccountAddressAndPubKey,
+  getAccountAddressForChain,
+  useAccountAddressForChain,
+  useAccounts,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -136,12 +136,14 @@ export function TransferTokenForm({
   setIsReview: any;
 }) {
   const initialValues = useFormInitialValues();
-  const { accounts } = useAccounts();
+  // Accounts are not used directly here but kept for future validation flows
+  // const { accounts } = useAccounts();
   const { relayChains } = useRelaySupportedChains();
 
   // Flag for check current type of token
   const [isNft, setIsNft] = useState(false);
 
+  const { accounts } = useAccounts();
   const validate = (values: TransferFormValues) => validateForm(values, accounts, relayChains);
 
   const onSubmitForm = (values: TransferFormValues) => {
@@ -180,6 +182,8 @@ export function TransferTokenForm({
 
           <div className="px-10 pt-4 pb-8 gap-y-4 flex flex-col">
             <ChainSelectSection isReview={isReview} type="to" transferType={transferType} />
+
+            <RecipientAddressField isReview={isReview} transferType={transferType} />
 
             {/* Show ReceiveSection for both deposits and withdraws */}
             <ReceiveSection isReview={isReview} transferType={transferType} />
@@ -301,6 +305,59 @@ function ChainSelectSection({
   );
 }
 
+function RecipientAddressField({ isReview, transferType }: { isReview: boolean; transferType: string }) {
+  const { values, setFieldValue } = useFormikContext<TransferFormValues>();
+
+  const destinationChain = values.destination;
+  const destinationAccount = useAccountAddressForChain(destinationChain) || '';
+
+  // Auto-populate with connected wallet on destination when available
+  useEffect(() => {
+    if (!values.recipient && destinationAccount) {
+      setFieldValue('recipient', destinationAccount);
+    }
+  }, [destinationAccount, setFieldValue, values.recipient]);
+
+  const onSelf = () => {
+    setFieldValue('recipient', destinationAccount || '');
+  };
+
+  return (
+    <div className="flex flex-col items-start w-full">
+      <div className="flex justify-between pr-1 w-full">
+        <label className="block text-sm text-secondary leading-5 font-medium">Address</label>
+      </div>
+      <div
+        className={`group relative w-full h-[48px] flex items-center mt-1.5 rounded-card border border-solid border-[#8C8D8F] ${
+          isReview ? 'bg-[#B5B5B5] cursor-not-allowed' : 'bg-white'
+        } ${!isReview && 'hover:border-black'}`}
+      >
+        <TextField
+          name="recipient"
+          placeholder="0x... or destination address"
+          classes={`w-full h-full p-3 pr-12 border-none bg-transparent placeholder:text-disabled focus:outline-none ${
+            isReview ? '!text-secondary cursor-not-allowed' : 'text-black'
+          }`}
+          disabled={isReview}
+          style={{
+            fontSize: '16px',
+          }}
+        />
+        <button
+          type="button"
+          onClick={onSelf}
+          disabled={isReview || !destinationAccount}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold underline ${
+            isReview || !destinationAccount ? 'text-secondary cursor-not-allowed' : 'text-primary hover:opacity-80'
+          }`}
+        >
+          SELF
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AmountSection({
   isNft,
   isReview,
@@ -316,14 +373,12 @@ function AmountSection({
   const originBalanceResult = useOriginBalance(values, transferType);
   const { balance } = originBalanceResult;
   const { relayChains } = useRelaySupportedChains();
-  const { accounts } = useAccounts();
 
   // Check if this is a Relay transfer
   const isRelayTransfer = isUsingRelayForTransfer(
     values.origin,
     values.destination,
     relayChains,
-    accounts,
   );
 
   return (
@@ -371,26 +426,27 @@ function AmountSection({
           />
         </div>
       )}
-      <div className="pt-1 text-right">
-        <TokenBalance
-          label="BALANCE"
-          balance={balance}
-          disabled={isReview}
-          transferType={transferType}
-        />
-      </div>
-      {/* Error display for quote failures */}
-      {isRelayTransfer && (
-        <div className="mt-2">
-          <QuoteErrorDisplay 
-            originChain={values.origin}
-            destinationChain={values.destination}
-            amount={values.amount}
+      <div className="pt-1 flex items-center justify-between">
+        <div className="min-h-[1rem]">
+          {isRelayTransfer && (
+            <QuoteErrorDisplay 
+              originChain={values.origin}
+              destinationChain={values.destination}
+              amount={values.amount}
+              transferType={transferType}
+              selectedToken={values.selectedToken}
+            />
+          )}
+        </div>
+        <div className="text-right">
+          <TokenBalance
+            label="BALANCE"
+            balance={balance}
+            disabled={isReview}
             transferType={transferType}
-            selectedToken={values.selectedToken}
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -511,16 +567,14 @@ function ButtonSection({
 }) {
   const { values } = useFormikContext<TransferFormValues>();
   const { data: wallet } = useWalletClient();
-  const { switchChainAsync } = useSwitchChain();
+  // const { switchChainAsync } = useSwitchChain();
   const { relayChains } = useRelaySupportedChains();
-  const { accounts } = useAccounts();
 
   // Check if this is a Relay transfer
   const isRelayTransfer = isUsingRelayForTransfer(
     values.origin,
     values.destination,
     relayChains,
-    accounts,
   );
 
   // Get user address for origin chain
@@ -581,7 +635,6 @@ function ButtonSection({
         text={isValidating ? 'VALIDATING...' : transferType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW'}
         classes="py-3 px-8 w-full"
         isValidating={isValidating}
-        disabled={isDisabled}
       />
     );
   }
@@ -734,7 +787,6 @@ function ReviewDetails({ visible }: { visible: boolean }) {
               tradeType: 'EXACT_INPUT',
               user,
               recipient,
-              includeDefaultParameters: true,
             });
 
             if (quote?.fees) setDepositFees(quote.fees as any);
@@ -1245,12 +1297,17 @@ function TokenDisplaySection({
   transferType: string;
   section: 'convert' | 'receive';
 }) {
+  const formatTokenSymbol = (symbol?: string) => {
+    if (!symbol) return '';
+    const trimmed = symbol.trim();
+    return trimmed.length > 4 ? `${trimmed.slice(0, 4)}..` : trimmed;
+  };
   const { relayChains } = useRelaySupportedChains();
 
   // For deposits: only the receive section should always show Forma TIA
   if (transferType === 'deposit' && section === 'receive') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
           src="/logos/celestia.png"
           alt="TIA"
@@ -1266,7 +1323,7 @@ function TokenDisplaySection({
   // For withdrawals: only the receive section should show selected token (but only for Relay chains)
   if (transferType === 'withdraw' && section === 'receive' && selectedToken && selectedToken.symbol && isRelay) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         {selectedToken.logoURI ? (
           <Image
             src={`/api/proxy-image?url=${encodeURIComponent(selectedToken.logoURI)}`}
@@ -1278,7 +1335,7 @@ function TokenDisplaySection({
         ) : (
           <ChainLogo chainName={chain} size={24} />
         )}
-        <span className="text-sm font-medium text-gray-700">{selectedToken.symbol}</span>
+        <span className="text-sm font-medium text-gray-700">{formatTokenSymbol(selectedToken.symbol)}</span>
       </div>
     );
   }
@@ -1286,7 +1343,7 @@ function TokenDisplaySection({
   // For withdrawals: receive section should default to TIA if no token is selected
   if (transferType === 'withdraw' && section === 'receive') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
           src="/logos/celestia.png"
           alt="TIA"
@@ -1302,7 +1359,7 @@ function TokenDisplaySection({
   // For withdrawals: convert section should always show TIA
   if (transferType === 'withdraw' && section === 'convert') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
           src="/logos/celestia.png"
           alt="TIA"
@@ -1318,7 +1375,7 @@ function TokenDisplaySection({
   // Always show TIA for Forma/Sketchpad chains regardless of transfer type
   if (chain === 'forma' || chain === 'sketchpad') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
           src="/logos/celestia.png"
           alt="TIA"
@@ -1334,7 +1391,7 @@ function TokenDisplaySection({
   // For Hyperlane chains (non-Relay), always show TIA
   if (!isRelay) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+      <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
           src="/logos/celestia.png"
           alt="TIA"
@@ -1362,7 +1419,7 @@ function TokenDisplaySection({
         ) : (
           <ChainLogo chainName={chain} size={24} />
         )}
-        <span className="text-sm font-medium text-gray-700">{selectedToken.symbol}</span>
+        <span className="text-sm font-medium text-gray-700">{formatTokenSymbol(selectedToken.symbol)}</span>
       </div>
     );
   }
@@ -1372,9 +1429,9 @@ function TokenDisplaySection({
   const currencySymbol = currencyInfo?.symbol || 'Unknown';
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
+    <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
       <ChainLogo chainName={chain} size={24} />
-      <span className="text-sm font-medium text-gray-700">{currencySymbol}</span>
+      <span className="text-sm font-medium text-gray-700">{formatTokenSymbol(currencySymbol)}</span>
     </div>
   );
 }
@@ -1400,7 +1457,6 @@ function QuoteErrorDisplay({
   };
 }) {
   const { relayChains } = useRelaySupportedChains();
-  const { accounts } = useAccounts();
   
   // Get user address for the origin chain
   const user = useAccountAddressForChain(originChain);
@@ -1429,54 +1485,10 @@ function QuoteErrorDisplay({
   }
 
   return (
-    <div className="text-red-500 text-sm">
+    <div className="text-red-500 text-[12px]">
       {error}
     </div>
   );
 }
 
-function ChainLogoSection({ chain, isRelay }: { chain: string; isRelay: boolean }) {
-  const { relayChains } = useRelaySupportedChains();
-
-  // Always show TIA for Forma/Sketchpad chains regardless of transfer type
-  if (chain === 'forma' || chain === 'sketchpad') {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
-        <Image
-          src="/logos/celestia.png"
-          alt="TIA"
-          width={24}
-          height={24}
-          className="rounded-full"
-        />
-        <span className="text-sm font-medium text-gray-700">TIA</span>
-      </div>
-    );
-  }
-
-  // For other Hyperlane transfers, always show TIA and Celestia logo
-  if (!isRelay) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
-        <Image
-          src="/logos/celestia.png"
-          alt="TIA"
-          width={24}
-          height={24}
-          className="rounded-full"
-        />
-        <span className="text-sm font-medium text-gray-700">TIA</span>
-      </div>
-    );
-  }
-
-  const currencyInfo = getRelayNativeTokenInfo(chain, relayChains);
-  const currencySymbol = currencyInfo?.symbol || 'Unknown';
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
-      <ChainLogo chainName={chain} size={24} />
-      <span className="text-sm font-medium text-gray-700">{currencySymbol}</span>
-    </div>
-  );
-}
+// (unused) ChainLogoSection removed

@@ -9,25 +9,25 @@ import { logger } from '../../../utils/logger';
 import { getChainProtocol, tryGetChainProtocol } from '../../chains/utils';
 
 import {
-  useCosmosAccount,
-  useCosmosActiveChain,
-  useCosmosConnectFn,
-  useCosmosDisconnectFn,
-  useCosmosTransactionFns,
+    useCosmosAccount,
+    useCosmosActiveChain,
+    useCosmosConnectFn,
+    useCosmosDisconnectFn,
+    useCosmosTransactionFns,
 } from './cosmos';
 import {
-  useEvmAccount,
-  useEvmActiveChain,
-  useEvmConnectFn,
-  useEvmDisconnectFn,
-  useEvmTransactionFns,
+    useEvmAccount,
+    useEvmActiveChain,
+    useEvmConnectFn,
+    useEvmDisconnectFn,
+    useEvmTransactionFns,
 } from './evm';
 import {
-  useSolAccount,
-  useSolActiveChain,
-  useSolConnectFn,
-  useSolDisconnectFn,
-  useSolTransactionFns,
+    useSolAccount,
+    useSolActiveChain,
+    useSolConnectFn,
+    useSolDisconnectFn,
+    useSolTransactionFns,
 } from './solana';
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 
@@ -54,7 +54,7 @@ export function useAccounts(): {
     throw new Error('Wallet address is blacklisted');
   }
 
-  return useMemo(
+  const result = useMemo(
     () => ({
       accounts: {
         [ProtocolType.Ethereum]: evmAccountInfo,
@@ -66,6 +66,8 @@ export function useAccounts(): {
     }),
     [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts],
   );
+
+  return result;
 }
 
 export function useAccountForChain(chainName?: ChainName): AccountInfo | undefined {

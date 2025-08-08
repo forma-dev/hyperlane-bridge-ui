@@ -135,9 +135,15 @@ export function TransfersDetailsModal({
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
   }, [transfer, relayChains]);
 
-  // For Relay transfers, get the token symbol from the transfer context
-  // This should match what's shown in the convert input (selectedToken.symbol)
-  const relayTokenSymbol = isRelayTransfer ? transfer.originTokenAddressOrDenom : undefined;
+  // For Relay transfers, derive a user-friendly symbol instead of showing raw addresses
+  // - Withdrawals (Forma -> Relay): always TIA
+  // - Deposits (Relay -> Forma): show the selected token symbol saved in transfer context
+  //   (fallback to Relay native symbol if missing)
+  const relayTokenSymbol = isRelayTransfer
+    ? ((origin === 'forma' || origin === 'sketchpad')
+        ? 'TIA'
+        : (transfer.originTokenAddressOrDenom || getNativeCurrencySymbol(origin, relayChains)))
+    : undefined;
 
   // For non-Relay transfers, use warp core to find token with error handling
   const token = useMemo(() => {
@@ -146,7 +152,6 @@ export function TransfersDetailsModal({
     try {
       return getWarpCore().findToken(origin, originTokenAddressOrDenom);
     } catch (error) {
-      // console.warn(`Could not find token for ${origin} with address ${originTokenAddressOrDenom}:`, error);
       return null;
     }
   }, [isRelayTransfer, origin, originTokenAddressOrDenom]);

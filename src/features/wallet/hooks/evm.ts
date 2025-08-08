@@ -25,6 +25,8 @@ export function useEvmAccount(): AccountInfo {
   const isReady = ready && (walletsReady || !!wagmiAddress) && wallets.length > 0 && !!wagmiAddress;
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
 
+  
+
 
   return useMemo<AccountInfo>(
     () => ({
@@ -40,19 +42,22 @@ export function useEvmAccount(): AccountInfo {
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { connectOrCreateWallet, logout, authenticated } = usePrivy();
+  const { connectOrCreateWallet } = usePrivy();
+  const { wallets } = useWallets();
+  const { address: wagmiAddress } = useAccount();
 
   return useCallback(async () => {
     try {
-      if (authenticated) {
-        await logout();
+      // Only treat as connected if wagmi has an address
+      if (wagmiAddress) {
+        return;
       }
-      connectOrCreateWallet();
+      await connectOrCreateWallet();
     } catch (error) {
-      logger.error('Failed to login with Privy:', error);
+      logger.error('Failed to login/connect with Privy:', error);
       throw error;
     }
-  }, [connectOrCreateWallet, logout, authenticated]);
+  }, [connectOrCreateWallet, wagmiAddress, wallets]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {

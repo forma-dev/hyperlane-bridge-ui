@@ -61,7 +61,6 @@ export function useRelayQuote({
     
     // Simple check to prevent quote requests when amount is being cleared
     if (!amount || (typeof amount === 'string' && amount.trim() === '') || amount === '') {
-      console.log('DEBUG: useRelayQuote - Early return: amount is empty');
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -70,7 +69,6 @@ export function useRelayQuote({
     // Additional check to prevent processing if amount is 0 or invalid
     const amountNum = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      console.log('DEBUG: useRelayQuote - Early return: amount is invalid:', amountNum);
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -86,8 +84,6 @@ export function useRelayQuote({
       !user ||
       !recipient
     ) {
-      console.log('DEBUG: useRelayQuote - Early return: missing required parameters');
-      console.log('DEBUG: useRelayQuote - Check results:', { isReady, originChain, destinationChain, amount, user, recipient });
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -96,43 +92,28 @@ export function useRelayQuote({
     // Check if this is a Relay-supported transfer based on the current transfer type
     let isRelayTransfer = false;
     
-    console.log('DEBUG: useRelayQuote - Checking transfer type:', transferType);
-    console.log('DEBUG: useRelayQuote - originChain:', originChain);
-    console.log('DEBUG: useRelayQuote - destinationChain:', destinationChain);
-    console.log('DEBUG: useRelayQuote - relayChains:', relayChains.map(c => c.name));
     
     if (transferType === 'deposit') {
       // For deposits: Check if destination is Forma and origin is a Relay chain
       const isToForma = destinationChain === 'forma' || destinationChain === 'sketchpad';
       const isFromRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
-        const matches = internalName === originChain.toLowerCase();
-        console.log('DEBUG: useRelayQuote - deposit check:', { chainName: chain.name, internalName, originChain, matches });
-        return matches;
+        return internalName === originChain.toLowerCase();
       });
       isRelayTransfer = isToForma && isFromRelay;
-      console.log('DEBUG: useRelayQuote - deposit result:', { isToForma, isFromRelay, isRelayTransfer });
     } else if (transferType === 'withdraw') {
       // For withdrawals: Check if origin is Forma and destination is a Relay chain
       const isFromForma = originChain === 'forma' || originChain === 'sketchpad';
       const isToRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
-        const matches = internalName === destinationChain.toLowerCase();
-        console.log('DEBUG: useRelayQuote - withdraw check:', { chainName: chain.name, internalName, destinationChain, matches });
-        return matches;
+        return internalName === destinationChain.toLowerCase();
       });
       isRelayTransfer = isFromForma && isToRelay;
-      console.log('DEBUG: useRelayQuote - withdraw result:', { isFromForma, isToRelay, isRelayTransfer });
     }
 
     // Only get quotes for Relay transfers
-    console.log('DEBUG: useRelayQuote - isRelayTransfer:', isRelayTransfer);
-    console.log('DEBUG: useRelayQuote - transferType:', transferType);
-    console.log('DEBUG: useRelayQuote - originChain:', originChain);
-    console.log('DEBUG: useRelayQuote - destinationChain:', destinationChain);
     
     if (!isRelayTransfer) {
-      console.log('DEBUG: useRelayQuote - Not a Relay transfer, returning');
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -186,8 +167,7 @@ export function useRelayQuote({
     if (isFormaInvolved) {
               // Check supported chains
         try {
-
-          const { getRelaySupportedChains } = await import('./relaySdk');
+        const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
         const formaSupported = supportedChains.find(
           (chain) => chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma'),
@@ -215,7 +195,7 @@ export function useRelayQuote({
       : destinationChainIds.mainnet;
 
     if (!originChainId || !destinationChainId) {
-      setError('Unsupported chain for Relay');
+      setError('Swap combination not supported');
       return;
     }
 
@@ -314,9 +294,6 @@ export function useRelayQuote({
         ...(wallet && { wallet }), // Include wallet if provided
       };
 
-      // Minimal inspect of params to verify currency and chain IDs
-      try { console.log('Relay getQuote params:', { chainId: quoteParams.chainId, currency: quoteParams.currency, toChainId: quoteParams.toChainId, toCurrency: quoteParams.toCurrency, amount: quoteParams.amount }); } catch {}
-
       const quote = await getQuote(quoteParams);
       
       // Debug: Log the quote response
@@ -345,11 +322,11 @@ export function useRelayQuote({
     } catch (err) {
       // logger.error('Failed to get Relay quote:', err); // Removed logger
       if (err instanceof Error && err.message.includes('404')) {
-        setError('Not a valid token combo. Select a different token and try again.');
+      setError('Swap combination not supported');
       } else if (err instanceof Error && err.message.includes('chain')) {
-        setError('Not a valid token combo. Select a different token and try again.');
+        setError('Swap combination not supported');
       } else {
-        setError('Not a valid token combo. Select a different token and try again.');
+        setError('Swap combination not supported');
       }
     } finally {
       setIsLoading(false);
@@ -358,12 +335,8 @@ export function useRelayQuote({
   }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote, transferType, selectedToken]);
 
   useEffect(() => {
-    console.log('DEBUG: useRelayQuote - useEffect triggered');
-    console.log('DEBUG: useRelayQuote - useEffect dependencies:', { originChain, destinationChain, amount, transferType });
-    
     // Add a small delay to prevent race conditions during rapid changes
     const timeoutId = setTimeout(() => {
-      console.log('DEBUG: useRelayQuote - Calling getRelayQuoteData');
       getRelayQuoteData();
     }, 100); // Increased from 50ms to 100ms for better handling of rapid changes
 

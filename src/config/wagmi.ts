@@ -11,69 +11,55 @@ export function getDynamicWagmiConfig() {
   if (dynamicConfig) {
     return dynamicConfig;
   }
-  
-  // Start with just Forma as base config
-  return createConfig({
-    chains: [forma],
-    transports: {
-      [forma.id]: http(),
-    },
-  });
-}
 
-export function updateWagmiConfigWithRelayChains(relayChains: any[]) {
-  const chains = [forma];
+  // Seed with Forma and a stable set of popular EVM chains to avoid runtime provider remounts
+  const seededChains: any[] = [forma];
   const transports: Record<number, any> = {
     [forma.id]: http(),
   };
 
-  // Add all Relay chains dynamically
-  for (const chain of relayChains) {
-    if (chain.id && chain.name && chain.rpcUrls?.default?.http?.[0]) {
-      chains.push({
-        id: chain.id,
-        name: chain.name,
-        network: chain.name.toLowerCase().replace(/\s+/g, '-'),
-        nativeCurrency: {
-          decimals: 18,
-          name: chain.nativeCurrency?.name || 'ETH',
-          symbol: chain.nativeCurrency?.symbol || 'ETH',
-        },
-        rpcUrls: {
-          default: {
-            http: [chain.rpcUrls.default.http[0]],
-            webSocket: [],
-          },
-          public: {
-            http: [chain.rpcUrls.default.http[0]],
-            webSocket: [],
-          },
-        },
-        ...(chain.blockExplorers && {
-          blockExplorers: {
-            default: {
-              name: 'Explorer',
-              url: chain.blockExplorers.default.url,
-            },
-          },
-        }),
-      });
-      
-      transports[chain.id] = http(chain.rpcUrls.default.http[0]);
-    }
-  }
+  const addChain = (
+    id: number,
+    name: string,
+    rpcHttp: string,
+    currency: { name: string; symbol: string; decimals: number } = {
+      name: 'ETH',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+  ) => {
+    seededChains.push({
+      id,
+      name,
+      network: name.toLowerCase().replace(/\s+/g, '-'),
+      nativeCurrency: currency,
+      rpcUrls: {
+        default: { http: [rpcHttp], webSocket: [] },
+        public: { http: [rpcHttp], webSocket: [] },
+      },
+    });
+    transports[id] = http(rpcHttp);
+  };
 
-  dynamicConfig = createConfig({
-    chains: chains as any,
+  // Match RPCs from ChainSelect to ensure consistency
+  addChain(1, 'Ethereum', 'https://rpc.ankr.com/eth');
+  addChain(10, 'Optimism', 'https://rpc.ankr.com/optimism');
+  addChain(42161, 'Arbitrum', 'https://rpc.ankr.com/arbitrum');
+  addChain(8453, 'Base', 'https://rpc.ankr.com/base');
+  addChain(43114, 'Avalanche', 'https://rpc.ankr.com/avalanche');
+  addChain(137, 'Polygon', 'https://rpc.ankr.com/polygon');
+  addChain(250, 'Fantom', 'https://rpc.ankr.com/fantom');
+  addChain(56, 'BSC', 'https://rpc.ankr.com/bsc');
+
+  return createConfig({
+    chains: seededChains as any,
     transports,
   });
-  
-  // Notify any listeners that the config has been updated
-  if (configUpdateCallback) {
-    configUpdateCallback();
-  }
-  
-  return dynamicConfig;
+}
+
+export function updateWagmiConfigWithRelayChains(relayChains: any[]) {
+  // No-op: we now seed a stable set of chains at startup to avoid remounting WagmiProvider
+  return getDynamicWagmiConfig();
 }
 
 export const wagmiConfig = getDynamicWagmiConfig();

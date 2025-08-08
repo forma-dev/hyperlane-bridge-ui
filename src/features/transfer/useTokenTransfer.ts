@@ -108,7 +108,7 @@ function getTransferProtocol(
     destination === 'sketchpad';
 
   const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
+  const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
 
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
@@ -119,6 +119,11 @@ function getTransferProtocol(
 
   // 1. If both chains are available on Hyperlane, prefer Hyperlane
   if (originIsHyperlane && destinationIsHyperlane) {
+    return 'hyperlane';
+  }
+
+  // 1a. Forma withdrawals to a Hyperlane destination should always use Hyperlane
+  if (isWithdrawal && destinationIsHyperlane) {
     return 'hyperlane';
   }
 
@@ -135,8 +140,11 @@ function getTransferProtocol(
   }
 
   // 3. If either chain is Relay-only (not available on Hyperlane), use Relay
-  if ((originIsRelay && !originIsHyperlane) || (destinationIsRelay && !destinationIsHyperlane)) {
-    return 'relay';
+  // But do not apply this rule for Forma withdrawals to Hyperlane destinations
+  if (!isWithdrawal) {
+    if ((originIsRelay && !originIsHyperlane) || (destinationIsRelay && !destinationIsHyperlane)) {
+      return 'relay';
+    }
   }
 
   // 4. Default to Hyperlane
@@ -219,7 +227,7 @@ async function executeRelayTransfer({
       : destinationChainIds.mainnet;
 
     if (!originChainId || !destinationChainId) {
-      throw new Error(`Unsupported chain for Relay: ${origin} -> ${destination}`);
+      throw new Error(`Swap combination not supported: ${origin} -> ${destination}`);
     }
 
     // Determine if this is a deposit or withdrawal

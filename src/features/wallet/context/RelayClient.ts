@@ -1,9 +1,10 @@
 import {
-  MAINNET_RELAY_API,
-  TESTNET_RELAY_API,
-  configureDynamicChains,
-  createClient,
+    MAINNET_RELAY_API,
+    TESTNET_RELAY_API,
+    configureDynamicChains,
+    createClient,
 } from '@reservoir0x/relay-sdk';
+import { logger } from '../../../utils/logger';
 
 // Environment-based configuration
 const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
@@ -44,7 +45,7 @@ export async function setupDynamicChains() {
 
     return dynamicChains;
   } catch (error) {
-    console.error('Failed to setup dynamic chains:', error);
+    logger.error('Failed to setup dynamic chains', error);
     // Return empty array if dynamic configuration fails
     return [];
   }
@@ -74,7 +75,7 @@ export async function getAllAvailableChains() {
     
     return [];
   } catch (error) {
-    console.error('Failed to get chains from direct API:', error);
+    logger.error('Failed to get chains from direct API', error);
     return [];
   }
 }
@@ -107,11 +108,11 @@ export async function getCurrenciesV2(chainIds?: number[]) {
       const data = await response.json();
       return data;
     } else {
-      console.error('Failed to fetch currencies:', response.status, response.statusText);
+      logger.error('Failed to fetch currencies', new Error(`${response.status} ${response.statusText}`));
       return [];
     }
   } catch (error) {
-    console.error('Failed to fetch currencies:', error);
+    logger.error('Failed to fetch currencies', error);
     return [];
   }
 }
@@ -153,7 +154,7 @@ export async function getRelayBalance(
     const chain = dynamicChains.find(chain => chain.viemChain?.id === chainId);
     
     if (!chain || !chain.viemChain) {
-      console.error('No dynamic chain found for chainId:', chainId);
+      logger.error('No dynamic chain found for chainId', new Error(String(chainId)));
       return null;
     }
     
@@ -161,7 +162,7 @@ export async function getRelayBalance(
     const rpcUrl = chain.viemChain.rpcUrls.default.http[0];
     
     if (!rpcUrl) {
-      console.error('No RPC URL found in dynamic chain for chainId:', chainId);
+      logger.error('No RPC URL found in dynamic chain for chainId', new Error(String(chainId)));
       return null;
     }
     
@@ -213,7 +214,7 @@ export async function getRelayBalance(
       name,
     };
   } catch (error) {
-    console.error('Failed to fetch Relay balance:', error);
+    logger.error('Failed to fetch Relay balance', error);
     return null;
   }
 }

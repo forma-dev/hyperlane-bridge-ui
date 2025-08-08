@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { logger } from '../../utils/logger'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.query
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.send(Buffer.from(buffer))
   } catch (error) {
-    console.error('Error proxying image:', error)
+    logger.error('Error proxying image', error)
     res.status(500).json({ error: 'Failed to proxy image' })
   }
 } 
