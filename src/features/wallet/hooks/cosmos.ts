@@ -12,6 +12,36 @@ import { getChainMetadata } from '../../chains/utils';
 
 import { AccountInfo, ActiveChainInfo, ChainAddress, ChainTransactionFns } from './types';
 
+// Helper function to convert Long objects to strings for amino encoding
+function convertLongToString(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  // Check if this is a Long object (has low, high, unsigned properties)
+  if (typeof obj === 'object' && 'low' in obj && 'high' in obj && 'unsigned' in obj) {
+    // Convert Long object to string
+    const long = obj.unsigned
+      ? (BigInt(obj.high >>> 0) << 32n) | BigInt(obj.low >>> 0)
+      : (BigInt(obj.high | 0) << 32n) | BigInt(obj.low >>> 0);
+    return long.toString();
+  }
+
+  // Recursively process arrays
+  if (Array.isArray(obj)) {
+    return obj.map(convertLongToString);
+  }
+
+  // Recursively process objects
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = convertLongToString(value);
+    }
+    return result;
+  }
+
+  return obj;
+}
+
 export function useCosmosAccount(): AccountInfo {
   const chainToContext = useChains(getCosmosChainNames());
   return useMemo<AccountInfo>(() => {
@@ -75,27 +105,38 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
       if (!chainContext?.address) throw new Error(`Cosmos wallet not connected for ${chainName}`);
 
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
+      
+      logger.debug(`Sending tx on chain ${chainName}`);
 
+      // Convert Long objects to strings for amino encoding compatibility
+      const processedTransaction = convertLongToString(tx.transaction);
       const { getSigningCosmWasmClient, getSigningStargateClient } = chainContext;
       let result: ExecuteResult | DeliverTxResponse;
       let txDetails: IndexedTx | null;
       if (tx.type === ProviderType.CosmJsWasm) {
         const client = await getSigningCosmWasmClient();
-        result = await client.executeMultiple(chainContext.address, [tx.transaction], 'auto');
+        result = await client.executeMultiple(chainContext.address, [processedTransaction], 'auto');
         txDetails = await client.getTx(result.transactionHash);
       } else if (tx.type === ProviderType.CosmJs) {
         const client = await getSigningStargateClient();
-        result = await client.signAndBroadcast(chainContext.address, [tx.transaction], 'auto');
+        result = await client.signAndBroadcast(
+          chainContext.address,
+          [processedTransaction],
+          'auto',
+        );
         txDetails = await client.getTx(result.transactionHash);
       } else {
         throw new Error(`Invalid cosmos provider type ${tx.type}`);
       }
 
       const confirm = async (): Promise<TypedTransactionReceipt> => {
-        assert(txDetails, `Cosmos tx failed: ${JSON.stringify(result)}`);
+        assert(txDetails, `Cosmos tx failed: Transaction hash ${result.transactionHash}`);
         return {
           type: tx.type,
-          receipt: { ...txDetails, transactionHash: result.transactionHash },
+          receipt: {
+            ...txDetails,
+            transactionHash: result.transactionHash,
+          },
         };
       };
       return { hash: result.transactionHash, confirm };
