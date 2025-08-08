@@ -106,7 +106,7 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
       if (!chainContext?.address) throw new Error(`Cosmos wallet not connected for ${chainName}`);
 
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
-      
+
       logger.debug(`Sending tx on chain ${chainName}`);
 
       // Convert Long objects to strings for amino encoding compatibility
@@ -135,8 +135,8 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
         return {
           type: tx.type,
           receipt: {
-            ...txDetails,
-            transactionHash: result.transactionHash,
+            ...(txDetails as any),
+            transactionHash: String(result.transactionHash),
           },
         };
       };

@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import { PropsWithChildren } from 'react';
 
-import { chainMetadata } from '@hyperlane-xyz/sdk';
+//
 import { ProtocolType } from '@hyperlane-xyz/utils';
-import { ChainLogo } from '@hyperlane-xyz/widgets';
 
+// import { ChainLogo } from '@hyperlane-xyz/widgets';
 import { Modal } from '../../components/layout/Modal';
 
 import { useConnectFns } from './hooks/multiProtocol';
@@ -107,7 +107,7 @@ export function WalletEnvSelectionModal({
         <EnvButton
           onClick={onClickEnv(ProtocolType.Ethereum)}
           subTitle="an EVM"
-          logoChainId={chainMetadata.ethereum.chainId}
+          logo={<Image src={'/logos/forma.png'} width={34} height={34} alt="" />}
         >
           Ethereum
         </EnvButton>
@@ -131,7 +131,8 @@ function EnvButton({
   if (!logo) {
     if (!logoChainId) throw new Error('Either logo or logoChainId must be provided');
     if (typeof logoChainId !== 'number') throw new Error('logoChainId must be a number');
-    logo = <ChainLogo chainId={logoChainId} size={34} />;
+    // Fallback: use Celestia icon as generic EVM logo
+    logo = <Image src={'/logos/celestia.png'} width={34} height={34} alt="" />;
   }
   return (
     <button

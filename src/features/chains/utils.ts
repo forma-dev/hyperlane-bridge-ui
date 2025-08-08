@@ -1,4 +1,4 @@
-import { ChainNameOrId, chainMetadata } from '@hyperlane-xyz/sdk';
+import { ChainNameOrId } from '@hyperlane-xyz/sdk';
 import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
@@ -36,7 +36,11 @@ export function getChainDisplayName(chain: ChainName, shortName = false) {
 
 export function isPermissionlessChain(chain: ChainName) {
   if (!chain) return true;
-  return getChainMetadata(chain).protocol === ProtocolType.Ethereum || !chainMetadata[chain];
+  try {
+    return getChainMetadata(chain).protocol === ProtocolType.Ethereum;
+  } catch {
+    return true;
+  }
 }
 
 export function hasPermissionlessChain(ids: ChainName[]) {

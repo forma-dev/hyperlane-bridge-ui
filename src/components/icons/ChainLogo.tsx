@@ -1,11 +1,9 @@
 import Image from 'next/image';
-import { ComponentProps, useEffect, useMemo, useState } from 'react';
-
-import { ChainLogo as ChainLogoInner } from '@hyperlane-xyz/widgets';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
-    getRelayNativeTokenInfo,
-    mapRelayChainToInternalName,
+  getRelayNativeTokenInfo,
+  mapRelayChainToInternalName,
 } from '../../features/chains/relayUtils';
 import { getChainDisplayName, tryGetChainMetadata } from '../../features/chains/utils';
 import { useRelaySupportedChains } from '../../features/wallet/context/RelayContext';
@@ -80,11 +78,19 @@ function ChainImage({
   );
 }
 
-export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
-  const { chainName, ...rest } = props;
+export function ChainLogo({
+  chainName,
+  size,
+  background,
+}: {
+  chainName: string;
+  size?: number;
+  background?: boolean;
+}) {
+  const rest = { size, background } as { size?: number; background?: boolean };
   const { relayChains } = useRelaySupportedChains();
 
-  const { chainId, chainDisplayName, icon } = useMemo(() => {
+  const { chainDisplayName, icon } = useMemo(() => {
     if (!chainName) return {};
     const chainDisplayName = getChainDisplayName(chainName);
     const chainMetadata = tryGetChainMetadata(chainName);
@@ -154,5 +160,14 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
     };
   }, [chainName, relayChains, rest.size]);
 
-  return <ChainLogoInner {...rest} chainId={chainId} chainName={chainDisplayName} icon={icon} />;
+  if (!chainName) return null;
+
+  const FinalIcon = icon || createRelayChainIcon(chainName, rest.size || 32, relayChains);
+  return (
+    <FinalIcon
+      width={rest.size || 32}
+      height={rest.size || 32}
+      title={chainDisplayName || chainName}
+    />
+  );
 }

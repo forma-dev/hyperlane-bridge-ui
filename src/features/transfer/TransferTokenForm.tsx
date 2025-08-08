@@ -424,7 +424,7 @@ function AmountSection({
           <TokenDisplaySection
             chain={values.origin}
             isRelay={isRelayTransfer}
-            selectedToken={transferType === 'deposit' ? values.selectedToken : undefined}
+            selectedToken={transferType === 'deposit' ? (values.selectedToken as any) : undefined}
             transferType={transferType}
             section="convert"
           />

@@ -26,7 +26,7 @@ const IMG_SRC_HOSTS = [
 ];
 const cspHeader = `
   default-src 'self';
-  script-src 'self' https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ''};
+  script-src 'self' https://www.googletagmanager.com${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ''};
   style-src 'self' 'unsafe-inline' ${STYLE_SRC_HOSTS.join(' ')};
   connect-src *;
   img-src 'self' blob: data: ${IMG_SRC_HOSTS.join(' ')};
@@ -70,6 +70,8 @@ const securityHeaders = [
 
 const nextConfig = {
   webpack(config) {
+    // Disable persistent webpack cache to avoid snapshot hangs in some Node versions
+    config.cache = false;
     config.module.rules.push({
       test: /\.ya?ml$/,
       use: 'yaml-loader',
