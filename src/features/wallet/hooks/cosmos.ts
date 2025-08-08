@@ -7,6 +7,7 @@ import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hy
 import { HexString, ProtocolType, assert } from '@hyperlane-xyz/utils';
 
 import { PLACEHOLDER_COSMOS_CHAIN } from '../../../consts/values';
+import { logger } from '../../../utils/logger';
 import { getCosmosChainNames } from '../../chains/metadata';
 import { getChainMetadata } from '../../chains/utils';
 
