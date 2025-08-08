@@ -1,20 +1,49 @@
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 
 import { forma } from '../../../config/chain';
-import { wagmiConfig } from '../../../config/wagmi';
+import { getCurrentWagmiConfig, onConfigUpdate } from '../../../config/wagmi';
 import { config } from '../../../consts/config';
 
 const queryClient = new QueryClient();
 
 export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
+  const [wagmiConfig, setWagmiConfig] = useState(getCurrentWagmiConfig());
+
   const privyAppId = useMemo(() => {
     if (typeof window !== 'undefined' && window.location.hostname.endsWith('bridge.forma.art')) {
       return process.env.NEXT_PUBLIC_PRIVY_APP_ID_PROD;
     }
     return process.env.NEXT_PUBLIC_PRIVY_APP_ID_DEV;
+  }, []);
+
+  useEffect(() => {
+    // Listen for config updates and re-render with new config
+    onConfigUpdate(() => {
+      setWagmiConfig(getCurrentWagmiConfig());
+    });
+  }, []);
+
+  // Add error boundary for Privy analytics errors
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        return await originalFetch(...args);
+      } catch (error) {
+        // Silently handle Privy analytics errors to prevent console spam
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('auth.privy.io')) {
+          return new Response('{}', { status: 200 });
+        }
+        throw error;
+      }
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
   }, []);
 
   return (
@@ -35,7 +64,7 @@ export function EvmWalletContext({ children }: PropsWithChildren<unknown>) {
           createOnLogin: 'users-without-wallets',
         },
         defaultChain: forma,
-        supportedChains: [forma],
+        supportedChains: [forma], // Will be updated dynamically by RelayContext
       }}
     >
       <QueryClientProvider client={queryClient}>

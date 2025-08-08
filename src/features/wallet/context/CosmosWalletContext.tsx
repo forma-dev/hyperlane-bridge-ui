@@ -10,7 +10,7 @@ import { wallets as leapWallets } from '@cosmos-kit/leap-extension';
 import { wallets as leapSnapWallets } from '@cosmos-kit/leap-metamask-cosmos-snap';
 import { ChainProvider } from '@cosmos-kit/react';
 import '@interchain-ui/react/styles';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 
 import { APP_DESCRIPTION, APP_NAME, APP_URL } from '../../../consts/app';
 import { config } from '../../../consts/config';
@@ -25,7 +25,25 @@ const theme = extendTheme({
 
 export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
   const { chains, assets } = getCosmosKitConfig();
-  // const leapWithoutSnap = leapWallets.filter((wallet) => !wallet.walletName.includes('snap'));
+  // Build wallet list defensively to avoid noisy init errors when extensions aren't installed
+  const availableWallets = useMemo(() => {
+    const list: MainWalletBase[] = [];
+    // Keplr
+    list.push(...(keplrWallets as MainWalletBase[]));
+    // Leap extension only if present
+    if (typeof window !== 'undefined' && (window as any).leap) {
+      list.push(...(leapWallets as MainWalletBase[]));
+    }
+    // Leap MetaMask Cosmos Snap only if MetaMask is present
+    if (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask) {
+      list.push(...(leapSnapWallets as MainWalletBase[]));
+    }
+    // MetaMask Cosmos extension only if MetaMask is present
+    if (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask) {
+      list.push(...(mmWallets as MainWalletBase[]));
+    }
+    return list;
+  }, []);
   // TODO replace Chakra here with a custom modal for ChainProvider
   // Using Chakra + @cosmos-kit/react instead of @cosmos-kit/react-lite adds about 600Kb to the bundle
   return (
@@ -33,16 +51,9 @@ export function CosmosWalletContext({ children }: PropsWithChildren<unknown>) {
       <ChainProvider
         chains={chains}
         assetLists={assets}
-        wallets={
-          [
-            ...keplrWallets,
-            //...cosmostationWallets,
-            ...leapWallets,
-            ...leapSnapWallets,
-            ...mmWallets,
-          ] as MainWalletBase[]
-        }
-        throwErrors={true}
+        wallets={availableWallets}
+        // Avoid throwing to the error overlay due to missing extensions in dev
+        throwErrors={false}
         walletConnectOptions={{
           signClient: {
             projectId: config.walletConnectProjectId,

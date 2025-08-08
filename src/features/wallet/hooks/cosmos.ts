@@ -111,7 +111,6 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
 
       // Convert Long objects to strings for amino encoding compatibility
       const processedTransaction = convertLongToString(tx.transaction);
-
       const { getSigningCosmWasmClient, getSigningStargateClient } = chainContext;
       let result: ExecuteResult | DeliverTxResponse;
       let txDetails: IndexedTx | null;
@@ -136,8 +135,8 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
         return {
           type: tx.type,
           receipt: {
-            ...txDetails,
-            transactionHash: result.transactionHash,
+            ...(txDetails as any),
+            transactionHash: String(result.transactionHash),
           },
         };
       };

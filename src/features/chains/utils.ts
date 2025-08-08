@@ -1,19 +1,46 @@
-import { ChainNameOrId, chainMetadata } from '@hyperlane-xyz/sdk';
+import { ChainNameOrId } from '@hyperlane-xyz/sdk';
 import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
+// Import centralized Relay utilities
+import { getRelayChainId } from '../transfer/relaySdk';
+
+import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
+
+export function mapRelayChainToInternalName(relayChainName: string): string {
+  return relayMapChainName(relayChainName);
+}
+
+// Helper function to check if a chain is a Relay chain
+export function isRelayChain(chain: ChainNameOrId): boolean {
+  try {
+    getMultiProvider().getChainMetadata(chain);
+    return false; // If Hyperlane has metadata, it's not a Relay chain
+  } catch (error) {
+    return true; // If Hyperlane doesn't have metadata, assume it's a Relay chain
+  }
+}
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';
+
+  // First try to get from Hyperlane
   const metadata = tryGetChainMetadata(chain);
-  if (!metadata) return 'Unknown';
-  const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
-  return displayName || metadata.displayName || toTitleCase(metadata.name);
+  if (metadata) {
+    const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
+    return displayName || metadata.displayName || toTitleCase(metadata.name);
+  }
+
+  return toTitleCase(chain);
 }
 
 export function isPermissionlessChain(chain: ChainName) {
   if (!chain) return true;
-  return getChainMetadata(chain).protocol === ProtocolType.Ethereum || !chainMetadata[chain];
+  try {
+    return getChainMetadata(chain).protocol === ProtocolType.Ethereum;
+  } catch {
+    return true;
+  }
 }
 
 export function hasPermissionlessChain(ids: ChainName[]) {
@@ -29,19 +56,74 @@ export function getChainByRpcEndpoint(endpoint?: string) {
 }
 
 export function tryGetChainMetadata(chain: ChainNameOrId) {
-  return getMultiProvider().tryGetChainMetadata(chain);
+  // First try to get from Hyperlane
+  const hyperlaneMetadata = getMultiProvider().tryGetChainMetadata(chain);
+  if (hyperlaneMetadata) {
+    return hyperlaneMetadata;
+  }
+
+  // If Hyperlane doesn't have it, check if it's a Relay chain and provide fallback metadata
+  if (isRelayChain(chain)) {
+    const chainStr = typeof chain === 'string' ? chain : chain.toString();
+
+    // Get the correct chain ID from Relay mapping
+    const relayChainIds = getRelayChainId(chainStr);
+    const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+
+    // Create dynamic metadata for any Relay chain
+    return {
+      name: chainStr,
+      displayName: toTitleCase(chainStr),
+      displayNameShort: chainStr.toUpperCase().slice(0, 3),
+      protocol: ProtocolType.Ethereum,
+      chainId,
+      domainId: chainId,
+      nativeToken: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+      rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
+    };
+  }
+
+  return null;
 }
 
 export function getChainMetadata(chain: ChainNameOrId) {
-  return getMultiProvider().getChainMetadata(chain);
+  // First try to get from Hyperlane
+  try {
+    return getMultiProvider().getChainMetadata(chain);
+  } catch (error) {
+    // If Hyperlane doesn't have it, create dynamic Relay chain metadata
+    if (isRelayChain(chain)) {
+      const chainStr = typeof chain === 'string' ? chain : chain.toString();
+
+      // Get the correct chain ID from Relay mapping
+      const relayChainIds = getRelayChainId(chainStr);
+      const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+
+      // Create dynamic metadata for any Relay chain
+      return {
+        name: chainStr,
+        displayName: toTitleCase(chainStr),
+        displayNameShort: chainStr.toUpperCase().slice(0, 3),
+        protocol: ProtocolType.Ethereum,
+        chainId,
+        domainId: chainId,
+        nativeToken: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+        rpcUrls: [{ http: 'https://ethereum.rpc.hyperlane.xyz' }], // Default fallback
+      };
+    }
+    // Re-throw the original error if no fallback is available
+    throw error;
+  }
 }
 
 export function tryGetChainProtocol(chain: ChainNameOrId) {
-  return tryGetChainMetadata(chain)?.protocol;
+  const metadata = tryGetChainMetadata(chain);
+  return metadata?.protocol;
 }
 
 export function getChainProtocol(chain: ChainNameOrId) {
-  return getChainMetadata(chain).protocol;
+  const metadata = getChainMetadata(chain);
+  return metadata.protocol;
 }
 
 export function formatAddress(address: string): string {

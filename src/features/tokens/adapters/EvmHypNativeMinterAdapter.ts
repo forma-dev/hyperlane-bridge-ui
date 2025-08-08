@@ -59,7 +59,7 @@ export class EvmHypNativeMinterAdapter
     txValue = igpAmount + bigintWeiAmountOrId;
 
     const recipBytes32 = addressToBytes32(addressToByteHexString(recipient));
-    return this.contract.populateTransaction.transferRemote(
+    return (this.contract as any).populateTransaction['transferRemote(uint32,bytes32,uint256)'](
       destination,
       recipBytes32,
       weiAmountOrId,

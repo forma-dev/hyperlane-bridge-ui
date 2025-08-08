@@ -8,6 +8,7 @@ import { ErrorBoundary } from '../components/errors/ErrorBoundary';
 import { AppLayout } from '../components/layout/AppLayout';
 import { CosmosWalletContext } from '../features/wallet/context/CosmosWalletContext';
 import { EvmWalletContext } from '../features/wallet/context/EvmWalletContext';
+import { RelayProvider } from '../features/wallet/context/RelayContext';
 import { SolanaWalletContext } from '../features/wallet/context/SolanaWalletContext';
 import '../styles/fonts.css';
 import '../styles/globals.css';
@@ -38,16 +39,18 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary>
-      <EvmWalletContext>
-        <SolanaWalletContext>
-          <CosmosWalletContext>
-            <AppLayout>
-              <Component {...pageProps} />
-            </AppLayout>
-            <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
-          </CosmosWalletContext>
-        </SolanaWalletContext>
-      </EvmWalletContext>
+      <RelayProvider>
+        <EvmWalletContext>
+          <SolanaWalletContext>
+            <CosmosWalletContext>
+              <AppLayout>
+                <Component {...pageProps} />
+              </AppLayout>
+              <ToastContainer transition={Zoom} position={toast.POSITION.BOTTOM_RIGHT} limit={2} />
+            </CosmosWalletContext>
+          </SolanaWalletContext>
+        </EvmWalletContext>
+      </RelayProvider>
     </ErrorBoundary>
   );
 }

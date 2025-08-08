@@ -13,10 +13,17 @@ interface Props {
 }
 
 function _TokenIcon({ token, size = 32 }: Props) {
-  const imageSrc = isValidUrl(token?.logoURI) ? token!.logoURI : null;
   const title = token?.symbol || '';
   const character = title ? title.charAt(0).toUpperCase() : '';
   const fontSize = Math.floor(size / 2);
+
+  // Use proxy API for all external images to avoid CORS/CSP issues
+  const getProxiedImageSrc = (url: string) => {
+    if (!url || !isValidUrl(url)) return null;
+    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  };
+
+  const imageSrc = token?.logoURI ? getProxiedImageSrc(token.logoURI) : null;
 
   const bgColorSeed =
     token && !imageSrc ? (Buffer.from(token.addressOrDenom).at(0) || 0) % 5 : undefined;

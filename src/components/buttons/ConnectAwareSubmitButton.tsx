@@ -25,14 +25,30 @@ export function ConnectAwareSubmitButton<FormValues = any>({
 }: Props) {
   const { values } = useFormikContext<TransferFormValues>();
   // Flag for if form is in input vs review mode
+
   const [isReview, setIsReview] = useState(false);
 
   const protocol = tryGetChainProtocol(chainName) || ProtocolType.Ethereum;
   const connectFns = useConnectFns();
   const connectFn = connectFns[protocol];
 
-  const account = useAccountForChain(chainName);
-  const isAccountReady = account?.isReady;
+  // Check both origin and destination accounts
+  const originAccount = useAccountForChain(values.origin);
+  const destinationAccount = useAccountForChain(values.destination);
+  const isOriginReady = originAccount?.isReady;
+  const isDestinationReady = destinationAccount?.isReady;
+
+  // Determine transfer type based on form values
+  const isDeposit = values.destination === 'forma' || values.destination === 'sketchpad'; // TO Forma
+  const isWithdrawal = values.origin === 'forma' || values.origin === 'sketchpad'; // FROM Forma
+
+  // For deposits/withdrawals with manual address, we need origin wallet + (destination wallet OR manual recipient address)
+  // For other transfers, we need both wallets connected
+  const hasValidRecipient = values.recipient && values.recipient.trim().length > 0;
+  const isAccountReady =
+    isDeposit || isWithdrawal
+      ? isOriginReady && (isDestinationReady || hasValidRecipient)
+      : isOriginReady && isDestinationReady;
 
   const { errors, setErrors, touched, setTouched } = useFormikContext<FormValues>();
 
