@@ -91,6 +91,5 @@
     "test": "jest --passWithNoTests",
     "prettier": "prettier --write ./src"
   },
-  "types": "dist/src/index.d.ts",
-  "resolutions": {}
+  "types": "dist/src/index.d.ts"
 }
