@@ -305,7 +305,13 @@ function ChainSelectSection({
   );
 }
 
-function RecipientAddressField({ isReview, transferType }: { isReview: boolean; transferType: string }) {
+function RecipientAddressField({
+  isReview,
+  transferType,
+}: {
+  isReview: boolean;
+  transferType: string;
+}) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
 
   const destinationChain = values.destination;
@@ -348,7 +354,9 @@ function RecipientAddressField({ isReview, transferType }: { isReview: boolean; 
           onClick={onSelf}
           disabled={isReview || !destinationAccount}
           className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold underline ${
-            isReview || !destinationAccount ? 'text-secondary cursor-not-allowed' : 'text-primary hover:opacity-80'
+            isReview || !destinationAccount
+              ? 'text-secondary cursor-not-allowed'
+              : 'text-primary hover:opacity-80'
           }`}
         >
           SELF
@@ -375,11 +383,7 @@ function AmountSection({
   const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(
-    values.origin,
-    values.destination,
-    relayChains,
-  );
+  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
 
   return (
     <div className="flex-1">
@@ -417,8 +421,8 @@ function AmountSection({
             }`}
             style={{ borderLeftWidth: '0.5px' }}
           ></div>
-          <TokenDisplaySection 
-            chain={values.origin} 
+          <TokenDisplaySection
+            chain={values.origin}
             isRelay={isRelayTransfer}
             selectedToken={transferType === 'deposit' ? values.selectedToken : undefined}
             transferType={transferType}
@@ -429,7 +433,7 @@ function AmountSection({
       <div className="pt-1 flex items-center justify-between">
         <div className="min-h-[1rem]">
           {isRelayTransfer && (
-            <QuoteErrorDisplay 
+            <QuoteErrorDisplay
               originChain={values.origin}
               destinationChain={values.destination}
               amount={values.amount}
@@ -571,15 +575,11 @@ function ButtonSection({
   const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(
-    values.origin,
-    values.destination,
-    relayChains,
-  );
+  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
 
   // Get user address for origin chain
   const userAddress = useAccountAddressForChain(values.origin) || '';
-  
+
   // Get recipient address - always call the hook, handle errors in the quote
   const destinationAddress = useAccountAddressForChain(values.destination) || '';
   const recipientAddress = destinationAddress || userAddress;
@@ -598,8 +598,6 @@ function ButtonSection({
 
   // Disable button if there's a quote error for Relay transfers
   const isDisabled = isRelayTransfer && !!quoteError;
-  
-
 
   const onDoneTransactions = () => {
     setIsReview(false);
@@ -713,10 +711,10 @@ function ReviewDetails({ visible }: { visible: boolean }) {
 
   // For Relay transfers, get fee information from Relay quote
   const user = useAccountAddressForChain(values.origin);
-  
+
   // Get destination user - always call the hook
   const destinationUser = useAccountAddressForChain(values.destination) || user;
-  
+
   const recipient = values.recipient || destinationUser || '';
 
   // Determine transfer type based on origin and destination
@@ -728,9 +726,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
     }
     return '';
   })();
-  
-  
-  
+
   const { estimatedOutput } = useRelayQuote({
     originChain: values.origin,
     destinationChain: values.destination,
@@ -745,10 +741,10 @@ function ReviewDetails({ visible }: { visible: boolean }) {
   // Extract fee information from Relay quote if available
   const relayQuote = estimatedOutput?.quote;
   const relayFees = relayQuote?.fees;
-  
+
   // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
   const [depositFees, setDepositFees] = useState(null);
-  
+
   useEffect(() => {
     if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
       const fetchDepositFees = async () => {
@@ -774,8 +770,9 @@ function ReviewDetails({ visible }: { visible: boolean }) {
 
             const decimals = values.selectedToken?.decimals ?? 18;
             const amountWei = (
-              parseFloat(typeof values.amount === 'string' ? values.amount : String(values.amount)) *
-              Math.pow(10, decimals)
+              parseFloat(
+                typeof values.amount === 'string' ? values.amount : String(values.amount),
+              ) * Math.pow(10, decimals)
             ).toString();
 
             const quote = await client.actions.getQuote({
@@ -797,8 +794,17 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       };
       fetchDepositFees();
     }
-  }, [transferType, values.amount, values.origin, values.destination, values.selectedToken, user, recipient, estimatedOutput]);
-  
+  }, [
+    transferType,
+    values.amount,
+    values.origin,
+    values.destination,
+    values.selectedToken,
+    user,
+    recipient,
+    estimatedOutput,
+  ]);
+
   // Use depositFees for deposits if relayFees is not available
   const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
 
@@ -863,7 +869,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
                 <span className="text-right text-primary text-14px font-bold min-w-[7rem]">
                   {(() => {
                     const amount = parseFloat(finalRelayFees.relayer.amountFormatted);
-                                          const symbol = finalRelayFees.relayer.currency?.symbol || 'Unknown';
+                    const symbol = finalRelayFees.relayer.currency?.symbol || 'Unknown';
                     const formattedAmount = amount.toFixed(6);
                     const usdValue = finalRelayFees.relayer.amountUsd
                       ? `(~$${parseFloat(finalRelayFees.relayer.amountUsd).toFixed(2)})`
@@ -1257,7 +1263,7 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
           className={`h-full border-l border-[#8C8D8F] ${!isReview && 'group-hover:border-black'}`}
           style={{ borderLeftWidth: '0.5px' }}
         ></div>
-        <TokenDisplaySection 
+        <TokenDisplaySection
           chain={values.destination}
           isRelay={isUsingRelay}
           selectedToken={transferType === 'withdraw' ? values.selectedToken : undefined}
@@ -1277,15 +1283,15 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
   );
 }
 
-function TokenDisplaySection({ 
-  chain, 
-  isRelay, 
-  selectedToken, 
+function TokenDisplaySection({
+  chain,
+  isRelay,
+  selectedToken,
   transferType,
-  section
-}: { 
-  chain: string; 
-  isRelay: boolean; 
+  section,
+}: {
+  chain: string;
+  isRelay: boolean;
   selectedToken?: {
     address: string;
     symbol: string;
@@ -1321,7 +1327,13 @@ function TokenDisplaySection({
   }
 
   // For withdrawals: only the receive section should show selected token (but only for Relay chains)
-  if (transferType === 'withdraw' && section === 'receive' && selectedToken && selectedToken.symbol && isRelay) {
+  if (
+    transferType === 'withdraw' &&
+    section === 'receive' &&
+    selectedToken &&
+    selectedToken.symbol &&
+    isRelay
+  ) {
     return (
       <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         {selectedToken.logoURI ? (
@@ -1335,7 +1347,9 @@ function TokenDisplaySection({
         ) : (
           <ChainLogo chainName={chain} size={24} />
         )}
-        <span className="text-sm font-medium text-gray-700">{formatTokenSymbol(selectedToken.symbol)}</span>
+        <span className="text-sm font-medium text-gray-700">
+          {formatTokenSymbol(selectedToken.symbol)}
+        </span>
       </div>
     );
   }
@@ -1419,7 +1433,9 @@ function TokenDisplaySection({
         ) : (
           <ChainLogo chainName={chain} size={24} />
         )}
-        <span className="text-sm font-medium text-gray-700">{formatTokenSymbol(selectedToken.symbol)}</span>
+        <span className="text-sm font-medium text-gray-700">
+          {formatTokenSymbol(selectedToken.symbol)}
+        </span>
       </div>
     );
   }
@@ -1436,17 +1452,17 @@ function TokenDisplaySection({
   );
 }
 
-function QuoteErrorDisplay({ 
-  originChain, 
-  destinationChain, 
-  amount, 
-  transferType, 
-  selectedToken 
-}: { 
-  originChain: string; 
-  destinationChain: string; 
-  amount: string; 
-  transferType: string; 
+function QuoteErrorDisplay({
+  originChain,
+  destinationChain,
+  amount,
+  transferType,
+  selectedToken,
+}: {
+  originChain: string;
+  destinationChain: string;
+  amount: string;
+  transferType: string;
   selectedToken?: {
     address: string;
     symbol: string;
@@ -1457,13 +1473,13 @@ function QuoteErrorDisplay({
   };
 }) {
   const { relayChains } = useRelaySupportedChains();
-  
+
   // Get user address for the origin chain
   const user = useAccountAddressForChain(originChain);
-  
+
   // Get user address for the destination chain - always call the hook
   const destinationUser = useAccountAddressForChain(destinationChain) || user;
-  
+
   // For both deposits and withdraws, use destination user address as recipient if no recipient is set
   const recipient = destinationUser || '';
 
@@ -1484,11 +1500,7 @@ function QuoteErrorDisplay({
     return null;
   }
 
-  return (
-    <div className="text-red-500 text-[12px]">
-      {error}
-    </div>
-  );
+  return <div className="text-red-500 text-[12px]">{error}</div>;
 }
 
 // (unused) ChainLogoSection removed

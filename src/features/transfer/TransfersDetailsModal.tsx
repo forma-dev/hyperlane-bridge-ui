@@ -16,10 +16,10 @@ import { getHypExplorerLink } from '../../utils/links';
 import { logger } from '../../utils/logger';
 import { useTimeout } from '../../utils/timeout';
 import {
-    getIconByTransferStatus,
-    getTransferStatusLabel,
-    isTransferFailed,
-    isTransferSent,
+  getIconByTransferStatus,
+  getTransferStatusLabel,
+  isTransferFailed,
+  isTransferSent,
 } from '../../utils/transfer';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { getChainDisplayName, hasPermissionlessChain } from '../chains/utils';
@@ -115,14 +115,16 @@ export function TransfersDetailsModal({
     // Check for Relay tokens - now dynamic from API
     const relayTokenAddresses: string[] = [];
 
-    const hasRelayToken = originTokenAddressOrDenom ? relayTokenAddresses.includes(originTokenAddressOrDenom) : false;
+    const hasRelayToken = originTokenAddressOrDenom
+      ? relayTokenAddresses.includes(originTokenAddressOrDenom)
+      : false;
 
     // Check for Relay chains using dynamic relayChains
-    const originIsRelay = relayChains.some(chain => 
-      mapRelayChainToInternalName(chain.name) === origin.toLowerCase()
+    const originIsRelay = relayChains.some(
+      (chain) => mapRelayChainToInternalName(chain.name) === origin.toLowerCase(),
     );
-    const destinationIsRelay = relayChains.some(chain => 
-      mapRelayChainToInternalName(chain.name) === destination.toLowerCase()
+    const destinationIsRelay = relayChains.some(
+      (chain) => mapRelayChainToInternalName(chain.name) === destination.toLowerCase(),
     );
 
     // Check for Forma involvement (Relay bridge)
@@ -140,9 +142,9 @@ export function TransfersDetailsModal({
   // - Deposits (Relay -> Forma): show the selected token symbol saved in transfer context
   //   (fallback to Relay native symbol if missing)
   const relayTokenSymbol = isRelayTransfer
-    ? ((origin === 'forma' || origin === 'sketchpad')
-        ? 'TIA'
-        : (transfer.originTokenAddressOrDenom || getNativeCurrencySymbol(origin, relayChains)))
+    ? origin === 'forma' || origin === 'sketchpad'
+      ? 'TIA'
+      : transfer.originTokenAddressOrDenom || getNativeCurrencySymbol(origin, relayChains)
     : undefined;
 
   // For non-Relay transfers, use warp core to find token with error handling
@@ -299,25 +301,29 @@ export function TransfersDetailsModal({
             />
           )}
           {msgId && <TransferProperty name="Message ID" value={msgId} />}
-          
+
           {/* Show fee information for Relay transfers */}
           {isRelayTransfer && transfer.fees && (
             <>
               {transfer.fees.gas && (
                 <TransferProperty
                   name="Gas Fee"
-                  value={`${transfer.fees.gas.amountFormatted || '0'} ${transfer.fees.gas.currency?.symbol || 'Unknown'}`}
+                  value={`${transfer.fees.gas.amountFormatted || '0'} ${
+                    transfer.fees.gas.currency?.symbol || 'Unknown'
+                  }`}
                 />
               )}
               {transfer.fees.relayer && (
                 <TransferProperty
                   name="Relay Fee"
-                  value={`${transfer.fees.relayer.amountFormatted || '0'} ${transfer.fees.relayer.currency?.symbol || 'Unknown'}`}
+                  value={`${transfer.fees.relayer.amountFormatted || '0'} ${
+                    transfer.fees.relayer.currency?.symbol || 'Unknown'
+                  }`}
                 />
               )}
             </>
           )}
-          
+
           {explorerLink && !isRelayTransfer && (
             <div className="flex justify-between">
               <span className="text-gray-350 text-xs leading-normal tracking-wider">

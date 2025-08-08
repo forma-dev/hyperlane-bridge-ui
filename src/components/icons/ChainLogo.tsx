@@ -34,11 +34,11 @@ function createRelayChainIcon(chainName: string, _size: number, relayChains?: an
       }}
       title={props.title}
     >
-              {(currencyInfo?.symbol || 'Unknown').slice(0, 3)}
+      {(currencyInfo?.symbol || 'Unknown').slice(0, 3)}
     </div>
   );
 
-      RelayChainIcon.displayName = `RelayChainIcon-${currencyInfo?.symbol || 'Unknown'}`;
+  RelayChainIcon.displayName = `RelayChainIcon-${currencyInfo?.symbol || 'Unknown'}`;
 
   return RelayChainIcon;
 }
@@ -103,7 +103,12 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
     // For Forma, prioritize local logo over Relay's logo
     const shouldUseLocalLogo = chainName === 'forma' || chainName === 'sketchpad';
 
-    if (shouldUseLocalLogo && chainMetadata?.logoURI) {
+    if (
+      shouldUseLocalLogo &&
+      chainMetadata &&
+      'logoURI' in chainMetadata &&
+      chainMetadata.logoURI
+    ) {
       // Use local logo for Forma/Sketchpad
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image
@@ -126,7 +131,7 @@ export function ChainLogo(props: ComponentProps<typeof ChainLogoInner>) {
           title={props.title}
         />
       );
-    } else if (chainMetadata?.logoURI) {
+    } else if (chainMetadata && 'logoURI' in chainMetadata && chainMetadata.logoURI) {
       // Use logoURI from Hyperlane metadata for other chains
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image

@@ -4,8 +4,7 @@ import { http } from 'wagmi';
 import { forma } from './chain';
 
 // We'll dynamically add Relay chains at runtime
-let dynamicConfig: any = null;
-let configUpdateCallback: (() => void) | null = null;
+const dynamicConfig: any = null;
 
 export function getDynamicWagmiConfig() {
   if (dynamicConfig) {
@@ -57,16 +56,15 @@ export function getDynamicWagmiConfig() {
   });
 }
 
-export function updateWagmiConfigWithRelayChains(relayChains: any[]) {
+export function updateWagmiConfigWithRelayChains(_relayChains: any[]) {
   // No-op: we now seed a stable set of chains at startup to avoid remounting WagmiProvider
   return getDynamicWagmiConfig();
 }
 
 export const wagmiConfig = getDynamicWagmiConfig();
 
-export function onConfigUpdate(callback: () => void) {
-  configUpdateCallback = callback;
-}
+// Kept for backwards compatibility; no-op with seeded config
+export function onConfigUpdate(_callback: () => void) {}
 
 export function getCurrentWagmiConfig() {
   return dynamicConfig || getDynamicWagmiConfig();

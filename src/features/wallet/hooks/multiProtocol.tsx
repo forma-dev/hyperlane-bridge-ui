@@ -9,25 +9,25 @@ import { logger } from '../../../utils/logger';
 import { getChainProtocol, tryGetChainProtocol } from '../../chains/utils';
 
 import {
-    useCosmosAccount,
-    useCosmosActiveChain,
-    useCosmosConnectFn,
-    useCosmosDisconnectFn,
-    useCosmosTransactionFns,
+  useCosmosAccount,
+  useCosmosActiveChain,
+  useCosmosConnectFn,
+  useCosmosDisconnectFn,
+  useCosmosTransactionFns,
 } from './cosmos';
 import {
-    useEvmAccount,
-    useEvmActiveChain,
-    useEvmConnectFn,
-    useEvmDisconnectFn,
-    useEvmTransactionFns,
+  useEvmAccount,
+  useEvmActiveChain,
+  useEvmConnectFn,
+  useEvmDisconnectFn,
+  useEvmTransactionFns,
 } from './evm';
 import {
-    useSolAccount,
-    useSolActiveChain,
-    useSolConnectFn,
-    useSolDisconnectFn,
-    useSolTransactionFns,
+  useSolAccount,
+  useSolActiveChain,
+  useSolConnectFn,
+  useSolDisconnectFn,
+  useSolTransactionFns,
 } from './solana';
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 

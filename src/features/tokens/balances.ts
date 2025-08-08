@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 
-
 import { IToken } from '@hyperlane-xyz/sdk';
 import { isValidAddress } from '@hyperlane-xyz/utils';
 
@@ -12,7 +11,7 @@ import { mapRelayChainToInternalName as relayMapChainName } from '../chains/rela
 import { TransferFormValues } from '../transfer/types';
 import { getRelayBalance } from '../wallet/context/RelayClient';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
-import { useAccountAddressForChain, useAccounts } from '../wallet/hooks/multiProtocol';
+import { useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
 
 // Helper function to determine if a chain is a Relay chain
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
@@ -47,7 +46,7 @@ function getChainIdForRelayChain(chainName: string, relayChains?: any[]): number
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName === chainName.toLowerCase();
     });
-    
+
     if (relayChain?.id) {
       return relayChain.id;
     }
@@ -57,14 +56,14 @@ function getChainIdForRelayChain(chainName: string, relayChains?: any[]): number
   return undefined;
 }
 
-
-
 // Dynamic balance hook using Relay API for any chain
-export function useDynamicRelayBalance(chain?: ChainName, address?: Address, selectedTokenAddress?: string) {
+export function useDynamicRelayBalance(
+  chain?: ChainName,
+  address?: Address,
+  selectedTokenAddress?: string,
+) {
   const { relayChains } = useRelaySupportedChains();
   const chainId = chain ? getChainIdForRelayChain(chain, relayChains) : undefined;
-
-
 
   const {
     data: relayBalance,
@@ -95,8 +94,6 @@ export function useDynamicRelayBalance(chain?: ChainName, address?: Address, sel
         },
       }
     : null;
-
-
 
   return {
     isLoading,
@@ -129,11 +126,7 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
   const address = useAccountAddressForChain(origin);
   const token = getTokenByIndex(tokenIndex);
   const { relayChains } = useRelaySupportedChains();
-  const { accounts } = useAccounts();
-
-
-
-
+  // accounts not used
 
   // Check if this is a Relay chain
   const isRelayOrigin = isRelayChain(origin, relayChains);
@@ -141,17 +134,16 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
   const isFormaWithdrawal = origin === 'forma' || origin === 'sketchpad';
 
   // For Relay transfers (excluding ALL Forma withdrawals), use Relay balance fetching
-  
+
   // Use dynamic balance fetching for ALL Relay chains
-  const chainId = getChainIdForRelayChain(origin, relayChains);
-  
+
   // Use dynamic API balance for all Relay chains
   const dynamicBalance = useDynamicRelayBalance(
     isRelayOrigin && !isFormaWithdrawal ? origin : undefined,
     address,
     values.selectedToken?.address,
   );
-  
+
   // Use dynamic balance for all Relay chains
   const relayBalance = dynamicBalance;
 
@@ -194,7 +186,7 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
 
   // Check if wallet is connected
   const isWalletConnected = address && address !== '0x0000000000000000000000000000000000000000';
-  
+
   // Return the appropriate balance based on transfer type
   // For deposits from Hyperlane chains (Celestia/Forma) to Relay chains, always use Hyperlane balance
   // For withdrawals from Relay chains to Hyperlane chains, use Relay balance
@@ -226,19 +218,18 @@ export function useDestinationBalance(values: TransferFormValues, transferType?:
   const shouldUseRelayBalance = isDestinationRelay && !isFormaDestination;
 
   // Use dynamic balance fetching for ALL Relay chains
-  const chainId = getChainIdForRelayChain(destination, relayChains);
-  
+
   // For deposits: destination should always show Forma TIA balance
   // For withdrawals: destination should show selected token balance
   const tokenAddressToUse = transferType === 'deposit' ? undefined : selectedToken?.address;
-  
+
   // Use dynamic API balance for all Relay chains
   const dynamicBalance = useDynamicRelayBalance(
     shouldUseRelayBalance ? destination : undefined,
     destinationWalletAddress,
     tokenAddressToUse, // Use Forma TIA for deposits, selected token for withdrawals
   );
-  
+
   // Use dynamic balance for all Relay chains
   const relayBalance = dynamicBalance;
 
@@ -263,8 +254,10 @@ export function useDestinationBalance(values: TransferFormValues, transferType?:
   );
 
   // Check if wallet is connected
-  const isWalletConnected = destinationWalletAddress && destinationWalletAddress !== '0x0000000000000000000000000000000000000000';
-  
+  const isWalletConnected =
+    destinationWalletAddress &&
+    destinationWalletAddress !== '0x0000000000000000000000000000000000000000';
+
   // Return the appropriate balance based on chain type
   if (!isWalletConnected) {
     return { balance: null };

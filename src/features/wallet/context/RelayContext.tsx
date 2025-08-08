@@ -1,28 +1,28 @@
 import {
-    PropsWithChildren,
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 
 import { updateWagmiConfigWithRelayChains } from '../../../config/wagmi';
 import { logger } from '../../../utils/logger';
 // Import centralized Relay utilities
 import {
-    getRelayChainNames as relayGetChainNames,
-    mapRelayChainToInternalName as relayMapChainName,
+  getRelayChainNames as relayGetChainNames,
+  mapRelayChainToInternalName as relayMapChainName,
 } from '../../chains/relayUtils';
 
 import {
-    getAllAvailableChains,
-    getCurrenciesV2,
-    getRelayClient,
-    initializeRelayClient,
-    isRelayClientReady,
-    setupDynamicChains,
+  getAllAvailableChains,
+  getCurrenciesV2,
+  getRelayClient,
+  initializeRelayClient,
+  isRelayClientReady,
+  setupDynamicChains,
 } from './RelayClient';
 
 // Types for chain configuration (keeping existing interface for compatibility)
@@ -104,11 +104,11 @@ function convertRelayChainToWagmiFormat(chain: RelayChain) {
   // For Relay chains, we need to construct a proper RPC URL
   // Most Relay chains will have their RPC URLs available through the Relay SDK
   let rpcUrl = 'https://rpc.ankr.com/eth'; // Default fallback
-  
+
   // Map known chain IDs to their proper RPC URLs
   const chainRpcMap: Record<number, string> = {
     1: 'https://rpc.ankr.com/eth',
-    10: 'https://rpc.ankr.com/optimism', 
+    10: 'https://rpc.ankr.com/optimism',
     56: 'https://rpc.ankr.com/bsc',
     137: 'https://rpc.ankr.com/polygon',
     250: 'https://rpc.ankr.com/fantom',
@@ -116,11 +116,11 @@ function convertRelayChainToWagmiFormat(chain: RelayChain) {
     43114: 'https://rpc.ankr.com/avalanche',
     42161: 'https://rpc.ankr.com/arbitrum',
   };
-  
+
   if (chainRpcMap[chain.id]) {
     rpcUrl = chainRpcMap[chain.id];
   }
-  
+
   return {
     id: chain.id,
     name: chain.name,
@@ -164,8 +164,6 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
   const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
 
-
-
   // Initialize Relay client
   useEffect(() => {
     const initClient = async () => {
@@ -175,7 +173,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         setClient(relayClient);
 
         // Wait a bit for the client to fully initialize
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Setup dynamic chains with error handling
         try {
@@ -203,10 +201,10 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
 
       // First try to get chains directly from the Relay API
       const directChains = await getAllAvailableChains();
-      
+
       // Get currencies from v2 API
       const currenciesV2 = await getCurrenciesV2();
-      
+
       if (directChains && directChains.length > 0) {
         // Convert direct API chains to our format
         const directFormattedChains: RelayChain[] = directChains
@@ -220,17 +218,17 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           })
           .map((chain: any) => {
             // Get currencies for this specific chain from the v2 API
-            const chainCurrencies = currenciesV2.filter((currency: any) => 
-              currency.chainId === chain.id
+            const chainCurrencies = currenciesV2.filter(
+              (currency: any) => currency.chainId === chain.id,
             );
-            
-            // Remove duplicates by address
-            const uniqueCurrencies = chainCurrencies.filter((currency, index, self) => 
-              index === self.findIndex(c => c.address.toLowerCase() === currency.address.toLowerCase())
-            );
-            
 
-            
+            // Remove duplicates by address
+            const uniqueCurrencies = chainCurrencies.filter(
+              (currency, index, self) =>
+                index ===
+                self.findIndex((c) => c.address.toLowerCase() === currency.address.toLowerCase()),
+            );
+
             return {
               id: chain.id,
               name: chain.name,
@@ -259,17 +257,14 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
                 decimals: currency.decimals,
                 supportsBridging: true, // Assume they support bridging
                 metadata: currency.metadata,
-                source: 'v2-api'
+                source: 'v2-api',
               })),
               viemChain: null,
-              
-
             };
           });
 
-
         setRelayChains(directFormattedChains);
-        
+
         // Update Wagmi config with the fetched chains
         updateWagmiConfigWithRelayChains(directFormattedChains.map(convertRelayChainToWagmiFormat));
         return;
@@ -313,7 +308,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
           }));
 
         setRelayChains(formattedChains);
-        
+
         // Update Wagmi config with the fetched chains
         updateWagmiConfigWithRelayChains(formattedChains.map(convertRelayChainToWagmiFormat));
         return;
@@ -378,7 +373,8 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
     if (isReady && client) {
       fetchDynamicChains();
     }
-  }, [isReady, client, fetchDynamicChains]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, client]);
 
   // Context value
   const contextValue = useMemo(

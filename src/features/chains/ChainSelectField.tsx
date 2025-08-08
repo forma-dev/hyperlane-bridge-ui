@@ -7,10 +7,10 @@ import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    useAccountAddressForChain,
-    useAccounts,
-    useConnectFns,
-    useDisconnectFns,
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
@@ -75,7 +75,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     (newChainId: ChainName, token?: any) => {
       helpers.setValue(newChainId);
       onChange?.(newChainId);
-      
+
       // If a token was selected, update the form with token details
       if (token) {
         const tokenData = {
@@ -84,9 +84,9 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           name: token.name,
           decimals: token.decimals,
           logoURI: token.metadata?.logoURI,
-          chainId: relayChains.find(rc => 
-            mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase()
-          )?.id
+          chainId: relayChains.find(
+            (rc) => mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase(),
+          )?.id,
         };
         setFieldValue('selectedToken', tokenData);
       }

@@ -2,9 +2,9 @@ import { ChainNameOrId, chainMetadata } from '@hyperlane-xyz/sdk';
 import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
-
 // Import centralized Relay utilities
 import { getRelayChainId } from '../transfer/relaySdk';
+
 import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
 
 export function mapRelayChainToInternalName(relayChainName: string): string {
@@ -23,14 +23,14 @@ export function isRelayChain(chain: ChainNameOrId): boolean {
 
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';
-  
+
   // First try to get from Hyperlane
   const metadata = tryGetChainMetadata(chain);
   if (metadata) {
     const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
     return displayName || metadata.displayName || toTitleCase(metadata.name);
   }
-  
+
   return toTitleCase(chain);
 }
 
@@ -61,11 +61,11 @@ export function tryGetChainMetadata(chain: ChainNameOrId) {
   // If Hyperlane doesn't have it, check if it's a Relay chain and provide fallback metadata
   if (isRelayChain(chain)) {
     const chainStr = typeof chain === 'string' ? chain : chain.toString();
-    
+
     // Get the correct chain ID from Relay mapping
     const relayChainIds = getRelayChainId(chainStr);
     const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
-    
+
     // Create dynamic metadata for any Relay chain
     return {
       name: chainStr,
@@ -90,11 +90,11 @@ export function getChainMetadata(chain: ChainNameOrId) {
     // If Hyperlane doesn't have it, create dynamic Relay chain metadata
     if (isRelayChain(chain)) {
       const chainStr = typeof chain === 'string' ? chain : chain.toString();
-      
+
       // Get the correct chain ID from Relay mapping
       const relayChainIds = getRelayChainId(chainStr);
       const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
-      
+
       // Create dynamic metadata for any Relay chain
       return {
         name: chainStr,

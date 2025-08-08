@@ -1,9 +1,10 @@
 import {
-    MAINNET_RELAY_API,
-    TESTNET_RELAY_API,
-    configureDynamicChains,
-    createClient,
+  MAINNET_RELAY_API,
+  TESTNET_RELAY_API,
+  configureDynamicChains,
+  createClient,
 } from '@reservoir0x/relay-sdk';
+
 import { logger } from '../../../utils/logger';
 
 // Environment-based configuration
@@ -56,23 +57,23 @@ export async function getAllAvailableChains() {
   try {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
     const baseUrl = isMainnet ? MAINNET_RELAY_API : TESTNET_RELAY_API;
-    
+
     // This is a direct API call to get all available chains
     const response = await fetch(`${baseUrl}/chains`);
     if (response.ok) {
       const data = await response.json();
-      
+
       // The API returns an object with a 'chains' property containing the array
       const chains = data.chains || [];
-      
+
       // Filter to only enabled chains
-      const enabledChains = chains.filter((chain: any) => 
-        chain.enabled !== false && !chain.disabled
+      const enabledChains = chains.filter(
+        (chain: any) => chain.enabled !== false && !chain.disabled,
       );
-      
+
       return enabledChains;
     }
-    
+
     return [];
   } catch (error) {
     logger.error('Failed to get chains from direct API', error);
@@ -85,17 +86,17 @@ export async function getCurrenciesV2(chainIds?: number[]) {
   try {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
     const baseUrl = isMainnet ? MAINNET_RELAY_API : TESTNET_RELAY_API;
-    
+
     // Minimal request body with only required parameters + chainIds
     const requestBody: any = {
-      limit: 100
+      limit: 100,
     };
-    
+
     // Add chainIds if provided
     if (chainIds && chainIds.length > 0) {
       requestBody.chainIds = chainIds;
     }
-    
+
     const response = await fetch(`${baseUrl}/currencies/v2`, {
       method: 'POST',
       headers: {
@@ -103,12 +104,15 @@ export async function getCurrenciesV2(chainIds?: number[]) {
       },
       body: JSON.stringify(requestBody),
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       return data;
     } else {
-      logger.error('Failed to fetch currencies', new Error(`${response.status} ${response.statusText}`));
+      logger.error(
+        'Failed to fetch currencies',
+        new Error(`${response.status} ${response.statusText}`),
+      );
       return [];
     }
   } catch (error) {
@@ -135,7 +139,7 @@ export function isRelayClientReady(): boolean {
 export async function getRelayBalance(
   chainId: number,
   address: string,
-  tokenAddress?: string
+  tokenAddress?: string,
 ): Promise<{
   balance: string;
   decimals: number;
@@ -146,28 +150,26 @@ export async function getRelayBalance(
     // Use Relay SDK's configureDynamicChains to get all supported chains with their RPC URLs
     const { configureDynamicChains } = await import('@reservoir0x/relay-sdk');
     const { ethers } = await import('ethers');
-    
+
     // Get all dynamically configured chains
     const dynamicChains = await configureDynamicChains();
-    
+
     // Find the chain for this chainId
-    const chain = dynamicChains.find(chain => chain.viemChain?.id === chainId);
-    
+    const chain = dynamicChains.find((chain) => chain.viemChain?.id === chainId);
+
     if (!chain || !chain.viemChain) {
       logger.error('No dynamic chain found for chainId', new Error(String(chainId)));
       return null;
     }
-    
+
     // Get the RPC URL from the viemChain
     const rpcUrl = chain.viemChain.rpcUrls.default.http[0];
-    
+
     if (!rpcUrl) {
       logger.error('No RPC URL found in dynamic chain for chainId', new Error(String(chainId)));
       return null;
     }
-    
 
-    
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
     let balance: string;
@@ -185,7 +187,7 @@ export async function getRelayBalance(
           'function symbol() view returns (string)',
           'function name() view returns (string)',
         ],
-        provider
+        provider,
       );
 
       const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([

@@ -58,7 +58,6 @@ export function useRelayQuote({
   const { getQuote, isReady } = useRelayContext();
 
   const getRelayQuoteData = useCallback(async () => {
-    
     // Simple check to prevent quote requests when amount is being cleared
     if (!amount || (typeof amount === 'string' && amount.trim() === '') || amount === '') {
       setEstimatedOutput(null);
@@ -91,8 +90,7 @@ export function useRelayQuote({
 
     // Check if this is a Relay-supported transfer based on the current transfer type
     let isRelayTransfer = false;
-    
-    
+
     if (transferType === 'deposit') {
       // For deposits: Check if destination is Forma and origin is a Relay chain
       const isToForma = destinationChain === 'forma' || destinationChain === 'sketchpad';
@@ -112,14 +110,12 @@ export function useRelayQuote({
     }
 
     // Only get quotes for Relay transfers
-    
+
     if (!isRelayTransfer) {
       setEstimatedOutput(null);
       setError(null);
       return;
     }
-
-
 
     // Check if the specific transfer is supported by Relay
     if (transferType === 'deposit') {
@@ -165,8 +161,8 @@ export function useRelayQuote({
       destinationChain === 'sketchpad';
 
     if (isFormaInvolved) {
-              // Check supported chains
-        try {
+      // Check supported chains
+      try {
         const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
         const formaSupported = supportedChains.find(
@@ -213,43 +209,50 @@ export function useRelayQuote({
     currentRequestRef.current = requestId;
 
     try {
-
-      
       // Determine currencies based on transfer type
       let originCurrency, destinationCurrency;
-      
+
       if (transferType === 'deposit') {
         // Deposit: Relay token -> Forma TIA
-        originCurrency = selectedToken?.address || 
-                        selectedToken?.currency || 
-                        selectedToken?.contractAddress ||
-                        getNativeCurrency(originChain);
-        
+        originCurrency =
+          selectedToken?.address ||
+          selectedToken?.currency ||
+          selectedToken?.contractAddress ||
+          getNativeCurrency(originChain);
+
         // Only use zero address for actual native tokens (ETH), not ERC20 tokens
-        if (selectedToken?.symbol === 'ETH' && selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+        if (
+          selectedToken?.symbol === 'ETH' &&
+          selectedToken?.address === '0x0000000000000000000000000000000000000000'
+        ) {
           originCurrency = '0x0000000000000000000000000000000000000000';
         }
-        
+
         // Destination is Forma/Sketchpad native TIA -> use zero address per Relay expectations
-        destinationCurrency = (destinationChain === 'forma' || destinationChain === 'sketchpad')
-          ? '0x0000000000000000000000000000000000000000'
-          : getNativeCurrency(destinationChain);
+        destinationCurrency =
+          destinationChain === 'forma' || destinationChain === 'sketchpad'
+            ? '0x0000000000000000000000000000000000000000'
+            : getNativeCurrency(destinationChain);
       } else {
         // Withdraw: Forma TIA -> Relay token
         // For withdrawals, we're sending TIA from Forma to get OP on Optimism
         originCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
-        
-        destinationCurrency = selectedToken?.address || 
-                             selectedToken?.currency || 
-                             selectedToken?.contractAddress ||
-                             getNativeCurrency(destinationChain);
-        
+
+        destinationCurrency =
+          selectedToken?.address ||
+          selectedToken?.currency ||
+          selectedToken?.contractAddress ||
+          getNativeCurrency(destinationChain);
+
         // Only use zero address for actual native tokens (ETH), not ERC20 tokens
-        if (selectedToken?.symbol === 'ETH' && selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+        if (
+          selectedToken?.symbol === 'ETH' &&
+          selectedToken?.address === '0x0000000000000000000000000000000000000000'
+        ) {
           destinationCurrency = '0x0000000000000000000000000000000000000000';
         }
       }
-      
+
       // Calculate amount in wei
       let amountWei;
       if (transferType === 'deposit') {
@@ -266,14 +269,6 @@ export function useRelayQuote({
           parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
         ).toString();
       }
-      
-
-      
-
-      
-
-
-
 
       // Determine trade type - both deposits and withdrawals use EXACT_INPUT
       // For deposits: user specifies how much Relay token to send
@@ -295,24 +290,22 @@ export function useRelayQuote({
       };
 
       const quote = await getQuote(quoteParams);
-      
+
       // Debug: Log the quote response
-      
 
       // Parse the quote response to extract the estimated output
       const outputAmount = quote.details.currencyOut.amount;
       const outputDecimals = quote.details.currencyOut.currency.decimals;
 
       // Use the formatted amount from the API response instead of calculating it
-      const formattedOutput = quote.details.currencyOut.amountFormatted || 
-                             (parseFloat(outputAmount) / Math.pow(10, outputDecimals)).toFixed(4);
+      const formattedOutput =
+        quote.details.currencyOut.amountFormatted ||
+        (parseFloat(outputAmount) / Math.pow(10, outputDecimals)).toFixed(4);
 
       // Calculate USD value from the API response
-      const usdValue = quote.details.currencyOut.amountUsd || 
-                      (parseFloat(formattedOutput) * 8.5).toFixed(2);
+      const usdValue =
+        quote.details.currencyOut.amountUsd || (parseFloat(formattedOutput) * 8.5).toFixed(2);
 
-
-      
       setEstimatedOutput({
         formatted: formattedOutput,
         usd: usdValue,
@@ -322,7 +315,7 @@ export function useRelayQuote({
     } catch (err) {
       // logger.error('Failed to get Relay quote:', err); // Removed logger
       if (err instanceof Error && err.message.includes('404')) {
-      setError('Swap combination not supported');
+        setError('Swap combination not supported');
       } else if (err instanceof Error && err.message.includes('chain')) {
         setError('Swap combination not supported');
       } else {
@@ -332,7 +325,19 @@ export function useRelayQuote({
       setIsLoading(false);
       currentRequestRef.current = null;
     }
-  }, [isReady, originChain, destinationChain, amount, relayChains, user, recipient, getQuote, transferType, selectedToken]);
+  }, [
+    isReady,
+    originChain,
+    destinationChain,
+    amount,
+    relayChains,
+    user,
+    recipient,
+    getQuote,
+    transferType,
+    selectedToken,
+    wallet,
+  ]);
 
   useEffect(() => {
     // Add a small delay to prevent race conditions during rapid changes

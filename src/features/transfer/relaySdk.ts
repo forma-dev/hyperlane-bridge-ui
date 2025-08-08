@@ -315,24 +315,24 @@ export function getRelayChainId(chainName: string): {
 } {
   // Hardcoded chain mappings for now - these should come from API data
   const chainIdMap: Record<string, { mainnet: number | null; testnet: number | null }> = {
-    'ethereum': { mainnet: 1, testnet: 1 },
-    'optimism': { mainnet: 10, testnet: 10 },
-    'arbitrum': { mainnet: 42161, testnet: 42161 },
-    'forma': { mainnet: 984122, testnet: 984123 },
-    'sketchpad': { mainnet: 984122, testnet: 984123 },
-    'linea': { mainnet: 59144, testnet: 59144 },
-    'bob': { mainnet: 60808, testnet: 60808 },
-    'animechain': { mainnet: 69000, testnet: 69000 },
-    'apex': { mainnet: 70700, testnet: 70700 },
-    'boss': { mainnet: 70701, testnet: 70701 },
-    'berachain': { mainnet: 80085, testnet: 80085 },
-    'blast': { mainnet: 81457, testnet: 81457 },
-    'plume': { mainnet: 16116, testnet: 16116 },
-    'taiko': { mainnet: 167008, testnet: 167008 },
-    'scroll': { mainnet: 534352, testnet: 534352 },
+    ethereum: { mainnet: 1, testnet: 1 },
+    optimism: { mainnet: 10, testnet: 10 },
+    arbitrum: { mainnet: 42161, testnet: 42161 },
+    forma: { mainnet: 984122, testnet: 984123 },
+    sketchpad: { mainnet: 984122, testnet: 984123 },
+    linea: { mainnet: 59144, testnet: 59144 },
+    bob: { mainnet: 60808, testnet: 60808 },
+    animechain: { mainnet: 69000, testnet: 69000 },
+    apex: { mainnet: 70700, testnet: 70700 },
+    boss: { mainnet: 70701, testnet: 70701 },
+    berachain: { mainnet: 80085, testnet: 80085 },
+    blast: { mainnet: 81457, testnet: 81457 },
+    plume: { mainnet: 16116, testnet: 16116 },
+    taiko: { mainnet: 167008, testnet: 167008 },
+    scroll: { mainnet: 534352, testnet: 534352 },
     'zero-network': { mainnet: 12052, testnet: 12052 },
-    'xai': { mainnet: 660279, testnet: 660279 },
-    'katana': { mainnet: 1261120, testnet: 1261120 },
+    xai: { mainnet: 660279, testnet: 660279 },
+    katana: { mainnet: 1261120, testnet: 1261120 },
   };
 
   return chainIdMap[chainName.toLowerCase()] || { mainnet: null, testnet: null };
@@ -344,14 +344,14 @@ export function getRelayChainId(chainName: string): {
  */
 export function getNativeCurrency(chainName: string): string {
   const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
-  
+
   // For Forma/Sketchpad, return TIA token address
   if (chainName === 'forma' || chainName === 'sketchpad') {
-    return isMainnet 
-      ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'  // Mainnet TIA
+    return isMainnet
+      ? '0x832d26B6904BA7539248Db4D58614251FD63dC05' // Mainnet TIA
       : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53'; // Testnet TIA
   }
-  
+
   // For other chains, return native token address
   return '0x0000000000000000000000000000000000000000'; // Native token
 }

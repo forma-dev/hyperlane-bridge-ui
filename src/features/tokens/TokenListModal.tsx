@@ -75,43 +75,65 @@ export function TokenList({
   onSelect: (token: IToken) => void;
 }) {
   const { relayChains } = useRelaySupportedChains();
-  
+
   const tokens = useMemo(() => {
     const q = searchQuery?.trim().toLowerCase();
-    
+
     // Check if this is a Relay chain
     const isOriginRelay = relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName === origin.toLowerCase();
     });
-    
+
     if (isOriginRelay) {
       // For Relay chains, use Relay API tokens
       const relayChain = relayChains.find((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         return internalName === origin.toLowerCase();
       });
-      
+
       if (relayChain) {
         // Get supported tokens from Relay API (24hr global volume tokens)
-        const supportedTokens = (relayChain.featuredTokens || []).filter(token => 
-          token.metadata && token.metadata.logoURI && token.supportsBridging
+        const supportedTokens = (relayChain.featuredTokens || []).filter(
+          (token) => token.metadata && token.metadata.logoURI && token.supportsBridging,
         );
-        
+
         // Convert Relay tokens to IToken format
         const relayTokens = supportedTokens.map((relayToken) => ({
           token: {
             ...relayToken,
             chainName: origin,
-            protocol: 'ethereum',
+            protocol: 'ethereum' as const,
             addressOrDenom: relayToken.address,
             logoURI: relayToken.metadata?.logoURI,
             isMultiChainToken: () => true,
             isNft: () => false,
-          } as IToken,
+            // Add missing IToken methods as stubs
+            getAdapter: () => {
+              throw new Error('Not implemented for Relay tokens');
+            },
+            getHypAdapter: () => {
+              throw new Error('Not implemented for Relay tokens');
+            },
+            getBalance: () => {
+              throw new Error('Not implemented for Relay tokens');
+            },
+            amount: BigInt(0),
+            totalSupply: () => {
+              throw new Error('Not implemented for Relay tokens');
+            },
+            type: () => {
+              throw new Error('Not implemented for Relay tokens');
+            },
+            standard: 'EvmHypNative' as const,
+            getConnectionForChain: () => undefined,
+            isMultiRouteToken: () => false,
+            getTokensForRoute: () => [],
+            isSyntheticRebase: () => false,
+          } as unknown as IToken,
           disabled: false, // All Relay tokens are bridgeable
         }));
-        
+
         // Filter by search query
         const filteredTokens = relayTokens.filter((t) => {
           if (!q) return true;
@@ -121,11 +143,11 @@ export function TokenList({
             t.token.addressOrDenom.toLowerCase().includes(q)
           );
         });
-        
+
         return filteredTokens;
       }
     }
-    
+
     // For non-Relay chains, use Warp Core tokens
     const warpCore = getWarpCore();
     const multiChainTokens = warpCore.tokens.filter((t) => t.isMultiChainToken());

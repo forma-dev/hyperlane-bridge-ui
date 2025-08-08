@@ -2,10 +2,10 @@ import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import { TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
-import { toTitleCase, toWei } from '@hyperlane-xyz/utils';
-
 import { ProviderType } from '@hyperlane-xyz/sdk';
+import { toTitleCase, toWei } from '@hyperlane-xyz/utils';
 import { ProtocolType } from '@hyperlane-xyz/utils';
+
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { getTokenByIndex, getWarpCore } from '../../context/context';
 import { logger } from '../../utils/logger';
@@ -208,8 +208,7 @@ async function executeRelayTransfer({
     }
 
     // Import Relay API functions
-    const { getRelayQuote, getRelayChainId, getNativeCurrency } =
-      await import('./relaySdk');
+    const { getRelayQuote, getRelayChainId, getNativeCurrency } = await import('./relaySdk');
 
     // Get chain IDs for Relay API
     const originChainIds = getRelayChainId(origin);
@@ -233,7 +232,7 @@ async function executeRelayTransfer({
     // Determine if this is a deposit or withdrawal
     const isDeposit = destination === 'forma' || destination === 'sketchpad';
     const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
-    
+
     // DEBUG: Log transfer type and chain information
     logger.info('=== RELAY TRANSFER DEBUG ===');
     logger.info('Transfer Type:', isDeposit ? 'DEPOSIT' : isWithdrawal ? 'WITHDRAWAL' : 'UNKNOWN');
@@ -280,28 +279,32 @@ async function executeRelayTransfer({
     // Step 1: Get a quote from Relay
     // Determine currencies based on transfer type (same logic as quote function)
     let originCurrency, destinationCurrency;
-    
+
     if (isDeposit) {
       // Deposit: Relay token -> Forma TIA
-      originCurrency = values.selectedToken?.address || 
-                      getNativeCurrency(origin);
-      
+      originCurrency = values.selectedToken?.address || getNativeCurrency(origin);
+
       // Only use zero address for actual native tokens (ETH), not ERC20 tokens
-      if (values.selectedToken?.symbol === 'ETH' && values.selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+      if (
+        values.selectedToken?.symbol === 'ETH' &&
+        values.selectedToken?.address === '0x0000000000000000000000000000000000000000'
+      ) {
         originCurrency = '0x0000000000000000000000000000000000000000';
       }
-      
+
       // Destination is always TIA on Forma
       destinationCurrency = '0x0000000000000000000000000000000000000000';
     } else if (isWithdrawal) {
       // Withdraw: Forma TIA -> Relay token
       originCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
-      
-      destinationCurrency = values.selectedToken?.address || 
-                           getNativeCurrency(destination);
-      
+
+      destinationCurrency = values.selectedToken?.address || getNativeCurrency(destination);
+
       // Only use zero address for actual native tokens (ETH), not ERC20 tokens
-      if (values.selectedToken?.symbol === 'ETH' && values.selectedToken?.address === '0x0000000000000000000000000000000000000000') {
+      if (
+        values.selectedToken?.symbol === 'ETH' &&
+        values.selectedToken?.address === '0x0000000000000000000000000000000000000000'
+      ) {
         destinationCurrency = '0x0000000000000000000000000000000000000000';
       }
     } else {
@@ -343,7 +346,7 @@ async function executeRelayTransfer({
     // Get quote with transaction data (but don't execute)
     const { getClient } = await import('@reservoir0x/relay-sdk');
     const client = getClient();
-    
+
     if (!client) {
       throw new Error('Relay client not initialized');
     }
@@ -366,7 +369,7 @@ async function executeRelayTransfer({
 
     const hashes: string[] = [];
     const steps = quote?.steps || [];
-    
+
     if (!steps || steps.length === 0) {
       throw new Error('No transaction steps found in Relay response');
     }
@@ -375,7 +378,7 @@ async function executeRelayTransfer({
     const originProtocol = tryGetChainProtocol(origin) || ProtocolType.Ethereum;
     const sendTransaction = transactionFns[originProtocol].sendTransaction;
     const activeChain = activeChains.chains[originProtocol];
-    
+
     // Execute each step manually
     for (const step of steps) {
       if (!step.items || !Array.isArray(step.items)) {
@@ -396,7 +399,7 @@ async function executeRelayTransfer({
             // Fallback: try to determine chain name from chainId
             targetChainName = origin;
           }
-          
+
           // Create transaction object using the expected format
           const tx = {
             type: ProviderType.EthersV5 as const,
@@ -409,24 +412,22 @@ async function executeRelayTransfer({
               ...(item.data.gas && { gasLimit: item.data.gas }),
               ...(item.data.gasPrice && { gasPrice: item.data.gasPrice }),
               ...(item.data.maxFeePerGas && { maxFeePerGas: item.data.maxFeePerGas }),
-              ...(item.data.maxPriorityFeePerGas && { maxPriorityFeePerGas: item.data.maxPriorityFeePerGas }),
+              ...(item.data.maxPriorityFeePerGas && {
+                maxPriorityFeePerGas: item.data.maxPriorityFeePerGas,
+              }),
             },
             category: WarpTxCategory.Transfer,
           };
 
-          try {
-            // Use the same transaction execution approach that works for withdrawals
-            const result = await sendTransaction({
-              chainName: targetChainName,
-              activeChainName: activeChain.chainName,
-              tx,
-            });
+          // Use the same transaction execution approach that works for withdrawals
+          const result = await sendTransaction({
+            chainName: targetChainName,
+            activeChainName: activeChain.chainName,
+            tx,
+          });
 
-            const hash = typeof result === 'string' ? result : result?.hash;
-            if (hash) hashes.push(hash);
-          } catch (err) {
-            throw err;
-          }
+          const hash = typeof result === 'string' ? result : result?.hash;
+          if (hash) hashes.push(hash);
         }
       }
     }
@@ -444,7 +445,7 @@ async function executeRelayTransfer({
     logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     logger.error('Full error object:', error);
     logger.error('Error JSON:', JSON.stringify(error));
-    
+
     if (JSON.stringify(error).includes('ChainMismatchError')) {
       toast.error('Wallet must be connected to origin chain');
     } else if (error instanceof Error) {

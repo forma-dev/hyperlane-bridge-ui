@@ -119,10 +119,10 @@ export function getRelayNativeTokenInfo(chainName: string, relayChains?: any[]) 
   }
 
   // Fallback for when API data is not available
-  return { 
-    symbol: 'Unknown', 
-    decimals: 18, 
-    name: chainName 
+  return {
+    symbol: 'Unknown',
+    decimals: 18,
+    name: chainName,
   };
 }
 

@@ -29,8 +29,7 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
     return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
       return (
-        internalName &&
-        internalName === chainName.toLowerCase()
+        internalName && internalName === chainName.toLowerCase()
         // Removed depositEnabled and disabled checks as they might be preventing detection
       );
     });
@@ -62,7 +61,7 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
   useEffect(() => {
     // Check if origin is a Relay chain
     const isOriginRelay = isRelayChain(origin, relayChains);
-    
+
     if (isOriginRelay) {
       // For Relay chains, allow manual token selection
       // We'll use a special token index of -1 to indicate Relay native token as default
@@ -202,7 +201,7 @@ function TokenButton({
   // Generic token icon for Relay native tokens
   const renderNativeTokenIcon = (tokenInfo: { symbol: string; decimals: number; name: string }) => {
     // Create a simple token icon with generic color
-    const getTokenColor = (symbol: string) => {
+    const getTokenColor = (_symbol: string) => {
       return '#6B7280'; // Generic color for all tokens
     };
 
