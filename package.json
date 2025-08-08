@@ -75,7 +75,7 @@
   "homepage": "https://www.hyperlane.xyz",
   "license": "Apache-2.0",
   "main": "dist/src/index.js",
-  "packageManager": "yarn@4.0.2",
+  "packageManager": "yarn@4.9.2",
   "private": true,
   "repository": {
     "type": "git",
@@ -92,17 +92,5 @@
     "prettier": "prettier --write ./src"
   },
   "types": "dist/src/index.d.ts",
-  "resolutions": {
-    "@cosmjs/math": "0.32.4",
-    "@cosmjs/amino": "0.32.4",
-    "@cosmjs/proto-signing": "0.32.4",
-    "@cosmjs/stargate": "0.32.4",
-    "axios": "0.27.2",
-    "bn.js": "^5.2",
-    "cosmjs-types": "0.9",
-    "ethers": "^5.7",
-    "lit-html": "2.8.0",
-    "react-fast-compare": "^3.2",
-    "zustand": "^4.4"
-  }
+  "resolutions": {}
 }
