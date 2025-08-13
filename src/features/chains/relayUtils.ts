@@ -75,9 +75,8 @@ export function mapRelayChainToInternalName(relayChainName: string): string {
  * Extracts chain names from an array of Relay chain objects
  */
 export function getRelayChainNames(relayChains: RelayChain[]): string[] {
-  return relayChains
-    .filter((chain) => chain.enabled && chain.depositEnabled && !chain.disabled)
-    .map((chain) => chain.name.toLowerCase());
+  // Include all chains; UI components can decide which are selectable.
+  return relayChains.map((chain) => chain.name.toLowerCase());
 }
 
 /**

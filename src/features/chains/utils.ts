@@ -3,7 +3,7 @@ import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
 // Import centralized Relay utilities
-import { getRelayChainId } from '../transfer/relaySdk';
+
 
 import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
 
@@ -66,11 +66,11 @@ export function tryGetChainMetadata(chain: ChainNameOrId) {
   if (isRelayChain(chain)) {
     const chainStr = typeof chain === 'string' ? chain : chain.toString();
 
-    // Get the correct chain ID from Relay mapping
-    const relayChainIds = getRelayChainId(chainStr);
-    const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+    // Use a default chain ID for fallback metadata
+    // Real chain IDs should come from Relay API data, this is just for fallback cases
+    const chainId = 1; // Default fallback
 
-    // Create dynamic metadata for any Relay chain
+    // Create basic fallback metadata for any Relay chain
     return {
       name: chainStr,
       displayName: toTitleCase(chainStr),
@@ -91,15 +91,15 @@ export function getChainMetadata(chain: ChainNameOrId) {
   try {
     return getMultiProvider().getChainMetadata(chain);
   } catch (error) {
-    // If Hyperlane doesn't have it, create dynamic Relay chain metadata
+    // If Hyperlane doesn't have it, create basic Relay chain metadata
     if (isRelayChain(chain)) {
       const chainStr = typeof chain === 'string' ? chain : chain.toString();
 
-      // Get the correct chain ID from Relay mapping
-      const relayChainIds = getRelayChainId(chainStr);
-      const chainId = relayChainIds.mainnet || relayChainIds.testnet || 1;
+      // Use a default chain ID for fallback metadata
+      // Real chain IDs should come from Relay API data, this is just for fallback cases
+      const chainId = 1; // Default fallback
 
-      // Create dynamic metadata for any Relay chain
+      // Create basic fallback metadata for any Relay chain
       return {
         name: chainStr,
         displayName: toTitleCase(chainStr),

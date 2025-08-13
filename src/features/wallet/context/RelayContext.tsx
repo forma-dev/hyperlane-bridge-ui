@@ -209,12 +209,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         // Convert direct API chains to our format
         const directFormattedChains: RelayChain[] = directChains
           .filter((chain: any) => {
-            const isEnabled = !chain.disabled && chain.enabled !== false;
-            const supportsDeposits =
-              chain.depositEnabled === true || chain.depositEnabled !== false;
+            // Include chains with valid names regardless of enabled/deposit flags.
             const hasValidName = chain.name && chain.name.trim().length > 0;
-
-            return isEnabled && supportsDeposits && hasValidName;
+            return hasValidName;
           })
           .map((chain: any) => {
             // Get currencies for this specific chain from the v2 API
@@ -277,13 +274,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         // Convert SDK chains to our RelayChain format
         const formattedChains: RelayChain[] = chains
           .filter((chain: any) => {
-            // More comprehensive filtering based on actual capabilities
-            const isEnabled = !chain.disabled && chain.enabled !== false;
-            const supportsDeposits =
-              chain.depositEnabled === true || chain.depositEnabled !== false;
+            // Include chains with valid names regardless of enabled/deposit flags
             const hasValidName = chain.name && chain.name.trim().length > 0;
-
-            return isEnabled && supportsDeposits && hasValidName;
+            return hasValidName;
           })
           .map((chain: any) => ({
             id: chain.id,

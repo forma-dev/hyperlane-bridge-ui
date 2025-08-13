@@ -66,12 +66,8 @@ export async function getAllAvailableChains() {
       // The API returns an object with a 'chains' property containing the array
       const chains = data.chains || [];
 
-      // Filter to only enabled chains
-      const enabledChains = chains.filter(
-        (chain: any) => chain.enabled !== false && !chain.disabled,
-      );
-
-      return enabledChains;
+      // Return all chains; downstream filtering determines selectability.
+      return chains;
     }
 
     return [];
@@ -155,66 +151,148 @@ export async function getRelayBalance(
     const dynamicChains = await configureDynamicChains();
 
     // Find the chain for this chainId
-    const chain = dynamicChains.find((chain) => chain.viemChain?.id === chainId);
+    const chain = dynamicChains.find((c) => c.viemChain?.id === chainId);
 
-    if (!chain || !chain.viemChain) {
-      logger.error('No dynamic chain found for chainId', new Error(String(chainId)));
+    const defaultUrls = [...(chain?.viemChain?.rpcUrls?.default?.http || [])];
+    const publicUrls = [...(chain?.viemChain?.rpcUrls?.public?.http || [])];
+
+    const orderedUrls: string[] = Array.from(
+      new Set([...(defaultUrls || []), ...(publicUrls || [])]),
+    );
+
+    // First, try the user's wallet provider if it's on the same chain
+    try {
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        const web3Provider = new ethers.providers.Web3Provider((window as any).ethereum);
+        const network = await web3Provider.getNetwork();
+        
+        // If wallet is not on the target chain, try to switch it
+        if (Number(network.chainId) !== Number(chainId)) {
+          try {
+            await (window as any).ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: `0x${chainId.toString(16)}` }],
+            });
+            
+            // Re-check the network after switching
+            const newNetwork = await web3Provider.getNetwork();
+            if (Number(newNetwork.chainId) !== Number(chainId)) {
+              throw new Error('Chain switch unsuccessful');
+            }
+          } catch (switchError) {
+            throw switchError;
+          }
+        }
+        
+        let balance: string;
+        let decimals: number;
+        let symbol: string;
+        let name: string;
+
+        const isErc20 = !!tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000';
+        if (isErc20) {
+          const tokenContract = new ethers.Contract(
+            tokenAddress,
+            [
+              'function balanceOf(address owner) view returns (uint256)',
+              'function decimals() view returns (uint8)',
+              'function symbol() view returns (string)',
+              'function name() view returns (string)',
+            ],
+            web3Provider,
+          );
+
+          const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([
+            tokenContract.balanceOf(address),
+            tokenContract.decimals(),
+            tokenContract.symbol(),
+            tokenContract.name(),
+          ]);
+
+          balance = balanceResult.toString();
+          decimals = decimalsResult;
+          symbol = symbolResult;
+          name = nameResult;
+        } else {
+          const nativeBal = await web3Provider.getBalance(address);
+          balance = nativeBal?.toString?.() || String(nativeBal);
+
+          const nativeCurrency = chain?.viemChain?.nativeCurrency;
+          decimals = nativeCurrency?.decimals || 18;
+          symbol = nativeCurrency?.symbol || 'ETH';
+          name = nativeCurrency?.name || 'Ether';
+        }
+
+        return { balance, decimals, symbol, name };
+      }
+    } catch (err) {
+      // Fall back to Relay RPCs
+    }
+
+
+
+    if (orderedUrls.length === 0) {
+      logger.error('No RPC URL available for chainId', new Error(String(chainId)));
       return null;
     }
 
-    // Get the RPC URL from the viemChain
-    const rpcUrl = chain.viemChain.rpcUrls.default.http[0];
 
-    if (!rpcUrl) {
-      logger.error('No RPC URL found in dynamic chain for chainId', new Error(String(chainId)));
-      return null;
+
+    // Try Relay-provided RPC URLs in order (no hardcoded endpoints)
+    let lastError: unknown = undefined;
+    for (const rpcUrl of orderedUrls) {
+      try {
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+        let balance: string;
+        let decimals: number;
+        let symbol: string;
+        let name: string;
+
+        const isErc20 = !!tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000';
+
+        if (isErc20) {
+          const tokenContract = new ethers.Contract(
+            tokenAddress,
+            [
+              'function balanceOf(address owner) view returns (uint256)',
+              'function decimals() view returns (uint8)',
+              'function symbol() view returns (string)',
+              'function name() view returns (string)',
+            ],
+            provider,
+          );
+
+          const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([
+            tokenContract.balanceOf(address),
+            tokenContract.decimals(),
+            tokenContract.symbol(),
+            tokenContract.name(),
+          ]);
+
+          balance = balanceResult.toString();
+          decimals = decimalsResult;
+          symbol = symbolResult;
+          name = nameResult;
+        } else {
+          const nativeBal = await provider.getBalance(address);
+          balance = nativeBal?.toString?.() || String(nativeBal);
+
+          const nativeCurrency = chain?.viemChain?.nativeCurrency;
+          decimals = nativeCurrency?.decimals || 18;
+          symbol = nativeCurrency?.symbol || 'ETH';
+          name = nativeCurrency?.name || 'Ether';
+        }
+
+        return { balance, decimals, symbol, name };
+      } catch (err) {
+        lastError = err;
+        // try next URL
+      }
     }
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-
-    let balance: string;
-    let decimals: number;
-    let symbol: string;
-    let name: string;
-
-    if (tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000') {
-      // ERC20 token balance
-      const tokenContract = new ethers.Contract(
-        tokenAddress,
-        [
-          'function balanceOf(address owner) view returns (uint256)',
-          'function decimals() view returns (uint8)',
-          'function symbol() view returns (string)',
-          'function name() view returns (string)',
-        ],
-        provider,
-      );
-
-      const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([
-        tokenContract.balanceOf(address),
-        tokenContract.decimals(),
-        tokenContract.symbol(),
-        tokenContract.name(),
-      ]);
-
-      balance = balanceResult.toString();
-      decimals = decimalsResult;
-      symbol = symbolResult;
-      name = nameResult;
-    } else {
-      // Native token balance
-      balance = (await provider.getBalance(address)).toString();
-      decimals = 18;
-      symbol = 'ETH';
-      name = 'Ether';
-    }
-
-    return {
-      balance,
-      decimals,
-      symbol,
-      name,
-    };
+    logger.error('Failed to fetch balance from all sources', lastError);
+    return null;
   } catch (error) {
     logger.error('Failed to fetch Relay balance', error);
     return null;

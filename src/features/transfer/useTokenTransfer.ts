@@ -1,10 +1,8 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 
-import { TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
-import { ProviderType } from '@hyperlane-xyz/sdk';
-import { toTitleCase, toWei } from '@hyperlane-xyz/utils';
-import { ProtocolType } from '@hyperlane-xyz/utils';
+import { ProviderType, TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
+import { ProtocolType, toTitleCase, toWei } from '@hyperlane-xyz/utils';
 
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { getTokenByIndex, getWarpCore } from '../../context/context';
@@ -14,10 +12,10 @@ import { tryGetChainProtocol } from '../chains/utils';
 import { AppState, useStore } from '../store';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  getAccountAddressForChain,
-  useAccounts,
-  useActiveChains,
-  useTransactionFns,
+    getAccountAddressForChain,
+    useAccounts,
+    useActiveChains,
+    useTransactionFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferFormValues, TransferStatus } from './types';
@@ -57,6 +55,7 @@ export function useTokenTransfer(onDone?: () => void) {
           setIsLoading,
           onDone,
           wallet,
+          relayChains,
         });
       } else {
         return executeHyperlaneTransfer({
@@ -179,6 +178,7 @@ async function executeRelayTransfer({
   setIsLoading,
   onDone,
   wallet,
+  relayChains,
 }: {
   values: TransferFormValues;
   transferIndex: number;
@@ -190,6 +190,7 @@ async function executeRelayTransfer({
   setIsLoading: (b: boolean) => void;
   onDone?: () => void;
   wallet?: any;
+  relayChains: any[];
 }) {
   const { origin, destination, amount, recipient } = values;
 
@@ -208,25 +209,25 @@ async function executeRelayTransfer({
     }
 
     // Import Relay API functions
-    const { getRelayQuote, getRelayChainId, getNativeCurrency } = await import('./relaySdk');
+    const { getRelayQuote, getNativeCurrency } = await import('./relaySdk');
+    const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
 
-    // Get chain IDs for Relay API
-    const originChainIds = getRelayChainId(origin);
-    const destinationChainIds = getRelayChainId(destination);
+    // Get chain IDs from dynamic Relay data (not hardcoded)
+    const originRelayChain = relayChains.find(chain => {
+      const internalName = mapRelayChainToInternalName(chain.name);
+      return internalName === origin.toLowerCase();
+    });
+    
+    const destinationRelayChain = relayChains.find(chain => {
+      const internalName = mapRelayChainToInternalName(chain.name);
+      return internalName === destination.toLowerCase();
+    });
 
-    // For now, try mainnet first to test currency format
-    // If either chain requires testnet, use testnet for both
-    const needsTestnet = false; // Temporarily force mainnet to test currency format
-    // const needsTestnet = destinationChainIds.mainnet === null || originChainIds.mainnet === null ||
-    //                     destinationChainIds.testnet === 984123 || originChainIds.testnet === 984123; // Check for sketchpad testnet
-
-    const originChainId = needsTestnet ? originChainIds.testnet : originChainIds.mainnet;
-    const destinationChainId = needsTestnet
-      ? destinationChainIds.testnet
-      : destinationChainIds.mainnet;
+    const originChainId = originRelayChain?.id;
+    const destinationChainId = destinationRelayChain?.id;
 
     if (!originChainId || !destinationChainId) {
-      throw new Error(`Swap combination not supported: ${origin} -> ${destination}`);
+      throw new Error(`Chain IDs not found in Relay data: origin=${originChainId}, destination=${destinationChainId}`);
     }
 
     // Determine if this is a deposit or withdrawal

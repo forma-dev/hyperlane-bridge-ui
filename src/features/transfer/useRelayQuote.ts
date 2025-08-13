@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
 
-import { RelayQuoteResponse, getNativeCurrency, getRelayChainId } from './relaySdk';
+import { RelayQuoteResponse, getNativeCurrency } from './relaySdk';
 
 interface UseRelayQuoteParams {
   originChain: string;
@@ -58,8 +59,20 @@ export function useRelayQuote({
   const { getQuote, isReady } = useRelayContext();
 
   const getRelayQuoteData = useCallback(async () => {
+    console.log('getRelayQuoteData called with:', { 
+      amount, 
+      isReady, 
+      originChain, 
+      destinationChain, 
+      user, 
+      recipient,
+      transferType,
+      relayChains: relayChains?.length 
+    });
+    
     // Simple check to prevent quote requests when amount is being cleared
     if (!amount || (typeof amount === 'string' && amount.trim() === '') || amount === '') {
+      console.log('Early return: amount is empty');
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -68,6 +81,7 @@ export function useRelayQuote({
     // Additional check to prevent processing if amount is 0 or invalid
     const amountNum = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
+      console.log('Early return: amount is invalid or <= 0', amountNum);
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -83,6 +97,14 @@ export function useRelayQuote({
       !user ||
       !recipient
     ) {
+      console.log('Early return: missing required params', {
+        isReady,
+        originChain: !!originChain,
+        destinationChain: !!destinationChain,
+        amount: !!amount,
+        user: !!user,
+        recipient: !!recipient
+      });
       setEstimatedOutput(null);
       setError(null);
       return;
@@ -110,14 +132,18 @@ export function useRelayQuote({
     }
 
     // Only get quotes for Relay transfers
+    console.log('isRelayTransfer check:', isRelayTransfer);
 
     if (!isRelayTransfer) {
+      console.log('Early return: not a relay transfer');
       setEstimatedOutput(null);
       setError(null);
       return;
     }
 
     // Check if the specific transfer is supported by Relay
+    console.log('Checking transfer type support:', transferType);
+    
     if (transferType === 'deposit') {
       // For deposits: Check if origin chain is supported by Relay
       const relayChain = relayChains.find((chain) => {
@@ -127,7 +153,10 @@ export function useRelayQuote({
         );
       });
 
+      console.log('Found relay chain for deposit:', relayChain ? 'YES' : 'NO', { originChain });
+      
       if (!relayChain) {
+        console.log('Early return: no relay chain found for deposit');
         setEstimatedOutput(null);
         setError(null);
         return;
@@ -142,31 +171,56 @@ export function useRelayQuote({
         return matches && isEnabled;
       });
 
+      console.log('Found relay chain for withdrawal:', relayChain ? 'YES' : 'NO', { destinationChain });
+
       if (!relayChain) {
+        console.log('Early return: no relay chain found for withdrawal');
         setEstimatedOutput(null);
         setError(null);
         return;
       }
     }
 
-    // Get chain IDs for Relay API
-    const originChainIds = getRelayChainId(originChain);
-    const destinationChainIds = getRelayChainId(destinationChain);
+    // Get chain IDs from dynamic Relay data (not hardcoded)
+    console.log('Getting chain IDs from Relay API data...');
+    
+    const originRelayChain = relayChains.find(chain => {
+      const internalName = mapRelayChainToInternalName(chain.name);
+      return internalName === originChain.toLowerCase();
+    });
+    
+    const destinationRelayChain = relayChains.find(chain => {
+      const internalName = mapRelayChainToInternalName(chain.name);
+      return internalName === destinationChain.toLowerCase();
+    });
+    
+    const originChainId = originRelayChain?.id;
+    const destinationChainId = destinationRelayChain?.id;
+    
+    console.log('Chain IDs from API:', { 
+      originChainId, 
+      destinationChainId, 
+      originRelayChain: originRelayChain?.name,
+      destinationRelayChain: destinationRelayChain?.name 
+    });
 
-    // For this bridge, Forma is always involved (either origin or destination)
-    const isFormaInvolved =
-      originChain === 'forma' ||
-      originChain === 'sketchpad' ||
-      destinationChain === 'forma' ||
-      destinationChain === 'sketchpad';
+    // Validate that we found both chain IDs
+    if (!originChainId || !destinationChainId) {
+      console.log('Early return: missing chain IDs from Relay API', {
+        originChainId: !!originChainId,
+        destinationChainId: !!destinationChainId
+      });
+      setEstimatedOutput(null);
+      setError(null);
+      return;
+    }
 
-    if (isFormaInvolved) {
-      // Check supported chains
-      try {
+    // Check supported chains for the quote
+    try {
         const { getRelaySupportedChains } = await import('./relaySdk');
         const supportedChains = await getRelaySupportedChains();
         const formaSupported = supportedChains.find(
-          (chain) => chain.chainId === 984122 || chain.name?.toLowerCase().includes('forma'),
+          (chain) => chain.chainId === destinationChainId || chain.name?.toLowerCase().includes('forma'),
         );
 
         if (!formaSupported) {
@@ -177,23 +231,8 @@ export function useRelayQuote({
       } catch (error) {
         // logger.error('Failed to check supported chains:', error); // Removed logger
       }
-    }
 
-    // For now, try mainnet first to test currency format
-    // If either chain requires testnet, use testnet for both
-    const needsTestnet = false; // Temporarily force mainnet to test currency format
-    // const needsTestnet = destinationChainIds.mainnet === null || originChainIds.mainnet === null ||
-    //                     destinationChainIds.testnet === 984123 || originChainIds.testnet === 984123; // Check for sketchpad testnet
 
-    const originChainId = needsTestnet ? originChainIds.testnet : originChainIds.mainnet;
-    const destinationChainId = needsTestnet
-      ? destinationChainIds.testnet
-      : destinationChainIds.mainnet;
-
-    if (!originChainId || !destinationChainId) {
-      setError('Swap combination not supported');
-      return;
-    }
 
     setIsLoading(true);
     setError(null);
@@ -253,21 +292,21 @@ export function useRelayQuote({
         }
       }
 
-      // Calculate amount in wei
+      // Calculate amount in wei - must be a string of digits only for Relay API
       let amountWei;
       if (transferType === 'deposit') {
         // For deposits: user specifies how much Relay token to send
         const decimals = selectedToken?.decimals || 18;
-        amountWei = (
-          parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
-        ).toString();
+        const amountFloat = parseFloat(typeof amount === 'string' ? amount : String(amount));
+        // Use BigInt to avoid floating point precision issues
+        amountWei = (BigInt(Math.floor(amountFloat * Math.pow(10, decimals)))).toString();
       } else {
         // For withdrawals: user specifies how much TIA to send (not OP to receive)
         // The amount should be the TIA amount, not a calculated estimate
         const decimals = 18; // TIA has 18 decimals
-        amountWei = (
-          parseFloat(typeof amount === 'string' ? amount : String(amount)) * Math.pow(10, decimals)
-        ).toString();
+        const amountFloat = parseFloat(typeof amount === 'string' ? amount : String(amount));
+        // Use BigInt to avoid floating point precision issues
+        amountWei = (BigInt(Math.floor(amountFloat * Math.pow(10, decimals)))).toString();
       }
 
       // Determine trade type - both deposits and withdrawals use EXACT_INPUT
@@ -289,9 +328,25 @@ export function useRelayQuote({
         ...(wallet && { wallet }), // Include wallet if provided
       };
 
-      const quote = await getQuote(quoteParams);
-
-      // Debug: Log the quote response
+      console.log('Submitting Relay quote request:', quoteParams);
+      console.log('Amount details:', { 
+        originalAmount: amount, 
+        amountWei, 
+        amountPattern: /^[0-9]+$/.test(amountWei),
+        transferType,
+        decimals: transferType === 'deposit' ? (selectedToken?.decimals || 18) : 18
+      });
+      
+      let quote;
+      try {
+        quote = await getQuote(quoteParams);
+        console.log('Received Relay quote response:', quote);
+        console.log('Quote response type:', typeof quote);
+        console.log('Quote response keys:', quote ? Object.keys(quote) : 'null');
+      } catch (quoteError) {
+        console.log('Quote request failed with error:', quoteError);
+        throw quoteError;
+      }
 
       // Parse the quote response to extract the estimated output
       const outputAmount = quote.details.currencyOut.amount;
@@ -313,14 +368,44 @@ export function useRelayQuote({
         quote,
       });
     } catch (err) {
-      // logger.error('Failed to get Relay quote:', err); // Removed logger
-      if (err instanceof Error && err.message.includes('404')) {
-        setError('Swap combination not supported');
-      } else if (err instanceof Error && err.message.includes('chain')) {
-        setError('Swap combination not supported');
-      } else {
-        setError('Swap combination not supported');
+      logger.error('Failed to get Relay quote:', err);
+      
+      // Extract meaningful error messages from the error object
+      let errorMessage = 'Failed to get quote';
+      
+      if (err instanceof Error) {
+        // Check for specific error patterns and provide better messages
+        if (err.message.includes('404') || err.message.includes('not found')) {
+          errorMessage = 'Swap combination not supported';
+        } else if (err.message.includes('insufficient') && err.message.includes('balance')) {
+          errorMessage = 'Insufficient balance for this swap';
+        } else if (err.message.includes('minimum') || err.message.includes('min')) {
+          errorMessage = 'Amount below minimum required';
+        } else if (err.message.includes('maximum') || err.message.includes('max')) {
+          errorMessage = 'Amount exceeds maximum allowed';
+        } else if (err.message.includes('rate limit') || err.message.includes('429')) {
+          errorMessage = 'Too many requests, please try again later';
+        } else if (err.message.includes('network') || err.message.includes('connection')) {
+          errorMessage = 'Network error, please check your connection';
+        } else if (err.message.includes('chain') && err.message.includes('not supported')) {
+          errorMessage = 'Chain not supported for this swap';
+        } else if (err.message.includes('token') && err.message.includes('not supported')) {
+          errorMessage = 'Token not supported on this chain';
+        } else if (err.message.includes('liquidity')) {
+          errorMessage = 'Insufficient liquidity for this swap';
+        } else if (err.message.toLowerCase().includes('unauthorized') || err.message.includes('401')) {
+          errorMessage = 'Authorization error, please reconnect wallet';
+        } else if (err.message.toLowerCase().includes('forbidden') || err.message.includes('403')) {
+          errorMessage = 'Access denied for this operation';
+        } else if (err.message.includes('timeout')) {
+          errorMessage = 'Request timed out, please try again';
+        } else if (err.message.trim()) {
+          // Use the actual error message if it's meaningful and not empty
+          errorMessage = err.message;
+        }
       }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
       currentRequestRef.current = null;
@@ -354,3 +439,4 @@ export function useRelayQuote({
     error,
   };
 }
+

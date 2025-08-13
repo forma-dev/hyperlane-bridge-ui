@@ -40,6 +40,8 @@ function mapRelayChainToInternalName(relayChainName: string): string | null {
 
 // Get chain ID for supported Relay chains
 function getChainIdForRelayChain(chainName: string, relayChains?: any[]): number | undefined {
+  // Debug logging removed
+
   // Get from Relay API data
   if (relayChains && relayChains.length > 0) {
     const relayChain = relayChains.find((chain) => {
@@ -51,6 +53,8 @@ function getChainIdForRelayChain(chainName: string, relayChains?: any[]): number
       return relayChain.id;
     }
   }
+
+  // No chain id found
 
   // No hardcoded fallback - return undefined if not found in API data
   return undefined;
@@ -65,10 +69,11 @@ export function useDynamicRelayBalance(
   const { relayChains } = useRelaySupportedChains();
   const chainId = chain ? getChainIdForRelayChain(chain, relayChains) : undefined;
 
+  // Quiet: no console prelogs
+
   const {
     data: relayBalance,
     isLoading,
-    error,
     isError,
   } = useQuery({
     queryKey: ['relayBalance', chainId, address, selectedTokenAddress],
@@ -76,13 +81,19 @@ export function useDynamicRelayBalance(
       if (!chainId || !address) {
         return null;
       }
+      // Quiet: no console fetch logs
       return await getRelayBalance(chainId, address, selectedTokenAddress);
+    },
+    onError: (err) => {
+      // Quiet: no console error logs
+      // Don't show toast errors for balance fetching failures since they will retry
     },
     enabled: !!chainId && !!address,
     refetchInterval: 5000,
   });
 
-  useToastError(error, 'Error fetching dynamic Relay balance');
+  // Don't show toast errors for balance fetching since we have RPC fallbacks
+  // useToastError(error, 'Error fetching dynamic Relay balance');
 
   // Create a simple balance object with just the method TokenBalance needs
   const balance = relayBalance
@@ -132,6 +143,8 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
   const isRelayOrigin = isRelayChain(origin, relayChains);
 
   const isFormaWithdrawal = origin === 'forma' || origin === 'sketchpad';
+
+  // Quiet: no chain analysis logs
 
   // For Relay transfers (excluding ALL Forma withdrawals), use Relay balance fetching
 

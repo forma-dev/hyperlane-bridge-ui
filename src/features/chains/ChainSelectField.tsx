@@ -7,10 +7,10 @@ import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
-  useDisconnectFns,
+    useAccountAddressForChain,
+    useAccounts,
+    useConnectFns,
+    useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
@@ -47,7 +47,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
     // Add Relay chains (all EVM-based) - using centralized mapping
     relayChains.forEach((chain) => {
-      if (chain.name && chain.depositEnabled && !chain.disabled) {
+      if (chain.name) {
         const internalName = mapRelayChainToInternalName(chain.name);
 
         // Only add if not already present

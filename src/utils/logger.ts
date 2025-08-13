@@ -4,13 +4,18 @@ import { captureException } from '@sentry/nextjs';
 import { config } from '../consts/config';
 
 export const logger = {
-  debug: (..._args: any[]) => {},
-  info: (..._args: any[]) => {},
-  warn: (..._args: any[]) => {},
+  debug: (...args: any[]) => {
+    if (config.isDevMode) console.debug(...args);
+  },
+  info: (...args: any[]) => {
+    if (config.isDevMode) console.info(...args);
+  },
+  warn: (...args: any[]) => {
+    if (config.isDevMode) console.warn(...args);
+  },
   error: (message: string, err: any, ...args: any[]) => {
     if (config.isDevMode) {
-      // Suppress noisy console errors in dev unless needed
-      // console.error(message, err, ...args);
+      console.error(message, err, ...args);
     }
     if (!config.isDevMode) {
       const filteredArgs = args.filter(isSafeSentryArg);

@@ -28,15 +28,15 @@ import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  getAccountAddressAndPubKey,
-  getAccountAddressForChain,
-  useAccountAddressForChain,
-  useAccounts,
+    getAccountAddressAndPubKey,
+    getAccountAddressForChain,
+    useAccountAddressForChain,
+    useAccounts,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
 import { useFetchMaxAmount } from './maxAmount';
-import { getNativeCurrency, getRelayChainId } from './relaySdk';
+import { getNativeCurrency } from './relaySdk';
 import { TransferFormValues } from './types';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useRelayMaxAmount } from './useRelayMaxAmount';
@@ -752,11 +752,21 @@ function ReviewDetails({ visible }: { visible: boolean }) {
           const { getClient } = await import('@reservoir0x/relay-sdk');
           const client = getClient();
           if (client) {
-            // Resolve dynamic chainIds
-            const originIds = getRelayChainId(values.origin);
-            const destIds = getRelayChainId(values.destination);
-            const originChainId = originIds.mainnet ?? originIds.testnet ?? undefined;
-            const destinationChainId = destIds.mainnet ?? destIds.testnet ?? undefined;
+            // Get chain IDs from dynamic Relay data (not hardcoded)
+            const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
+            
+            const originRelayChain = relayChains.find(chain => {
+              const internalName = mapRelayChainToInternalName(chain.name);
+              return internalName === values.origin.toLowerCase();
+            });
+            
+            const destinationRelayChain = relayChains.find(chain => {
+              const internalName = mapRelayChainToInternalName(chain.name);
+              return internalName === values.destination.toLowerCase();
+            });
+            
+            const originChainId = originRelayChain?.id;
+            const destinationChainId = destinationRelayChain?.id;
             if (!originChainId || !destinationChainId) return;
 
             // Resolve currencies
@@ -1023,7 +1033,8 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
 
   const result = relayChains.some((chain) => {
     const internalName = mapRelayChainToInternalName(chain.name);
-    return internalName === chainName.toLowerCase() && chain.depositEnabled && !chain.disabled;
+    // Treat any chain present in Relay list as Relay-supported, regardless of deposit/disabled flags
+    return internalName === chainName.toLowerCase();
   });
 
   return result;
@@ -1167,9 +1178,9 @@ async function validateRelayTransfer({
 function getRelayChainNames(relayChains: any[]): string[] {
   const chainNames: string[] = [];
 
-  // Add all Relay supported chains that are enabled and support deposits
+  // Add all Relay supported chains regardless of deposit/disabled flags
   relayChains.forEach((chain) => {
-    if (chain.name && chain.depositEnabled && !chain.disabled) {
+    if (chain.name) {
       // Use the chain name directly as the internal name
       const internalName = chain.name.toLowerCase();
 

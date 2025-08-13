@@ -62,12 +62,7 @@ export function ChainSelectListModal({
 
     return relayChains.some((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
-      return (
-        internalName &&
-        internalName === chainName.toLowerCase() &&
-        chain.depositEnabled &&
-        !chain.disabled
-      );
+      return internalName && internalName === chainName.toLowerCase();
     });
   };
 
@@ -208,16 +203,7 @@ export function ChainSelectListModal({
     }
   };
 
-  // Debounced search function
-  const debouncedSearch = (() => {
-    let timeoutId: NodeJS.Timeout;
-    return (chainId: number, searchTerm: string) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        searchTokensWithTerm(chainId, searchTerm);
-      }, 2000); // 2 second delay
-    };
-  })();
+  // Direct search on value change (no debounce per UX request)
 
   // Function to handle network selection
   const handleNetworkSelection = (chain: ChainName) => {
@@ -355,12 +341,14 @@ export function ChainSelectListModal({
     return (
       <button
         key={chain}
-        className={`pb-2 px-6 text-sm flex items-center w-full ${
-          isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+        className={`w-full flex items-center text-sm px-6 py-2 border-l-4 ${
+          isSelected
+            ? 'bg-blue-50 border-blue-500'
+            : 'border-transparent hover:bg-blue-50 hover:border-blue-200'
         }`}
         onClick={onSelectChain(chain)}
       >
-        <div className="px-2 py-2 flex items-center justify-between w-full hover:bg-bg-button-main-disabled">
+        <div className="w-full flex items-center justify-between">
           <div className="flex items-center">
             <ChainLogo chainName={chain} size={32} background={false} />
             <span className="ml-2 font-medium text-sm leading-5 text-black">{displayName}</span>
@@ -406,7 +394,7 @@ export function ChainSelectListModal({
                     placeholder="Search chains"
                     value={chainSearchTerm}
                     onChange={(e) => setChainSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-l-lg rounded-r-none bg-gray-100 focus:outline-none"
                   />
                 </div>
               </div>
@@ -517,14 +505,35 @@ export function ChainSelectListModal({
                                 : null;
 
                               if (chainId) {
-                                debouncedSearch(chainId, newValue);
+                                if (!newValue.trim()) {
+                                  // If search is cleared, reset states immediately
+                                  setIsSearching(false);
+                                  setSearchResults((prev) => ({ ...prev, [chainId]: [] }));
+                                } else {
+                                  setIsSearching(true);
+                                  searchTokensWithTerm(chainId, newValue);
+                                }
                               }
                             }}
-                            className="w-full pl-10 pr-6 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
+                            className="w-full pl-10 pr-6 py-2 border border-gray-300 rounded-l-lg rounded-r-none bg-gray-100 focus:outline-none"
                           />
                           {searchTerm && (
                             <button
-                              onClick={() => setSearchTerm('')}
+                              onClick={() => {
+                                setSearchTerm('');
+                                setIsSearching(false);
+                                // Clear search results for current chain
+                                const chainId = selectedChain
+                                  ? relayChains.find(
+                                      (chain) =>
+                                        mapRelayChainToInternalName(chain.name) ===
+                                        selectedChain.toLowerCase(),
+                                    )?.id
+                                  : null;
+                                if (chainId) {
+                                  setSearchResults((prev) => ({ ...prev, [chainId]: [] }));
+                                }
+                              }}
                               className="absolute inset-y-0 right-0 pr-3 flex items-center"
                             >
                               <svg
@@ -548,16 +557,30 @@ export function ChainSelectListModal({
                       {/* Token content */}
                       {(() => {
                         const tokenData = getTokensForChain(selectedChain);
+                        
+                        // Apply local search filter to featured tokens if user is typing
+                        let filteredFeaturedTokens = tokenData.featuredTokens;
+                        if (searchTerm.trim()) {
+                          const searchLower = searchTerm.toLowerCase();
+                          filteredFeaturedTokens = tokenData.featuredTokens.filter(
+                            (token) =>
+                              token.symbol?.toLowerCase().includes(searchLower) ||
+                              token.name?.toLowerCase().includes(searchLower) ||
+                              token.address?.toLowerCase().includes(searchLower)
+                          );
+                        }
+                        
                         return (
                           <>
-                            {/* Featured tokens - always show immediately */}
-                            {tokenData.featuredTokens.length > 0 && (
+                            {/* Featured tokens - with local search filtering */}
+                            {!searchTerm.trim() || filteredFeaturedTokens.length > 0 ? (
+                              filteredFeaturedTokens.length > 0 && (
                               <div className="mb-4">
                                 <h4 className="text-sm font-semibold text-gray-500 mb-3">
                                   Featured Tokens
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
-                                  {tokenData.featuredTokens.map((token) => (
+                                  {filteredFeaturedTokens.map((token) => (
                                     <button
                                       key={token.address}
                                       onClick={() => {
@@ -565,7 +588,7 @@ export function ChainSelectListModal({
                                         close();
                                         setSelectedChain(null);
                                       }}
-                                      className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                      className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                       <div className="relative">
                                         {getTokenIconUrl(token) ? (
@@ -589,7 +612,7 @@ export function ChainSelectListModal({
                                   ))}
                                 </div>
                               </div>
-                            )}
+                            )) : null}
 
                             {/* Loading state for additional tokens */}
                             {isLoadingTokens && (
@@ -615,7 +638,7 @@ export function ChainSelectListModal({
                                   const displayTokens = searchResultsForChain.slice(0, 20);
 
                                   return displayTokens.length > 0 ? (
-                                    <div>
+                                    <div className="pr-4">
                                       <div className="space-y-1">
                                         {displayTokens.map((token) => (
                                           <button
@@ -625,7 +648,7 @@ export function ChainSelectListModal({
                                               close();
                                               setSelectedChain(null);
                                             }}
-                                            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                                            className="w-full flex items-center justify-between p-3 hover:bg-gray-100 rounded-lg transition-colors"
                                           >
                                             <div className="flex items-center space-x-3">
                                               {getTokenIconUrl(token) ? (
@@ -679,7 +702,7 @@ export function ChainSelectListModal({
                                   );
                                 }
 
-                                // If not searching, show regular tokens
+                                // If not searching with API, show regular tokens with local filtering
                                 const currentTokens = chainId ? loadedTokens[chainId] || [] : [];
 
                                 // Get featured tokens for this chain
@@ -692,7 +715,7 @@ export function ChainSelectListModal({
                                   ) || [];
 
                                 // Filter out featured tokens from current tokens
-                                const nonFeaturedTokens = currentTokens.filter(
+                                let nonFeaturedTokens = currentTokens.filter(
                                   (token) =>
                                     !featuredTokens.some(
                                       (featured) =>
@@ -701,11 +724,22 @@ export function ChainSelectListModal({
                                     ),
                                 );
 
+                                // Apply local search filter if user is typing (for immediate feedback)
+                                if (searchTerm.trim()) {
+                                  const searchLower = searchTerm.toLowerCase();
+                                  nonFeaturedTokens = nonFeaturedTokens.filter(
+                                    (token) =>
+                                      token.symbol?.toLowerCase().includes(searchLower) ||
+                                      token.name?.toLowerCase().includes(searchLower) ||
+                                      token.address?.toLowerCase().includes(searchLower)
+                                  );
+                                }
+
                                 // Limit to 20 tokens
                                 const displayTokens = nonFeaturedTokens.slice(0, 20);
 
                                 return displayTokens.length > 0 ? (
-                                  <div>
+                                  <div className="pr-4">
                                     <div className="space-y-1">
                                       {displayTokens.map((token) => (
                                         <button
@@ -715,7 +749,7 @@ export function ChainSelectListModal({
                                             close();
                                             setSelectedChain(null);
                                           }}
-                                          className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                                          className="w-full flex items-center justify-between p-3 hover:bg-gray-100 rounded-lg transition-colors"
                                         >
                                           <div className="flex items-center space-x-3">
                                             {getTokenIconUrl(token) ? (

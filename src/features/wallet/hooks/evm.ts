@@ -22,17 +22,24 @@ export function useEvmAccount(): AccountInfo {
   const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address: wagmiAddress, connector } = useAccount();
-  const isReady = ready && (walletsReady || !!wagmiAddress) && wallets.length > 0 && !!wagmiAddress;
+  // Consider the account usable if wagmi has an address, regardless of Privy wallet enumeration
+  const derivedAddress = wagmiAddress as string | undefined;
+  const isReady = !!derivedAddress || (ready && walletsReady && wallets.length > 0);
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
-      addresses: activeWallet ? [{ address: activeWallet.address }] : [],
+      // Always prefer the wagmi-derived address if available; fall back to Privy wallet
+      addresses: derivedAddress
+        ? [{ address: derivedAddress }]
+        : activeWallet
+        ? [{ address: activeWallet.address }]
+        : [],
       connectorName: connector?.name || 'Privy',
       isReady,
     }),
-    [activeWallet, isReady, connector],
+    [activeWallet, isReady, connector, derivedAddress],
   );
 }
 
