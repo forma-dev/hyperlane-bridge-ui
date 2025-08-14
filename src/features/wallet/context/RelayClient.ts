@@ -156,89 +156,33 @@ export async function getRelayBalance(
     const defaultUrls = [...(chain?.viemChain?.rpcUrls?.default?.http || [])];
     const publicUrls = [...(chain?.viemChain?.rpcUrls?.public?.http || [])];
 
+    // Keep original Relay SDK ordering but filter out only the most problematic RPCs
     const orderedUrls: string[] = Array.from(
       new Set([...(defaultUrls || []), ...(publicUrls || [])]),
-    );
+    ).filter((url) => !/mainnet\.base\.org/.test(url)); // Only filter base.org for 429s
 
-    // First, try the user's wallet provider if it's on the same chain
-    try {
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
-        const web3Provider = new ethers.providers.Web3Provider((window as any).ethereum);
-        const network = await web3Provider.getNetwork();
-        
-        // If wallet is not on the target chain, try to switch it
-        if (Number(network.chainId) !== Number(chainId)) {
-          try {
-            await (window as any).ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: `0x${chainId.toString(16)}` }],
-            });
-            
-            // Re-check the network after switching
-            const newNetwork = await web3Provider.getNetwork();
-            if (Number(newNetwork.chainId) !== Number(chainId)) {
-              throw new Error('Chain switch unsuccessful');
-            }
-          } catch (switchError) {
-            throw switchError;
-          }
-        }
-        
-        let balance: string;
-        let decimals: number;
-        let symbol: string;
-        let name: string;
+    // Add fallback RPCs if none found
+    if (orderedUrls.length === 0) {
+      const fallbackRpcs: Record<number, string[]> = {
+        8453: ['https://base.llamarpc.com', 'https://base-mainnet.diamondswap.org/rpc'],
+        1: ['https://eth.llamarpc.com'],
+        137: ['https://polygon.llamarpc.com'],
+        10: ['https://optimism.llamarpc.com'],
+      };
 
-        const isErc20 = !!tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000';
-        if (isErc20) {
-          const tokenContract = new ethers.Contract(
-            tokenAddress,
-            [
-              'function balanceOf(address owner) view returns (uint256)',
-              'function decimals() view returns (uint8)',
-              'function symbol() view returns (string)',
-              'function name() view returns (string)',
-            ],
-            web3Provider,
-          );
-
-          const [balanceResult, decimalsResult, symbolResult, nameResult] = await Promise.all([
-            tokenContract.balanceOf(address),
-            tokenContract.decimals(),
-            tokenContract.symbol(),
-            tokenContract.name(),
-          ]);
-
-          balance = balanceResult.toString();
-          decimals = decimalsResult;
-          symbol = symbolResult;
-          name = nameResult;
-        } else {
-          const nativeBal = await web3Provider.getBalance(address);
-          balance = nativeBal?.toString?.() || String(nativeBal);
-
-          const nativeCurrency = chain?.viemChain?.nativeCurrency;
-          decimals = nativeCurrency?.decimals || 18;
-          symbol = nativeCurrency?.symbol || 'ETH';
-          name = nativeCurrency?.name || 'Ether';
-        }
-
-        return { balance, decimals, symbol, name };
+      if (fallbackRpcs[chainId]) {
+        orderedUrls.push(...fallbackRpcs[chainId]);
       }
-    } catch (err) {
-      // Fall back to Relay RPCs
     }
 
-
+    // Do not attempt to use or switch the user's wallet for balance reads; rely on RPCs below
 
     if (orderedUrls.length === 0) {
       logger.error('No RPC URL available for chainId', new Error(String(chainId)));
       return null;
     }
 
-
-
-    // Try Relay-provided RPC URLs in order (no hardcoded endpoints)
+    // Try Relay-provided RPC URLs in order
     let lastError: unknown = undefined;
     for (const rpcUrl of orderedUrls) {
       try {
@@ -249,7 +193,8 @@ export async function getRelayBalance(
         let symbol: string;
         let name: string;
 
-        const isErc20 = !!tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000';
+        const isErc20 =
+          !!tokenAddress && tokenAddress !== '0x0000000000000000000000000000000000000000';
 
         if (isErc20) {
           const tokenContract = new ethers.Contract(

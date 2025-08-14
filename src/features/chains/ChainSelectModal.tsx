@@ -1,4 +1,5 @@
 import { MAINNET_RELAY_API, TESTNET_RELAY_API } from '@reservoir0x/relay-sdk';
+import Image from 'next/image';
 import { useState } from 'react';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
@@ -557,7 +558,7 @@ export function ChainSelectListModal({
                       {/* Token content */}
                       {(() => {
                         const tokenData = getTokensForChain(selectedChain);
-                        
+
                         // Apply local search filter to featured tokens if user is typing
                         let filteredFeaturedTokens = tokenData.featuredTokens;
                         if (searchTerm.trim()) {
@@ -566,53 +567,56 @@ export function ChainSelectListModal({
                             (token) =>
                               token.symbol?.toLowerCase().includes(searchLower) ||
                               token.name?.toLowerCase().includes(searchLower) ||
-                              token.address?.toLowerCase().includes(searchLower)
+                              token.address?.toLowerCase().includes(searchLower),
                           );
                         }
-                        
+
                         return (
                           <>
                             {/* Featured tokens - with local search filtering */}
-                            {!searchTerm.trim() || filteredFeaturedTokens.length > 0 ? (
-                              filteredFeaturedTokens.length > 0 && (
-                              <div className="mb-4">
-                                <h4 className="text-sm font-semibold text-gray-500 mb-3">
-                                  Featured Tokens
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {filteredFeaturedTokens.map((token) => (
-                                    <button
-                                      key={token.address}
-                                      onClick={() => {
-                                        onSelect(selectedChain, token);
-                                        close();
-                                        setSelectedChain(null);
-                                      }}
-                                      className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                                    >
-                                      <div className="relative">
-                                        {getTokenIconUrl(token) ? (
-                                          <img
-                                            src={getTokenIconUrl(token)!}
-                                            alt={token.symbol}
-                                            className="w-6 h-6 rounded-full"
-                                          />
-                                        ) : (
-                                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                                            <span className="text-xs font-bold text-white">
-                                              {token.symbol?.charAt(0)?.toUpperCase() || '?'}
-                                            </span>
+                            {!searchTerm.trim() || filteredFeaturedTokens.length > 0
+                              ? filteredFeaturedTokens.length > 0 && (
+                                  <div className="mb-4">
+                                    <h4 className="text-sm font-semibold text-gray-500 mb-3">
+                                      Featured Tokens
+                                    </h4>
+                                    <div className="flex flex-wrap gap-2">
+                                      {filteredFeaturedTokens.map((token) => (
+                                        <button
+                                          key={token.address}
+                                          onClick={() => {
+                                            onSelect(selectedChain, token);
+                                            close();
+                                            setSelectedChain(null);
+                                          }}
+                                          className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                                        >
+                                          <div className="relative">
+                                            {getTokenIconUrl(token) ? (
+                                              <Image
+                                                src={getTokenIconUrl(token)!}
+                                                alt={token.symbol}
+                                                width={24}
+                                                height={24}
+                                                className="w-6 h-6 rounded-full"
+                                              />
+                                            ) : (
+                                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                                                <span className="text-xs font-bold text-white">
+                                                  {token.symbol?.charAt(0)?.toUpperCase() || '?'}
+                                                </span>
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
-                                      <span className="text-sm font-medium text-black">
-                                        {token.symbol}
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )) : null}
+                                          <span className="text-sm font-medium text-black">
+                                            {token.symbol}
+                                          </span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )
+                              : null}
 
                             {/* Loading state for additional tokens */}
                             {isLoadingTokens && (
@@ -652,9 +656,11 @@ export function ChainSelectListModal({
                                           >
                                             <div className="flex items-center space-x-3">
                                               {getTokenIconUrl(token) ? (
-                                                <img
+                                                <Image
                                                   src={getTokenIconUrl(token)!}
                                                   alt={token.symbol}
+                                                  width={32}
+                                                  height={32}
                                                   className="w-8 h-8 rounded-full"
                                                 />
                                               ) : (
@@ -731,7 +737,7 @@ export function ChainSelectListModal({
                                     (token) =>
                                       token.symbol?.toLowerCase().includes(searchLower) ||
                                       token.name?.toLowerCase().includes(searchLower) ||
-                                      token.address?.toLowerCase().includes(searchLower)
+                                      token.address?.toLowerCase().includes(searchLower),
                                   );
                                 }
 
@@ -753,9 +759,11 @@ export function ChainSelectListModal({
                                         >
                                           <div className="flex items-center space-x-3">
                                             {getTokenIconUrl(token) ? (
-                                              <img
+                                              <Image
                                                 src={getTokenIconUrl(token)!}
                                                 alt={token.symbol}
+                                                width={32}
+                                                height={32}
                                                 className="w-8 h-8 rounded-full"
                                               />
                                             ) : (

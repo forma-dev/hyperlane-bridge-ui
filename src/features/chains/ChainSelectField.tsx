@@ -7,10 +7,10 @@ import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    useAccountAddressForChain,
-    useAccounts,
-    useConnectFns,
-    useDisconnectFns,
+  useAccountAddressForChain,
+  useAccounts,
+  useConnectFns,
+  useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';

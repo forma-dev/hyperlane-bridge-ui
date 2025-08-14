@@ -1,21 +1,20 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 
-import { ProviderType, TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
-import { ProtocolType, toTitleCase, toWei } from '@hyperlane-xyz/utils';
+import { TypedTransactionReceipt, WarpTxCategory } from '@hyperlane-xyz/sdk';
+import { toTitleCase, toWei } from '@hyperlane-xyz/utils';
 
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { getTokenByIndex, getWarpCore } from '../../context/context';
 import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
-import { tryGetChainProtocol } from '../chains/utils';
 import { AppState, useStore } from '../store';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    getAccountAddressForChain,
-    useAccounts,
-    useActiveChains,
-    useTransactionFns,
+  getAccountAddressForChain,
+  useAccounts,
+  useActiveChains,
+  useTransactionFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferFormValues, TransferStatus } from './types';
@@ -48,8 +47,8 @@ export function useTokenTransfer(onDone?: () => void) {
           values,
           transferIndex,
           activeAccounts,
-          activeChains,
-          transactionFns,
+          _activeChains: activeChains,
+          _transactionFns: transactionFns,
           addTransfer,
           updateTransferStatus,
           setIsLoading,
@@ -62,8 +61,8 @@ export function useTokenTransfer(onDone?: () => void) {
           values,
           transferIndex,
           activeAccounts,
-          activeChains,
-          transactionFns,
+          _activeChains: activeChains,
+          _transactionFns: transactionFns,
           addTransfer,
           updateTransferStatus,
           setIsLoading,
@@ -171,8 +170,8 @@ async function executeRelayTransfer({
   values,
   transferIndex,
   activeAccounts,
-  activeChains,
-  transactionFns,
+  _activeChains,
+  _transactionFns,
   addTransfer,
   updateTransferStatus,
   setIsLoading,
@@ -183,8 +182,8 @@ async function executeRelayTransfer({
   values: TransferFormValues;
   transferIndex: number;
   activeAccounts: ReturnType<typeof useAccounts>;
-  activeChains: ReturnType<typeof useActiveChains>;
-  transactionFns: ReturnType<typeof useTransactionFns>;
+  _activeChains: ReturnType<typeof useActiveChains>;
+  _transactionFns: ReturnType<typeof useTransactionFns>;
   addTransfer: (t: TransferContext) => void;
   updateTransferStatus: AppState['updateTransferStatus'];
   setIsLoading: (b: boolean) => void;
@@ -213,12 +212,12 @@ async function executeRelayTransfer({
     const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
 
     // Get chain IDs from dynamic Relay data (not hardcoded)
-    const originRelayChain = relayChains.find(chain => {
+    const originRelayChain = relayChains.find((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName === origin.toLowerCase();
     });
-    
-    const destinationRelayChain = relayChains.find(chain => {
+
+    const destinationRelayChain = relayChains.find((chain) => {
       const internalName = mapRelayChainToInternalName(chain.name);
       return internalName === destination.toLowerCase();
     });
@@ -227,7 +226,9 @@ async function executeRelayTransfer({
     const destinationChainId = destinationRelayChain?.id;
 
     if (!originChainId || !destinationChainId) {
-      throw new Error(`Chain IDs not found in Relay data: origin=${originChainId}, destination=${destinationChainId}`);
+      throw new Error(
+        `Chain IDs not found in Relay data: origin=${originChainId}, destination=${destinationChainId}`,
+      );
     }
 
     // Determine if this is a deposit or withdrawal
@@ -319,15 +320,15 @@ async function executeRelayTransfer({
     if (isDeposit) {
       // For deposits: user specifies how much Relay token to send
       const decimals = values.selectedToken?.decimals || 18;
-      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+      amountWei = BigInt(Math.floor(parseFloat(amount) * Math.pow(10, decimals))).toString();
     } else if (isWithdrawal) {
       // For withdrawals: user specifies how much TIA to send
       const decimals = 18; // TIA has 18 decimals
-      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+      amountWei = BigInt(Math.floor(parseFloat(amount) * Math.pow(10, decimals))).toString();
     } else {
       // Fallback
       const decimals = 18;
-      amountWei = (parseFloat(amount) * Math.pow(10, decimals)).toString();
+      amountWei = BigInt(Math.floor(parseFloat(amount) * Math.pow(10, decimals))).toString();
     }
 
     await getRelayQuote({
@@ -341,18 +342,22 @@ async function executeRelayTransfer({
       tradeType: 'EXACT_INPUT',
     });
 
-    // Step 2: Get swap data from Relay and execute using existing transaction functions
+    // Step 2: Execute via Relay SDK (no manual tx building)
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.SigningTransfer));
 
-    // Get quote with transaction data (but don't execute)
-    const { getClient } = await import('@reservoir0x/relay-sdk');
-    const client = getClient();
-
-    if (!client) {
-      throw new Error('Relay client not initialized');
+    // Ensure wallet is on the correct chain before executing
+    if (wallet && wallet.switchChain && wallet.getChainId) {
+      const currentChainId = await wallet.getChainId();
+      if (currentChainId !== originChainId) {
+        logger.debug(`Switching wallet from chain ${currentChainId} to ${originChainId}`);
+        await wallet.switchChain({ id: originChainId });
+      }
     }
 
-    // Get quote which contains the transaction steps
+    const { getClient } = await import('@reservoir0x/relay-sdk');
+    const client = getClient();
+    if (!client) throw new Error('Relay client not initialized');
+
     const quote = await client.actions.getQuote({
       chainId: originChainId,
       toChainId: destinationChainId,
@@ -365,73 +370,7 @@ async function executeRelayTransfer({
       wallet,
     });
 
-    // Step 3: Execute transactions manually using existing transaction functions
-    updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmingTransfer));
-
-    const hashes: string[] = [];
-    const steps = quote?.steps || [];
-
-    if (!steps || steps.length === 0) {
-      throw new Error('No transaction steps found in Relay response');
-    }
-
-    // Get transaction functions - use the same approach as working withdrawals
-    const originProtocol = tryGetChainProtocol(origin) || ProtocolType.Ethereum;
-    const sendTransaction = transactionFns[originProtocol].sendTransaction;
-    const activeChain = activeChains.chains[originProtocol];
-
-    // Execute each step manually
-    for (const step of steps) {
-      if (!step.items || !Array.isArray(step.items)) {
-        continue;
-      }
-
-      for (const item of step.items) {
-        if (item.status === 'incomplete' && item.data) {
-          // Determine which chain this transaction should execute on
-          const targetChainId = item.data.chainId;
-          // Transaction should be executed on the chain that matches the transaction's chainId
-          let targetChainName: string;
-          if (targetChainId === originChainId) {
-            targetChainName = origin;
-          } else if (targetChainId === destinationChainId) {
-            targetChainName = destination;
-          } else {
-            // Fallback: try to determine chain name from chainId
-            targetChainName = origin;
-          }
-
-          // Create transaction object using the expected format
-          const tx = {
-            type: ProviderType.EthersV5 as const,
-            transaction: {
-              to: item.data.to,
-              data: item.data.data,
-              value: item.data.value,
-              from: item.data.from,
-              chainId: targetChainId,
-              ...(item.data.gas && { gasLimit: item.data.gas }),
-              ...(item.data.gasPrice && { gasPrice: item.data.gasPrice }),
-              ...(item.data.maxFeePerGas && { maxFeePerGas: item.data.maxFeePerGas }),
-              ...(item.data.maxPriorityFeePerGas && {
-                maxPriorityFeePerGas: item.data.maxPriorityFeePerGas,
-              }),
-            },
-            category: WarpTxCategory.Transfer,
-          };
-
-          // Use the same transaction execution approach that works for withdrawals
-          const result = await sendTransaction({
-            chainName: targetChainName,
-            activeChainName: activeChain.chainName,
-            tx,
-          });
-
-          const hash = typeof result === 'string' ? result : result?.hash;
-          if (hash) hashes.push(hash);
-        }
-      }
-    }
+    await client.actions.execute({ quote, wallet });
 
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer));
     setIsLoading(false);
@@ -439,20 +378,34 @@ async function executeRelayTransfer({
     return;
   } catch (error) {
     updateTransferStatus(transferIndex, TransferStatus.Failed);
-    // Log the error to the console
+
+    // Check if user cancelled the transaction
+    const errorStr = JSON.stringify(error).toLowerCase();
+    const errorMsg = error instanceof Error ? error.message?.toLowerCase() : '';
+
+    const isUserCancellation =
+      errorStr.includes('user rejected') ||
+      errorStr.includes('user denied') ||
+      errorStr.includes('rejected the request') ||
+      errorMsg.includes('user rejected') ||
+      errorMsg.includes('user denied');
+
+    if (isUserCancellation) {
+      // Silent cancellation - just reset UI, no error toast
+      setIsLoading(false);
+      if (onDone) onDone();
+      return;
+    }
+
+    // Log actual errors to console (not user cancellations)
     logger.error('=== RELAY TRANSFER ERROR ===', error);
-    logger.error('Error type:', typeof error);
-    logger.error('Error message:', error instanceof Error ? error.message : 'No message');
-    logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
-    logger.error('Full error object:', error);
-    logger.error('Error JSON:', JSON.stringify(error));
 
     if (JSON.stringify(error).includes('ChainMismatchError')) {
       toast.error('Wallet must be connected to origin chain');
     } else if (error instanceof Error) {
-      toast.error(error.message || JSON.stringify(error));
+      toast.error(error.message || 'Transfer failed');
     } else {
-      toast.error(JSON.stringify(error));
+      toast.error('Transfer failed');
     }
     setIsLoading(false);
     if (onDone) onDone();
@@ -464,8 +417,8 @@ async function executeHyperlaneTransfer({
   values,
   transferIndex,
   activeAccounts,
-  activeChains,
-  transactionFns,
+  _activeChains,
+  _transactionFns,
   addTransfer,
   updateTransferStatus,
   setIsLoading,
@@ -474,8 +427,8 @@ async function executeHyperlaneTransfer({
   values: TransferFormValues;
   transferIndex: number;
   activeAccounts: ReturnType<typeof useAccounts>;
-  activeChains: ReturnType<typeof useActiveChains>;
-  transactionFns: ReturnType<typeof useTransactionFns>;
+  _activeChains: ReturnType<typeof useActiveChains>;
+  _transactionFns: ReturnType<typeof useTransactionFns>;
   addTransfer: (t: TransferContext) => void;
   updateTransferStatus: AppState['updateTransferStatus'];
   setIsLoading: (b: boolean) => void;
@@ -496,8 +449,8 @@ async function executeHyperlaneTransfer({
     const weiAmountOrId = isNft ? amount : toWei(amount, originToken.decimals);
     const originTokenAmount = originToken.amount(weiAmountOrId);
 
-    const sendTransaction = transactionFns[originProtocol].sendTransaction;
-    const activeChain = activeChains.chains[originProtocol];
+    const sendTransaction = _transactionFns[originProtocol].sendTransaction;
+    const activeChain = _activeChains.chains[originProtocol];
     const sender = getAccountAddressForChain(origin, activeAccounts.accounts);
     if (!sender) throw new Error('No active account found for origin chain');
 
@@ -557,7 +510,21 @@ async function executeHyperlaneTransfer({
     });
   } catch (error) {
     updateTransferStatus(transferIndex, TransferStatus.Failed);
-    if (JSON.stringify(error).includes('ChainMismatchError')) {
+
+    // Check if user cancelled the transaction
+    const errorStr = JSON.stringify(error).toLowerCase();
+    const errorMsg = error instanceof Error ? error.message?.toLowerCase() : '';
+
+    const isUserCancellation =
+      errorStr.includes('user rejected') ||
+      errorStr.includes('user denied') ||
+      errorStr.includes('rejected the request') ||
+      errorMsg.includes('user rejected') ||
+      errorMsg.includes('user denied');
+
+    if (isUserCancellation) {
+      // Silent cancellation - no error toast, just reset UI
+    } else if (JSON.stringify(error).includes('ChainMismatchError')) {
       // Wagmi switchNetwork call helps prevent this but isn't foolproof
       toast.error('Wallet must be connected to origin chain');
     } else {

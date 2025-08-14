@@ -84,7 +84,7 @@ export function useDynamicRelayBalance(
       // Quiet: no console fetch logs
       return await getRelayBalance(chainId, address, selectedTokenAddress);
     },
-    onError: (err) => {
+    onError: (_err) => {
       // Quiet: no console error logs
       // Don't show toast errors for balance fetching failures since they will retry
     },

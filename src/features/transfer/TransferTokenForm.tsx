@@ -28,10 +28,10 @@ import { SelectOrInputTokenIds } from '../tokens/SelectOrInputTokenIds';
 import { useDestinationBalance, useOriginBalance } from '../tokens/balances';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    getAccountAddressAndPubKey,
-    getAccountAddressForChain,
-    useAccountAddressForChain,
-    useAccounts,
+  getAccountAddressAndPubKey,
+  getAccountAddressForChain,
+  useAccountAddressForChain,
+  useAccounts,
 } from '../wallet/hooks/multiProtocol';
 import { AccountInfo } from '../wallet/hooks/types';
 
@@ -754,17 +754,17 @@ function ReviewDetails({ visible }: { visible: boolean }) {
           if (client) {
             // Get chain IDs from dynamic Relay data (not hardcoded)
             const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
-            
-            const originRelayChain = relayChains.find(chain => {
+
+            const originRelayChain = relayChains.find((chain) => {
               const internalName = mapRelayChainToInternalName(chain.name);
               return internalName === values.origin.toLowerCase();
             });
-            
-            const destinationRelayChain = relayChains.find(chain => {
+
+            const destinationRelayChain = relayChains.find((chain) => {
               const internalName = mapRelayChainToInternalName(chain.name);
               return internalName === values.destination.toLowerCase();
             });
-            
+
             const originChainId = originRelayChain?.id;
             const destinationChainId = destinationRelayChain?.id;
             if (!originChainId || !destinationChainId) return;
