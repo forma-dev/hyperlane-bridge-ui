@@ -8,7 +8,7 @@ import { getAccountAddressAndPubKey, useAccounts } from '../wallet/hooks/multiPr
 
 import { TransferFormValues } from './types';
 
-const FEE_QUOTE_REFRESH_INTERVAL = 15_000; // 10s
+const FEE_QUOTE_REFRESH_INTERVAL = 60_000; // 60s
 
 export function useFeeQuotes(
   { origin, destination, tokenIndex }: TransferFormValues,

@@ -84,9 +84,7 @@ export async function getCurrenciesV2(chainIds?: number[]) {
     const baseUrl = isMainnet ? MAINNET_RELAY_API : TESTNET_RELAY_API;
 
     // Minimal request body with only required parameters + chainIds
-    const requestBody: any = {
-      limit: 100,
-    };
+    const requestBody: any = {};
 
     // Add chainIds if provided
     if (chainIds && chainIds.length > 0) {
@@ -156,26 +154,10 @@ export async function getRelayBalance(
     const defaultUrls = [...(chain?.viemChain?.rpcUrls?.default?.http || [])];
     const publicUrls = [...(chain?.viemChain?.rpcUrls?.public?.http || [])];
 
-    // Keep original Relay SDK ordering but filter out only the most problematic RPCs
+    // Use all RPC URLs provided by Relay SDK without filtering
     const orderedUrls: string[] = Array.from(
       new Set([...(defaultUrls || []), ...(publicUrls || [])]),
-    ).filter((url) => !/mainnet\.base\.org/.test(url)); // Only filter base.org for 429s
-
-    // Add fallback RPCs if none found
-    if (orderedUrls.length === 0) {
-      const fallbackRpcs: Record<number, string[]> = {
-        8453: ['https://base.llamarpc.com', 'https://base-mainnet.diamondswap.org/rpc'],
-        1: ['https://eth.llamarpc.com'],
-        137: ['https://polygon.llamarpc.com'],
-        10: ['https://optimism.llamarpc.com'],
-      };
-
-      if (fallbackRpcs[chainId]) {
-        orderedUrls.push(...fallbackRpcs[chainId]);
-      }
-    }
-
-    // Do not attempt to use or switch the user's wallet for balance reads; rely on RPCs below
+    );
 
     if (orderedUrls.length === 0) {
       logger.error('No RPC URL available for chainId', new Error(String(chainId)));

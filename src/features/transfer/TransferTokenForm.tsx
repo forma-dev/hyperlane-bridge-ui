@@ -36,7 +36,6 @@ import {
 import { AccountInfo } from '../wallet/hooks/types';
 
 import { useFetchMaxAmount } from './maxAmount';
-import { getNativeCurrency } from './relaySdk';
 import { TransferFormValues } from './types';
 import { useFeeQuotes } from './useFeeQuotes';
 import { useRelayMaxAmount } from './useRelayMaxAmount';
@@ -774,7 +773,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
               values.selectedToken?.address ||
               (values.selectedToken as any)?.currency ||
               (values.selectedToken as any)?.contractAddress ||
-              getNativeCurrency(values.origin);
+              '0x0000000000000000000000000000000000000000'; // Native token
 
             const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
 

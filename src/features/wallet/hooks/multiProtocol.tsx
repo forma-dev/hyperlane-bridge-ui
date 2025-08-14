@@ -51,7 +51,7 @@ export function useAccounts(): {
     .flat()
     .map((a) => a.address.toLowerCase());
   if (readyAddresses.some((a) => config.addressBlacklist.includes(a))) {
-    throw new Error('Wallet address is blacklisted');
+    throw new Error('This wallet address cannot be used with this application');
   }
 
   const result = useMemo(
@@ -132,7 +132,7 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
   const onClickDisconnect =
     (env: ProtocolType, disconnectFn?: () => Promise<void> | void) => async () => {
       try {
-        if (!disconnectFn) throw new Error('Disconnect function is null');
+        if (!disconnectFn) throw new Error('Unable to disconnect wallet');
         await disconnectFn();
       } catch (error) {
         logger.error(`Error disconnecting from ${env} wallet`, error);

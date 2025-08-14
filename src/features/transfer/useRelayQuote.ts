@@ -4,7 +4,7 @@ import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
 
-import { RelayQuoteResponse, getNativeCurrency } from './relaySdk';
+import { RelayQuoteResponse } from './relaySdk';
 
 interface UseRelayQuoteParams {
   originChain: string;
@@ -214,7 +214,7 @@ export function useRelayQuote({
           selectedToken?.address ||
           selectedToken?.currency ||
           selectedToken?.contractAddress ||
-          getNativeCurrency(originChain);
+          '0x0000000000000000000000000000000000000000'; // Native token
 
         // Only use zero address for actual native tokens (ETH), not ERC20 tokens
         if (
@@ -228,7 +228,7 @@ export function useRelayQuote({
         destinationCurrency =
           destinationChain === 'forma' || destinationChain === 'sketchpad'
             ? '0x0000000000000000000000000000000000000000'
-            : getNativeCurrency(destinationChain);
+            : '0x0000000000000000000000000000000000000000'; // Native token
       } else {
         // Withdraw: Forma TIA -> Relay token
         // For withdrawals, we're sending TIA from Forma to get OP on Optimism
@@ -238,7 +238,7 @@ export function useRelayQuote({
           selectedToken?.address ||
           selectedToken?.currency ||
           selectedToken?.contractAddress ||
-          getNativeCurrency(destinationChain);
+          '0x0000000000000000000000000000000000000000'; // Native token
 
         // Only use zero address for actual native tokens (ETH), not ERC20 tokens
         if (

@@ -204,11 +204,11 @@ async function executeRelayTransfer({
     const sender = getAccountAddressForChain(origin, activeAccounts.accounts);
 
     if (!sender) {
-      throw new Error('No active account found for origin chain');
+      throw new Error('Please connect your wallet to continue');
     }
 
     // Import Relay API functions
-    const { getRelayQuote, getNativeCurrency } = await import('./relaySdk');
+    const { getRelayQuote } = await import('./relaySdk');
     const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
 
     // Get chain IDs from dynamic Relay data (not hardcoded)
@@ -226,9 +226,7 @@ async function executeRelayTransfer({
     const destinationChainId = destinationRelayChain?.id;
 
     if (!originChainId || !destinationChainId) {
-      throw new Error(
-        `Chain IDs not found in Relay data: origin=${originChainId}, destination=${destinationChainId}`,
-      );
+      throw new Error('Selected chains are not supported for this transfer');
     }
 
     // Determine if this is a deposit or withdrawal
@@ -236,23 +234,6 @@ async function executeRelayTransfer({
     const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
 
     // DEBUG: Log transfer type and chain information
-    logger.info('=== RELAY TRANSFER DEBUG ===');
-    logger.info('Transfer Type:', isDeposit ? 'DEPOSIT' : isWithdrawal ? 'WITHDRAWAL' : 'UNKNOWN');
-    logger.info('Origin:', origin, 'Destination:', destination);
-    logger.info('Origin Chain ID:', originChainId, 'Destination Chain ID:', destinationChainId);
-    logger.info('Wallet object:', wallet);
-    logger.info('Wallet type:', typeof wallet);
-    logger.info('Wallet chainId:', wallet?.chainId);
-    logger.info('Wallet address:', wallet?.address);
-    logger.info('Wallet connected:', wallet?.connected);
-    logger.info('Wallet methods:', {
-      sendTransaction: typeof wallet?.sendTransaction,
-      switchChain: typeof wallet?.switchChain,
-      getAddresses: typeof wallet?.getAddresses,
-      signMessage: typeof wallet?.signMessage,
-    });
-    logger.info('Sender:', sender);
-    logger.info('Is Deposit:', isDeposit, 'Is Withdrawal:', isWithdrawal);
 
     // Get the correct token symbol for the origin chain
     const getTokenSymbol = (_chainName: string) => {
@@ -284,7 +265,8 @@ async function executeRelayTransfer({
 
     if (isDeposit) {
       // Deposit: Relay token -> Forma TIA
-      originCurrency = values.selectedToken?.address || getNativeCurrency(origin);
+      originCurrency =
+        values.selectedToken?.address || '0x0000000000000000000000000000000000000000'; // Native token
 
       // Only use zero address for actual native tokens (ETH), not ERC20 tokens
       if (
@@ -300,7 +282,8 @@ async function executeRelayTransfer({
       // Withdraw: Forma TIA -> Relay token
       originCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
 
-      destinationCurrency = values.selectedToken?.address || getNativeCurrency(destination);
+      destinationCurrency =
+        values.selectedToken?.address || '0x0000000000000000000000000000000000000000'; // Native token
 
       // Only use zero address for actual native tokens (ETH), not ERC20 tokens
       if (
@@ -311,8 +294,8 @@ async function executeRelayTransfer({
       }
     } else {
       // Fallback to old logic
-      originCurrency = getNativeCurrency(origin);
-      destinationCurrency = getNativeCurrency(destination);
+      originCurrency = '0x0000000000000000000000000000000000000000'; // Native token
+      destinationCurrency = '0x0000000000000000000000000000000000000000'; // Native token
     }
 
     // Calculate amount in wei
@@ -349,14 +332,14 @@ async function executeRelayTransfer({
     if (wallet && wallet.switchChain && wallet.getChainId) {
       const currentChainId = await wallet.getChainId();
       if (currentChainId !== originChainId) {
-        logger.debug(`Switching wallet from chain ${currentChainId} to ${originChainId}`);
         await wallet.switchChain({ id: originChainId });
       }
     }
 
     const { getClient } = await import('@reservoir0x/relay-sdk');
     const client = getClient();
-    if (!client) throw new Error('Relay client not initialized');
+    if (!client)
+      throw new Error('Bridge service is temporarily unavailable. Please try again later.');
 
     const quote = await client.actions.getQuote({
       chainId: originChainId,
@@ -442,7 +425,8 @@ async function executeHyperlaneTransfer({
     const { origin, destination, tokenIndex, amount, recipient } = values;
     const originToken = getTokenByIndex(tokenIndex);
     const connection = originToken?.getConnectionForChain(destination);
-    if (!originToken || !connection) throw new Error('No token route found between chains');
+    if (!originToken || !connection)
+      throw new Error('Transfer between these chains is not currently supported');
 
     const originProtocol = originToken.protocol;
     const isNft = originToken.isNft();
@@ -452,7 +436,7 @@ async function executeHyperlaneTransfer({
     const sendTransaction = _transactionFns[originProtocol].sendTransaction;
     const activeChain = _activeChains.chains[originProtocol];
     const sender = getAccountAddressForChain(origin, activeAccounts.accounts);
-    if (!sender) throw new Error('No active account found for origin chain');
+    if (!sender) throw new Error('Please connect your wallet to the origin chain');
 
     const warpCore = getWarpCore();
 
@@ -462,7 +446,7 @@ async function executeHyperlaneTransfer({
     });
     if (!isCollateralSufficient) {
       toast.error('Insufficient collateral on destination for transfer');
-      throw new Error('Insufficient destination collateral');
+      throw new Error('Insufficient liquidity on destination chain. Please try a smaller amount.');
     }
 
     addTransfer({

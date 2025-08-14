@@ -102,41 +102,26 @@ interface RelayContextType {
 // Helper function to convert RelayChain to Wagmi format
 function convertRelayChainToWagmiFormat(chain: RelayChain) {
   // For Relay chains, we need to construct a proper RPC URL
-  // Most Relay chains will have their RPC URLs available through the Relay SDK
-  let rpcUrl = 'https://rpc.ankr.com/eth'; // Default fallback
-
-  // Map known chain IDs to their proper RPC URLs
-  const chainRpcMap: Record<number, string> = {
-    1: 'https://rpc.ankr.com/eth',
-    10: 'https://rpc.ankr.com/optimism',
-    56: 'https://rpc.ankr.com/bsc',
-    137: 'https://rpc.ankr.com/polygon',
-    250: 'https://rpc.ankr.com/fantom',
-    8453: 'https://rpc.ankr.com/base',
-    43114: 'https://rpc.ankr.com/avalanche',
-    42161: 'https://rpc.ankr.com/arbitrum',
-  };
-
-  if (chainRpcMap[chain.id]) {
-    rpcUrl = chainRpcMap[chain.id];
-  }
+  // Use RPC URLs from the Relay SDK chain data
+  const rpcUrl =
+    chain.viemChain?.rpcUrls?.default?.http?.[0] || chain.viemChain?.rpcUrls?.public?.http?.[0];
 
   return {
     id: chain.id,
     name: chain.name,
     network: chain.name.toLowerCase().replace(/\s+/g, '-'),
     nativeCurrency: {
-      decimals: chain.currency?.decimals || 18,
-      name: chain.currency?.name || 'ETH',
-      symbol: chain.currency?.symbol || 'ETH',
+      decimals: chain.currency?.decimals ?? 18,
+      name: chain.currency?.name || chain.name,
+      symbol: chain.currency?.symbol || chain.name.toUpperCase(),
     },
     rpcUrls: {
       default: {
-        http: [rpcUrl],
+        http: rpcUrl ? [rpcUrl] : [],
         webSocket: [],
       },
       public: {
-        http: [rpcUrl],
+        http: rpcUrl ? [rpcUrl] : [],
         webSocket: [],
       },
     },
@@ -172,8 +157,8 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         const relayClient = initializeRelayClient();
         setClient(relayClient);
 
-        // Wait a bit for the client to fully initialize
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Brief wait for client initialization
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Setup dynamic chains with error handling
         try {
@@ -237,10 +222,10 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
               disabled: chain.disabled || chain.enabled === false,
               currency: {
                 id: `${chain.name}-native`,
-                symbol: chain.currency?.symbol || 'ETH',
+                symbol: chain.currency?.symbol || chain.name.toUpperCase(),
                 name: chain.currency?.name || chain.displayName || chain.name,
                 address: chain.currency?.address || '0x0000000000000000000000000000000000000000',
-                decimals: chain.currency?.decimals || 18,
+                decimals: chain.currency?.decimals ?? 18,
                 supportsBridging: true,
               },
               featuredTokens: chain.featuredTokens || [],
@@ -292,7 +277,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
               symbol: chain.currency?.symbol || 'ETH',
               name: chain.currency?.name || chain.displayName || chain.name,
               address: chain.currency?.address || '0x0000000000000000000000000000000000000000',
-              decimals: chain.currency?.decimals || 18,
+              decimals: chain.currency?.decimals ?? 18,
               supportsBridging: true,
             },
             featuredTokens: chain.featuredTokens || [],
@@ -327,7 +312,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   const getQuote = useCallback(
     async (request: any) => {
       if (!client) {
-        throw new Error('Relay client not initialized');
+        throw new Error('Bridge service is currently unavailable');
       }
 
       try {
@@ -346,7 +331,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   const executeSwap = useCallback(
     async (request: any) => {
       if (!client) {
-        throw new Error('Relay client not initialized');
+        throw new Error('Bridge service is currently unavailable');
       }
 
       try {

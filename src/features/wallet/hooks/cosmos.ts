@@ -7,7 +7,6 @@ import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hy
 import { HexString, ProtocolType, assert } from '@hyperlane-xyz/utils';
 
 import { PLACEHOLDER_COSMOS_CHAIN } from '../../../consts/values';
-import { logger } from '../../../utils/logger';
 import { getCosmosChainNames } from '../../chains/metadata';
 import { getChainMetadata } from '../../chains/utils';
 
@@ -103,11 +102,9 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
       activeChainName?: ChainName;
     }) => {
       const chainContext = chainToContext[chainName];
-      if (!chainContext?.address) throw new Error(`Cosmos wallet not connected for ${chainName}`);
+      if (!chainContext?.address) throw new Error('Please connect your Cosmos wallet to continue');
 
       if (activeChainName && activeChainName !== chainName) await onSwitchNetwork(chainName);
-
-      logger.debug(`Sending tx on chain ${chainName}`);
 
       // Convert Long objects to strings for amino encoding compatibility
       const processedTransaction = convertLongToString(tx.transaction);

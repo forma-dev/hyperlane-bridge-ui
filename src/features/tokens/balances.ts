@@ -13,6 +13,9 @@ import { getRelayBalance } from '../wallet/context/RelayClient';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import { useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
 
+// Simple fixed polling intervals - much less aggressive
+const BALANCE_POLLING_INTERVAL = 30000; // 30 seconds
+
 // Helper function to determine if a chain is a Relay chain
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
   if (!chainName) return false;
@@ -69,7 +72,8 @@ export function useDynamicRelayBalance(
   const { relayChains } = useRelaySupportedChains();
   const chainId = chain ? getChainIdForRelayChain(chain, relayChains) : undefined;
 
-  // Quiet: no console prelogs
+  // Use fixed polling interval - much less aggressive
+  const pollingInterval = BALANCE_POLLING_INTERVAL;
 
   const {
     data: relayBalance,
@@ -89,7 +93,7 @@ export function useDynamicRelayBalance(
       // Don't show toast errors for balance fetching failures since they will retry
     },
     enabled: !!chainId && !!address,
-    refetchInterval: 5000,
+    refetchInterval: pollingInterval,
   });
 
   // Don't show toast errors for balance fetching since we have RPC fallbacks
@@ -114,13 +118,16 @@ export function useDynamicRelayBalance(
 }
 
 export function useBalance(chain?: ChainName, token?: IToken, address?: Address) {
+  // Use fixed polling interval - much less aggressive
+  const pollingInterval = BALANCE_POLLING_INTERVAL;
+
   const { isLoading, isError, error, data } = useQuery({
     queryKey: ['useBalance', chain, address, token?.addressOrDenom],
     queryFn: () => {
       if (!chain || !token || !address || !isValidAddress(address, token.protocol)) return null;
       return token.getBalance(getMultiProvider(), address);
     },
-    refetchInterval: 5000,
+    refetchInterval: pollingInterval,
   });
 
   useToastError(error, 'Error fetching balance');
