@@ -5,6 +5,7 @@ import {
   createClient,
 } from '@reservoir0x/relay-sdk';
 
+import { getAllRpcUrls, hasRpcOverride } from '../../../config/rpc-overrides';
 import { logger } from '../../../utils/logger';
 
 // Environment-based configuration
@@ -155,9 +156,20 @@ export async function getRelayBalance(
     const publicUrls = [...(chain?.viemChain?.rpcUrls?.public?.http || [])];
 
     // Use all RPC URLs provided by Relay SDK without filtering
-    const orderedUrls: string[] = Array.from(
+    let orderedUrls: string[] = Array.from(
       new Set([...(defaultUrls || []), ...(publicUrls || [])]),
     );
+
+    // Apply RPC overrides if configured for this chain
+    if (hasRpcOverride(chainId)) {
+      const overrideUrls = getAllRpcUrls(chainId);
+
+      // Add override URLs at the beginning for priority
+      orderedUrls = [...overrideUrls, ...orderedUrls];
+
+      // Remove duplicates while preserving order
+      orderedUrls = Array.from(new Set(orderedUrls));
+    }
 
     if (orderedUrls.length === 0) {
       logger.error('No RPC URL available for chainId', new Error(String(chainId)));

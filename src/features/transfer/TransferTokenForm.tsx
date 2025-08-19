@@ -1348,7 +1348,7 @@ function TokenDisplaySection({
       <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         {selectedToken.logoURI ? (
           <Image
-            src={`/api/proxy-image?url=${encodeURIComponent(selectedToken.logoURI)}`}
+            src={selectedToken.logoURI}
             alt={selectedToken.symbol}
             width={24}
             height={24}
@@ -1434,7 +1434,7 @@ function TokenDisplaySection({
       <div className="flex items-center gap-2 px-3 py-2 h-full min-w-[100px]">
         {selectedToken.logoURI ? (
           <Image
-            src={`/api/proxy-image?url=${encodeURIComponent(selectedToken.logoURI)}`}
+            src={selectedToken.logoURI}
             alt={selectedToken.symbol}
             width={24}
             height={24}

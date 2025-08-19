@@ -29,7 +29,7 @@ const cspHeader = `
   script-src 'self' https://www.googletagmanager.com${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ''};
   style-src 'self' 'unsafe-inline' ${STYLE_SRC_HOSTS.join(' ')};
   connect-src *;
-  img-src 'self' blob: data: ${IMG_SRC_HOSTS.join(' ')};
+  img-src 'self' blob: data: https: ${IMG_SRC_HOSTS.join(' ')};
   font-src 'self' data:;
   object-src 'none';
   base-uri 'self';

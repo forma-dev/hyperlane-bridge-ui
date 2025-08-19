@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 
+import { getAllRpcUrls, hasRpcOverride } from '../../../config/rpc-overrides';
 import { updateWagmiConfigWithRelayChains } from '../../../config/wagmi';
 import { logger } from '../../../utils/logger';
 // Import centralized Relay utilities
@@ -106,6 +107,28 @@ function convertRelayChainToWagmiFormat(chain: RelayChain) {
   const rpcUrl =
     chain.viemChain?.rpcUrls?.default?.http?.[0] || chain.viemChain?.rpcUrls?.public?.http?.[0];
 
+  // Apply RPC overrides if configured for this chain
+  let httpUrls: string[] = [];
+  let webSocketUrls: string[] = [];
+
+  if (hasRpcOverride(chain.id)) {
+    // Use RPC override configuration
+    const overrideUrls = getAllRpcUrls(chain.id);
+    httpUrls = [
+      ...overrideUrls, // Override URLs first
+      ...(rpcUrl ? [rpcUrl] : []), // Original RPC as fallback
+    ];
+  } else {
+    // Use original RPC URLs
+    httpUrls = rpcUrl ? [rpcUrl] : [];
+  }
+
+  // Always include original WebSocket URLs as fallback
+  webSocketUrls = [
+    ...(chain.viemChain?.rpcUrls?.default?.webSocket || []),
+    ...(chain.viemChain?.rpcUrls?.public?.webSocket || []),
+  ];
+
   return {
     id: chain.id,
     name: chain.name,
@@ -117,12 +140,12 @@ function convertRelayChainToWagmiFormat(chain: RelayChain) {
     },
     rpcUrls: {
       default: {
-        http: rpcUrl ? [rpcUrl] : [],
-        webSocket: [],
+        http: httpUrls,
+        webSocket: webSocketUrls,
       },
       public: {
-        http: rpcUrl ? [rpcUrl] : [],
-        webSocket: [],
+        http: httpUrls,
+        webSocket: webSocketUrls,
       },
     },
     ...(chain.iconUrl && {

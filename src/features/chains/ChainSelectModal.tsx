@@ -12,9 +12,9 @@ import { getChainDisplayName } from './utils';
 
 // Helper function to get reliable token icons
 const getTokenIconUrl = (token: any): string | null => {
-  // Use our proxy API to avoid CORS issues
-  const getProxiedUrl = (url: string) => {
-    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  // Use direct loading for token images (CSP wildcard allows all HTTPS images)
+  const getDirectUrl = (url: string) => {
+    return url;
   };
 
   // First priority: Use the token's logoURI if it exists and looks valid
@@ -22,7 +22,7 @@ const getTokenIconUrl = (token: any): string | null => {
     const logoUrl = token.metadata.logoURI;
     // Check if it's a valid URL
     if (logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://'))) {
-      return getProxiedUrl(logoUrl);
+      return getDirectUrl(logoUrl);
     }
   }
 
