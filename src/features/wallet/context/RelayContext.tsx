@@ -98,6 +98,8 @@ interface RelayContextType {
   // SDK-based methods
   getQuote: (request: any) => Promise<any>;
   executeSwap: (request: any) => Promise<any>;
+  // Token loading methods
+  loadTokensForChain: (chainId: number) => Promise<void>;
 }
 
 // Helper function to convert RelayChain to Wagmi format
@@ -180,15 +182,11 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         const relayClient = initializeRelayClient();
         setClient(relayClient);
 
-        // Brief wait for client initialization
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
         // Setup dynamic chains with error handling
         try {
           await setupDynamicChains();
-          // Also fetch chains for Wagmi config
-          await fetchDynamicChains();
-          setIsReady(true);
+          await fetchChainsOnly();
+          setIsReady(true); // Mark as ready after chains are loaded
         } catch (chainError) {
           logger.warn('Failed to setup dynamic chains', chainError);
           setIsReady(true);
@@ -202,18 +200,142 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
     initClient();
   }, []);
 
-  // Fetch supported chains using SDK
+  // Progressive loading: Fetch chains only first for immediate UI interaction
+  const fetchChainsOnly = useCallback(async () => {
+    try {
+      setIsLoadingChains(true);
+
+      // Fetch only chain data for immediate UI display
+      const directChains = await getAllAvailableChains();
+
+      if (directChains && directChains.length > 0) {
+        // Create minimal chain data for immediate UI display
+        const minimalChains: RelayChain[] = directChains
+          .filter((chain: any) => {
+            const hasValidName = chain.name && chain.name.trim().length > 0;
+            return hasValidName;
+          })
+          .map((chain: any) => ({
+            id: chain.id,
+            name: chain.name,
+            displayName: chain.displayName || chain.name,
+            iconUrl: chain.iconUrl,
+            logoUrl: chain.logoUrl,
+            enabled: !chain.disabled && chain.enabled !== false,
+            depositEnabled: chain.depositEnabled === true || chain.depositEnabled !== false,
+            disabled: chain.disabled || chain.enabled === false,
+            currency: {
+              id: `${chain.name}-native`,
+              symbol: chain.currency?.symbol || chain.name.toUpperCase(),
+              name: chain.currency?.name || chain.displayName || chain.name,
+              address: chain.currency?.address || '0x0000000000000000000000000000000000000000',
+              decimals: chain.currency?.decimals ?? 18,
+              supportsBridging: true,
+            },
+            // Minimal token data - will be enhanced later
+            featuredTokens: chain.featuredTokens || [],
+            erc20Currencies: chain.erc20Currencies || [],
+            additionalTokens: [],
+            viemChain: null,
+          }));
+
+        setRelayChains(minimalChains);
+        setIsLoadingChains(false);
+      }
+    } catch (error) {
+      logger.error('Failed to fetch chains only', error);
+      setIsLoadingChains(false);
+    }
+  }, []);
+
+  // Enhance chains with full token metadata in background
+  const enhanceWithTokenMetadata = useCallback(async (chainIds?: number[]) => {
+    try {
+      // Fetch token metadata in background
+      const currenciesV2 = await getCurrenciesV2(chainIds);
+
+      setRelayChains(prevChains => {
+        // Optimize data processing with Map for O(1) lookups
+        const currenciesByChainId = new Map<number, any[]>();
+        currenciesV2.forEach((currency: any) => {
+          if (!currenciesByChainId.has(currency.chainId)) {
+            currenciesByChainId.set(currency.chainId, []);
+          }
+          currenciesByChainId.get(currency.chainId)!.push(currency);
+        });
+
+        // Enhance existing chains with token metadata
+        return prevChains.map(chain => {
+          const chainCurrencies = currenciesByChainId.get(chain.id) || [];
+
+          // Remove duplicates by address using Map for better performance
+          const uniqueCurrenciesMap = new Map<string, any>();
+          chainCurrencies.forEach((currency: any) => {
+            const key = currency.address.toLowerCase();
+            if (!uniqueCurrenciesMap.has(key)) {
+              uniqueCurrenciesMap.set(key, currency);
+            }
+          });
+          const uniqueCurrencies = Array.from(uniqueCurrenciesMap.values());
+
+          return {
+            ...chain,
+            // Enhance with token metadata
+            additionalTokens: uniqueCurrencies.map((currency: any) => ({
+              id: currency.address,
+              symbol: currency.symbol,
+              name: currency.name,
+              address: currency.address,
+              decimals: currency.decimals,
+              supportsBridging: true,
+              metadata: currency.metadata,
+              source: 'v2-api',
+            })),
+          };
+        });
+      });
+    } catch (error) {
+      logger.error('Failed to enhance with token metadata', error);
+    }
+  }, []);
+
+  // Load tokens for a specific chain when user selects it
+  const loadTokensForChain = useCallback(async (chainId: number) => {
+    try {
+      // Check if we already have tokens for this chain
+      const existingChain = relayChains.find(chain => chain.id === chainId);
+      if (existingChain && existingChain.additionalTokens && existingChain.additionalTokens.length > 0) {
+        return;
+      }
+
+      // Fetch tokens for this specific chain
+      await enhanceWithTokenMetadata([chainId]);
+    } catch (error) {
+      logger.error(`Failed to load tokens for chain ${chainId}`, error);
+    }
+  }, [relayChains, enhanceWithTokenMetadata]);
+
+  // Fetch supported chains using SDK (fallback method)
   const fetchDynamicChains = useCallback(async () => {
     try {
       setIsLoadingChains(true);
 
-      // First try to get chains directly from the Relay API
-      const directChains = await getAllAvailableChains();
-
-      // Get currencies from v2 API
-      const currenciesV2 = await getCurrenciesV2();
+      // Run both API calls in parallel for better performance
+      const [directChains, currenciesV2] = await Promise.all([
+        getAllAvailableChains(),
+        getCurrenciesV2(),
+      ]);
 
       if (directChains && directChains.length > 0) {
+        // Optimize data processing with Map for O(1) lookups
+        const currenciesByChainId = new Map<number, any[]>();
+        currenciesV2.forEach((currency: any) => {
+          if (!currenciesByChainId.has(currency.chainId)) {
+            currenciesByChainId.set(currency.chainId, []);
+          }
+          currenciesByChainId.get(currency.chainId)!.push(currency);
+        });
+
         // Convert direct API chains to our format
         const directFormattedChains: RelayChain[] = directChains
           .filter((chain: any) => {
@@ -222,17 +344,18 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
             return hasValidName;
           })
           .map((chain: any) => {
-            // Get currencies for this specific chain from the v2 API
-            const chainCurrencies = currenciesV2.filter(
-              (currency: any) => currency.chainId === chain.id,
-            );
+            // Get currencies for this specific chain using Map lookup (O(1))
+            const chainCurrencies = currenciesByChainId.get(chain.id) || [];
 
-            // Remove duplicates by address
-            const uniqueCurrencies = chainCurrencies.filter(
-              (currency, index, self) =>
-                index ===
-                self.findIndex((c) => c.address.toLowerCase() === currency.address.toLowerCase()),
-            );
+            // Remove duplicates by address using Map for better performance
+            const uniqueCurrenciesMap = new Map<string, any>();
+            chainCurrencies.forEach((currency: any) => {
+              const key = currency.address.toLowerCase();
+              if (!uniqueCurrenciesMap.has(key)) {
+                uniqueCurrenciesMap.set(key, currency);
+              }
+            });
+            const uniqueCurrencies = Array.from(uniqueCurrenciesMap.values());
 
             return {
               id: chain.id,
@@ -369,13 +492,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
     [client],
   );
 
-  // Fetch chains when client is ready
-  useEffect(() => {
-    if (isReady && client) {
-      fetchDynamicChains();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, client]);
+  // Removed this useEffect as it was causing the fallback method to run
+  // and interfere with the progressive loading. Chains are now loaded
+  // in the main initialization flow.
 
   // Context value
   const contextValue = useMemo(
@@ -390,6 +509,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       refreshChains,
       getQuote,
       executeSwap,
+      loadTokensForChain,
     }),
     [
       client,
@@ -401,6 +521,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       refreshChains,
       getQuote,
       executeSwap,
+      loadTokensForChain,
     ],
   );
 
@@ -418,8 +539,8 @@ export function useRelayContext() {
 
 // Hook to get supported chains
 export function useRelaySupportedChains() {
-  const { relayChains, isLoadingChains, refreshChains } = useRelayContext();
-  return { relayChains, isLoadingChains, refreshChains };
+  const { relayChains, isLoadingChains, refreshChains, loadTokensForChain } = useRelayContext();
+  return { relayChains, isLoadingChains, refreshChains, loadTokensForChain };
 }
 
 // Compatibility functions for existing code

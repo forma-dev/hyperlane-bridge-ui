@@ -46,7 +46,9 @@ export function ChainSelectListModal({
   chains: ChainName[];
   onSelect: (chain: ChainName, token?: any) => void;
 }) {
-  const { relayChains, isLoadingChains } = useRelaySupportedChains();
+  const { relayChains, isLoadingChains, loadTokensForChain } = useRelaySupportedChains();
+  
+
   const [selectedChain, setSelectedChain] = useState<ChainName | null>(null);
 
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -207,7 +209,7 @@ export function ChainSelectListModal({
   // Direct search on value change (no debounce per UX request)
 
   // Function to handle network selection
-  const handleNetworkSelection = (chain: ChainName) => {
+  const handleNetworkSelection = async (chain: ChainName) => {
     if (isRelayChain(chain)) {
       setSelectedChain(chain);
 
@@ -221,7 +223,10 @@ export function ChainSelectListModal({
         // Clear previous search
         setSearchTerm('');
 
-        // Check if we already have tokens for this network
+        // Load tokens for this chain using our new lazy loading function
+        await loadTokensForChain(relayChain.id);
+        
+        // Also fetch the first batch of tokens for immediate display
         if (!loadedTokens[relayChain.id] || !hasLoadedAllTokens[relayChain.id]) {
           fetchAllTokensForNetwork(relayChain.id);
         }
@@ -364,8 +369,69 @@ export function ChainSelectListModal({
     <Modal width={'max-w-[800px]'} isOpen={isOpen} title="Select Network & Token" close={close}>
       {/* Loading state for entire modal */}
       {isLoadingChains ? (
-        <div className="mt-4 flex items-center justify-center h-[500px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="mt-4 h-[500px]">
+          <div className="flex h-full">
+            {/* Left side skeleton - Chain selection */}
+            <div className="w-1/2 pr-4">
+              <div className="mb-4 px-6">
+                <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="flex flex-col space-y-1">
+                {/* Popular chains skeleton */}
+                <div className="px-6 py-2">
+                  <div className="h-4 bg-gray-300 rounded w-24 animate-pulse mb-2"></div>
+                </div>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center px-6 py-2">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse mr-3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                  </div>
+                ))}
+                
+                {/* Other chains skeleton */}
+                <div className="px-6 py-2 mt-4">
+                  <div className="h-4 bg-gray-300 rounded w-32 animate-pulse mb-2"></div>
+                </div>
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex items-center px-6 py-2">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse mr-3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Right side skeleton - Token selection */}
+            <div className="w-1/2 pl-4 border-l border-gray-200">
+              <div className="mb-4 px-6">
+                <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6">
+                <div className="h-4 bg-gray-300 rounded w-28 animate-pulse mb-3"></div>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center p-2 border rounded">
+                      <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse mr-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-12 animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="h-4 bg-gray-300 rounded w-32 animate-pulse mb-3"></div>
+                <div className="space-y-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="flex items-center p-2">
+                      <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse mr-3"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-gray-200 rounded w-16 animate-pulse mb-1"></div>
+                        <div className="h-2 bg-gray-100 rounded w-20 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="mt-4 flex h-[500px]">
