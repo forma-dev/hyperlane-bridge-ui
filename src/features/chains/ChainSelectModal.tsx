@@ -47,7 +47,6 @@ export function ChainSelectListModal({
   onSelect: (chain: ChainName, token?: any) => void;
 }) {
   const { relayChains, isLoadingChains, loadTokensForChain } = useRelaySupportedChains();
-  
 
   const [selectedChain, setSelectedChain] = useState<ChainName | null>(null);
 
@@ -225,7 +224,7 @@ export function ChainSelectListModal({
 
         // Load tokens for this chain using our new lazy loading function
         await loadTokensForChain(relayChain.id);
-        
+
         // Also fetch the first batch of tokens for immediate display
         if (!loadedTokens[relayChain.id] || !hasLoadedAllTokens[relayChain.id]) {
           fetchAllTokensForNetwork(relayChain.id);
@@ -387,7 +386,7 @@ export function ChainSelectListModal({
                     <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
                   </div>
                 ))}
-                
+
                 {/* Other chains skeleton */}
                 <div className="px-6 py-2 mt-4">
                   <div className="h-4 bg-gray-300 rounded w-32 animate-pulse mb-2"></div>
@@ -400,7 +399,7 @@ export function ChainSelectListModal({
                 ))}
               </div>
             </div>
-            
+
             {/* Right side skeleton - Token selection */}
             <div className="w-1/2 pl-4 border-l border-gray-200">
               <div className="mb-4 px-6">
@@ -416,7 +415,7 @@ export function ChainSelectListModal({
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="h-4 bg-gray-300 rounded w-32 animate-pulse mb-3"></div>
                 <div className="space-y-2">
                   {[...Array(6)].map((_, i) => (

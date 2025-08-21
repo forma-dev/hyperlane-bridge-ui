@@ -61,8 +61,8 @@ function useUserActivity() {
     const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    events.forEach(event => {
+
+    events.forEach((event) => {
       document.addEventListener(event, handleActivity, true);
     });
 
@@ -74,7 +74,7 @@ function useUserActivity() {
     }, 30000); // Check every 30 seconds
 
     return () => {
-      events.forEach(event => {
+      events.forEach((event) => {
         document.removeEventListener(event, handleActivity, true);
       });
       clearInterval(inactivityCheck);
@@ -120,7 +120,7 @@ export function useDynamicRelayBalance(
 ) {
   const { relayChains } = useRelaySupportedChains();
   const chainId = chain ? getChainIdForRelayChain(chain, relayChains) : undefined;
-  
+
   // Get account info to check if wallet is connected
   const accountInfo = useAccountForChain(chain);
   const isWalletConnected = accountInfo?.isReady;
@@ -135,26 +135,28 @@ export function useDynamicRelayBalance(
     data: relayBalance,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: ['relayBalance', chainId, address, selectedTokenAddress],
-    queryFn: async () => {
+  } = useQuery(
+    ['relayBalance', chainId, address, selectedTokenAddress],
+    async () => {
       if (!chainId || !address) {
         return null;
       }
       // Quiet: no console fetch logs
       return await getRelayBalance(chainId, address, selectedTokenAddress);
     },
-    onError: (_err) => {
-      // Quiet: no console error logs
-      // Don't show toast errors for balance fetching failures since they will retry
+    {
+      onError: (_err) => {
+        // Quiet: no console error logs
+        // Don't show toast errors for balance fetching failures since they will retry
+      },
+      enabled: !!chainId && !!address && !!isWalletConnected, // Only run when wallet is connected
+      refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
+      staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
+      cacheTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
     },
-    enabled: !!chainId && !!address && !!isWalletConnected, // Only run when wallet is connected
-    refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
-    staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
-    gcTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
-  });
+  );
 
   // Don't show toast errors for balance fetching since we have RPC fallbacks
   // useToastError(error, 'Error fetching dynamic Relay balance');
@@ -188,19 +190,21 @@ export function useBalance(chain?: ChainName, token?: IToken, address?: Address)
   // Use smart polling based on user activity
   const pollingInterval = isUserActive ? ACTIVE_POLLING_INTERVAL : BALANCE_POLLING_INTERVAL;
 
-  const { isLoading, isError, error, data } = useQuery({
-    queryKey: ['useBalance', chain, address, token?.addressOrDenom],
-    queryFn: () => {
+  const { isLoading, isError, error, data } = useQuery(
+    ['useBalance', chain, address, token?.addressOrDenom],
+    () => {
       if (!chain || !token || !address || !isValidAddress(address, token.protocol)) return null;
       return token.getBalance(getMultiProvider(), address);
     },
-    enabled: !!chain && !!token && !!address && !!isWalletConnected, // Only run when wallet is connected
-    refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
-    staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
-    gcTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
-  });
+    {
+      enabled: !!chain && !!token && !!address && !!isWalletConnected, // Only run when wallet is connected
+      refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
+      staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
+      cacheTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
+    },
+  );
 
   useToastError(error, 'Error fetching balance');
 

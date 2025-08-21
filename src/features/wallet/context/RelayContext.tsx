@@ -254,7 +254,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
       // Fetch token metadata in background
       const currenciesV2 = await getCurrenciesV2(chainIds);
 
-      setRelayChains(prevChains => {
+      setRelayChains((prevChains) => {
         // Optimize data processing with Map for O(1) lookups
         const currenciesByChainId = new Map<number, any[]>();
         currenciesV2.forEach((currency: any) => {
@@ -265,7 +265,7 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         });
 
         // Enhance existing chains with token metadata
-        return prevChains.map(chain => {
+        return prevChains.map((chain) => {
           const chainCurrencies = currenciesByChainId.get(chain.id) || [];
 
           // Remove duplicates by address using Map for better performance
@@ -300,20 +300,27 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
   }, []);
 
   // Load tokens for a specific chain when user selects it
-  const loadTokensForChain = useCallback(async (chainId: number) => {
-    try {
-      // Check if we already have tokens for this chain
-      const existingChain = relayChains.find(chain => chain.id === chainId);
-      if (existingChain && existingChain.additionalTokens && existingChain.additionalTokens.length > 0) {
-        return;
-      }
+  const loadTokensForChain = useCallback(
+    async (chainId: number) => {
+      try {
+        // Check if we already have tokens for this chain
+        const existingChain = relayChains.find((chain) => chain.id === chainId);
+        if (
+          existingChain &&
+          existingChain.additionalTokens &&
+          existingChain.additionalTokens.length > 0
+        ) {
+          return;
+        }
 
-      // Fetch tokens for this specific chain
-      await enhanceWithTokenMetadata([chainId]);
-    } catch (error) {
-      logger.error(`Failed to load tokens for chain ${chainId}`, error);
-    }
-  }, [relayChains, enhanceWithTokenMetadata]);
+        // Fetch tokens for this specific chain
+        await enhanceWithTokenMetadata([chainId]);
+      } catch (error) {
+        logger.error(`Failed to load tokens for chain ${chainId}`, error);
+      }
+    },
+    [relayChains, enhanceWithTokenMetadata],
+  );
 
   // Fetch supported chains using SDK (fallback method)
   const fetchDynamicChains = useCallback(async () => {
