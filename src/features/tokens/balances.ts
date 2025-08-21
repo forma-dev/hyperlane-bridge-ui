@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ethers } from 'ethers';
+import { useEffect, useState } from 'react';
 
 import { IToken } from '@hyperlane-xyz/sdk';
 import { isValidAddress } from '@hyperlane-xyz/utils';
@@ -11,10 +12,16 @@ import { mapRelayChainToInternalName as relayMapChainName } from '../chains/rela
 import { TransferFormValues } from '../transfer/types';
 import { getRelayBalance } from '../wallet/context/RelayClient';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
-import { useAccountAddressForChain } from '../wallet/hooks/multiProtocol';
+import { useAccountAddressForChain, useAccountForChain } from '../wallet/hooks/multiProtocol';
 
-// Simple fixed polling intervals - much less aggressive
-const BALANCE_POLLING_INTERVAL = 30000; // 30 seconds
+// Reduced polling intervals to be less aggressive
+const BALANCE_POLLING_INTERVAL = 120000; // 2 minutes (was 30 seconds)
+const ACTIVE_POLLING_INTERVAL = 60000; // 1 minute when user is active
+
+// Prevent multiple balance queries from running simultaneously
+const BALANCE_QUERY_STALE_TIME = 30000; // 30 seconds - prevent refetching if data is fresh
+const BALANCE_QUERY_CACHE_TIME = 300000; // 5 minutes - keep data in cache
+// These settings help prevent duplicate API calls and reduce wallet connection stress
 
 // Helper function to determine if a chain is a Relay chain
 function isRelayChain(chainName: string, relayChains: any[]): boolean {
@@ -33,6 +40,48 @@ function isRelayChain(chainName: string, relayChains: any[]): boolean {
   }
 
   return false;
+}
+
+// Hook to detect user activity for smart polling
+function useUserActivity() {
+  const [isActive, setIsActive] = useState(true);
+  const [lastActivity, setLastActivity] = useState(Date.now());
+
+  useEffect(() => {
+    const handleActivity = () => {
+      setIsActive(true);
+      setLastActivity(Date.now());
+    };
+
+    const handleInactivity = () => {
+      setIsActive(false);
+    };
+
+    // Consider user inactive after 5 minutes of no activity
+    const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, true);
+    });
+
+    // Check for inactivity
+    const inactivityCheck = setInterval(() => {
+      if (Date.now() - lastActivity > INACTIVITY_TIMEOUT) {
+        handleInactivity();
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity, true);
+      });
+      clearInterval(inactivityCheck);
+    };
+  }, [lastActivity]);
+
+  return isActive;
 }
 
 // Helper function to map Relay chain names to internal names
@@ -71,9 +120,16 @@ export function useDynamicRelayBalance(
 ) {
   const { relayChains } = useRelaySupportedChains();
   const chainId = chain ? getChainIdForRelayChain(chain, relayChains) : undefined;
+  
+  // Get account info to check if wallet is connected
+  const accountInfo = useAccountForChain(chain);
+  const isWalletConnected = accountInfo?.isReady;
 
-  // Use fixed polling interval - much less aggressive
-  const pollingInterval = BALANCE_POLLING_INTERVAL;
+  // Detect user activity for smart polling
+  const isUserActive = useUserActivity();
+
+  // Use smart polling based on user activity
+  const pollingInterval = isUserActive ? ACTIVE_POLLING_INTERVAL : BALANCE_POLLING_INTERVAL;
 
   const {
     data: relayBalance,
@@ -92,8 +148,12 @@ export function useDynamicRelayBalance(
       // Quiet: no console error logs
       // Don't show toast errors for balance fetching failures since they will retry
     },
-    enabled: !!chainId && !!address,
-    refetchInterval: pollingInterval,
+    enabled: !!chainId && !!address && !!isWalletConnected, // Only run when wallet is connected
+    refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
+    staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
+    gcTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
   });
 
   // Don't show toast errors for balance fetching since we have RPC fallbacks
@@ -118,8 +178,15 @@ export function useDynamicRelayBalance(
 }
 
 export function useBalance(chain?: ChainName, token?: IToken, address?: Address) {
-  // Use fixed polling interval - much less aggressive
-  const pollingInterval = BALANCE_POLLING_INTERVAL;
+  // Get account info to check if wallet is connected
+  const accountInfo = useAccountForChain(chain);
+  const isWalletConnected = accountInfo?.isReady;
+
+  // Detect user activity for smart polling
+  const isUserActive = useUserActivity();
+
+  // Use smart polling based on user activity
+  const pollingInterval = isUserActive ? ACTIVE_POLLING_INTERVAL : BALANCE_POLLING_INTERVAL;
 
   const { isLoading, isError, error, data } = useQuery({
     queryKey: ['useBalance', chain, address, token?.addressOrDenom],
@@ -127,7 +194,12 @@ export function useBalance(chain?: ChainName, token?: IToken, address?: Address)
       if (!chain || !token || !address || !isValidAddress(address, token.protocol)) return null;
       return token.getBalance(getMultiProvider(), address);
     },
-    refetchInterval: pollingInterval,
+    enabled: !!chain && !!token && !!address && !!isWalletConnected, // Only run when wallet is connected
+    refetchInterval: isWalletConnected ? pollingInterval : false, // Smart polling: 1min when active, 2min when inactive
+    staleTime: BALANCE_QUERY_STALE_TIME, // Prevent refetching if data is fresh
+    gcTime: BALANCE_QUERY_CACHE_TIME, // Keep data in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
   });
 
   useToastError(error, 'Error fetching balance');
