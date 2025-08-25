@@ -7,10 +7,10 @@ import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-  useAccountAddressForChain,
-  useAccounts,
-  useConnectFns,
-  useDisconnectFns,
+    useAccountAddressForChain,
+    useAccounts,
+    useConnectFns,
+    useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
@@ -184,24 +184,34 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
+    
+    // Only set defaults if the field doesn't already have a value
+    const currentValue = field.value;
+    
     if (
       (transferType == 'withdraw' && label == 'From') ||
       (transferType == 'deposit' && label == 'To')
     ) {
-      handleChange(isMainnet ? 'forma' : 'sketchpad');
+      if (!currentValue) {
+        handleChange(isMainnet ? 'forma' : 'sketchpad');
+      }
       setIsLocked(true);
     } else {
       setIsLocked(false);
     }
 
     if (transferType == 'withdraw' && label == 'To') {
-      handleChange('stride');
+      if (!currentValue) {
+        handleChange('stride');
+      }
     }
 
     if (transferType == 'deposit' && label == 'From') {
-      handleChange('celestia');
+      if (!currentValue) {
+        handleChange('celestia');
+      }
     }
-  }, [transferType, label, handleChange]);
+  }, [transferType, label, handleChange, field.value]);
 
   const { values } = useFormikContext<any>();
 
