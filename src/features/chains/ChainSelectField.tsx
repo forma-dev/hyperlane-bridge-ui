@@ -1,5 +1,5 @@
 import { useField, useFormikContext } from 'formik';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
@@ -29,6 +29,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   const [field, , helpers] = useField<ChainName>(name);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const previousTransferType = useRef<string | null>(null);
 
   const { accounts } = useAccounts();
   const connectFns = useConnectFns();
@@ -185,33 +186,44 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
 
-    // Only set defaults if the field doesn't already have a value
-    const currentValue = field.value;
-
-    if (
-      (transferType == 'withdraw' && label == 'From') ||
-      (transferType == 'deposit' && label == 'To')
-    ) {
-      if (!currentValue) {
-        handleChange(isMainnet ? 'forma' : 'sketchpad');
+    // Only set defaults when transfer type actually changes or on initial mount
+    if (previousTransferType.current !== transferType) {
+      // Set defaults based on transfer type
+      if (
+        (transferType == 'withdraw' && label == 'From') ||
+        (transferType == 'deposit' && label == 'To')
+      ) {
+        helpers.setValue(isMainnet ? 'forma' : 'sketchpad');
+        onChange?.(isMainnet ? 'forma' : 'sketchpad');
+        setIsLocked(true);
+      } else {
+        setIsLocked(false);
       }
-      setIsLocked(true);
+
+      if (transferType == 'withdraw' && label == 'To') {
+        helpers.setValue('stride');
+        onChange?.('stride');
+      }
+
+      if (transferType == 'deposit' && label == 'From') {
+        helpers.setValue('celestia');
+        onChange?.('celestia');
+      }
+
+      // Update the previous transfer type
+      previousTransferType.current = transferType;
     } else {
-      setIsLocked(false);
-    }
-
-    if (transferType == 'withdraw' && label == 'To') {
-      if (!currentValue) {
-        handleChange('stride');
+      // Just handle locking logic for subsequent renders
+      if (
+        (transferType == 'withdraw' && label == 'From') ||
+        (transferType == 'deposit' && label == 'To')
+      ) {
+        setIsLocked(true);
+      } else {
+        setIsLocked(false);
       }
     }
-
-    if (transferType == 'deposit' && label == 'From') {
-      if (!currentValue) {
-        handleChange('celestia');
-      }
-    }
-  }, [transferType, label, handleChange, field.value]);
+  }, [transferType, label, helpers, onChange]);
 
   const { values } = useFormikContext<any>();
 
@@ -317,6 +329,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         close={() => setIsModalOpen(false)}
         chains={chains}
         onSelect={handleChange}
+        transferType={transferType}
+        currentChain={field.value}
       />
     </div>
   );

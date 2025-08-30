@@ -1,6 +1,6 @@
 import { MAINNET_RELAY_API, TESTNET_RELAY_API } from '@reservoir0x/relay-sdk';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Modal } from '../../components/layout/Modal';
@@ -40,11 +40,15 @@ export function ChainSelectListModal({
   close,
   chains,
   onSelect,
+  transferType,
+  currentChain,
 }: {
   isOpen: boolean;
   close: () => void;
   chains: ChainName[];
   onSelect: (chain: ChainName, token?: any) => void;
+  transferType?: string;
+  currentChain?: ChainName;
 }) {
   const { relayChains, isLoadingChains, loadTokensForChain } = useRelaySupportedChains();
 
@@ -57,6 +61,30 @@ export function ChainSelectListModal({
   const [hasLoadedAllTokens, setHasLoadedAllTokens] = useState<{ [chainId: string]: boolean }>({});
   const [searchResults, setSearchResults] = useState<{ [chainId: string]: any[] }>({});
   const [isSearching, setIsSearching] = useState(false);
+
+  // Set the selected chain when modal opens
+  useEffect(() => {
+    if (isOpen && currentChain) {
+      setSelectedChain(currentChain);
+
+      // If it's a Relay chain, load tokens for it
+      if (isRelayChain(currentChain)) {
+        const relayChain = relayChains.find((relayChain) => {
+          const internalName = mapRelayChainToInternalName(relayChain.name);
+          return internalName === currentChain.toLowerCase();
+        });
+
+        if (relayChain && relayChain.id) {
+          loadTokensForChain(relayChain.id);
+
+          // Also fetch the first batch of tokens for immediate display
+          if (!loadedTokens[relayChain.id] || !hasLoadedAllTokens[relayChain.id]) {
+            fetchAllTokensForNetwork(relayChain.id);
+          }
+        }
+      }
+    }
+  }, [isOpen, currentChain, relayChains, loadTokensForChain, loadedTokens, hasLoadedAllTokens]);
 
   // Helper function to determine if a chain is a Relay chain
   const isRelayChain = (chainName: string): boolean => {
@@ -212,6 +240,9 @@ export function ChainSelectListModal({
     if (isRelayChain(chain)) {
       setSelectedChain(chain);
 
+      // Immediately update the form with the selected chain
+      onSelect(chain);
+
       // Get the Relay chain data to find the chainId
       const relayChain = relayChains.find((relayChain) => {
         const internalName = mapRelayChainToInternalName(relayChain.name);
@@ -290,7 +321,6 @@ export function ChainSelectListModal({
   };
 
   // Separate chains by protocol
-  const hyperlaneChains = chains.filter((chain) => !isRelayChain(chain));
   const relayChainsList = chains
     .filter((chain) => isRelayChain(chain))
     .sort((a, b) => {
@@ -309,16 +339,61 @@ export function ChainSelectListModal({
       })
     : relayChainsList;
 
-  // Popular chains (ETH, ARB, OP)
-  const popularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
-  const popularChainsList = popularChains.filter((chain) =>
-    relayChainsList.some((relayChain) => relayChain.toLowerCase() === chain.toLowerCase()),
-  );
+  // Organize chains based on transfer type
+  let popularChainsList: ChainName[] = [];
+  let otherChainsList: ChainName[] = [];
 
-  // Other chains (excluding popular ones)
-  const otherChainsList = filteredRelayChains.filter(
-    (chain) => !popularChains.includes(chain.toLowerCase()),
-  );
+  if (transferType === 'deposit') {
+    // For deposits: Celestia and Stride at top, then popular chains, then A-Z
+    const depositPriorityChains: ChainName[] = ['celestia', 'stride'];
+    const standardPopularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
+
+    // Add priority chains first
+    popularChainsList = depositPriorityChains.filter((chain) =>
+      chains.some((c) => c.toLowerCase() === chain.toLowerCase()),
+    );
+
+    // Add standard popular chains
+    const standardPopular = standardPopularChains.filter((chain) =>
+      relayChainsList.some((relayChain) => relayChain.toLowerCase() === chain.toLowerCase()),
+    );
+    popularChainsList = [...popularChainsList, ...standardPopular];
+
+    // Other chains (excluding popular and priority ones)
+    otherChainsList = filteredRelayChains.filter(
+      (chain) => !popularChainsList.includes(chain.toLowerCase()),
+    );
+  } else if (transferType === 'withdraw') {
+    // For withdrawals: Stride at top, then popular chains, then A-Z
+    const withdrawPriorityChains: ChainName[] = ['stride'];
+    const standardPopularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
+
+    // Add priority chains first
+    popularChainsList = withdrawPriorityChains.filter((chain) =>
+      chains.some((c) => c.toLowerCase() === chain.toLowerCase()),
+    );
+
+    // Add standard popular chains
+    const standardPopular = standardPopularChains.filter((chain) =>
+      relayChainsList.some((relayChain) => relayChain.toLowerCase() === chain.toLowerCase()),
+    );
+    popularChainsList = [...popularChainsList, ...standardPopular];
+
+    // Other chains (excluding popular and priority ones)
+    otherChainsList = filteredRelayChains.filter(
+      (chain) => !popularChainsList.includes(chain.toLowerCase()),
+    );
+  } else {
+    // Fallback: standard popular chains, then A-Z
+    const standardPopularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
+    popularChainsList = standardPopularChains.filter((chain) =>
+      relayChainsList.some((relayChain) => relayChain.toLowerCase() === chain.toLowerCase()),
+    );
+
+    otherChainsList = filteredRelayChains.filter(
+      (chain) => !popularChainsList.includes(chain.toLowerCase()),
+    );
+  }
 
   const onSelectChain = (chain: ChainName) => {
     return () => {
@@ -348,8 +423,8 @@ export function ChainSelectListModal({
         key={chain}
         className={`w-full flex items-center text-sm px-6 py-2 border-l-4 ${
           isSelected
-            ? 'bg-blue-50 border-blue-500'
-            : 'border-transparent hover:bg-blue-50 hover:border-blue-200'
+            ? 'bg-orange-50 border-orange-500'
+            : 'border-transparent hover:bg-orange-50 hover:border-orange-200'
         }`}
         onClick={onSelectChain(chain)}
       >
@@ -475,45 +550,35 @@ export function ChainSelectListModal({
                   </>
                 ) : (
                   <>
-                    {/* Hyperlane Chains Section */}
-                    {hyperlaneChains.length > 0 && (
-                      <>
-                        <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
-                          Hyperlane Networks
-                        </div>
-                        {hyperlaneChains.map((chain) => renderChainItem(chain, 'hyperlane'))}
-                      </>
-                    )}
-
                     {/* Popular Chains Section */}
                     {popularChainsList.length > 0 && (
                       <>
-                        {hyperlaneChains.length > 0 && (
-                          <div className="border-t border-gray-200 my-2" />
-                        )}
                         <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
                           Popular Chains
                         </div>
-                        {popularChainsList.map((chain) => renderChainItem(chain, 'relay'))}
+                        {popularChainsList.map((chain) =>
+                          renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane'),
+                        )}
                       </>
                     )}
 
-                    {/* Other Relay Chains Section */}
+                    {/* Other Chains Section */}
                     {otherChainsList.length > 0 && (
                       <>
-                        {(hyperlaneChains.length > 0 || popularChainsList.length > 0) && (
+                        {popularChainsList.length > 0 && (
                           <div className="border-t border-gray-200 my-2" />
                         )}
                         <div className="px-6 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-white z-10">
                           Chains A-Z
                         </div>
-                        {otherChainsList.map((chain) => renderChainItem(chain, 'relay'))}
+                        {otherChainsList.map((chain) =>
+                          renderChainItem(chain, isRelayChain(chain) ? 'relay' : 'hyperlane'),
+                        )}
                       </>
                     )}
 
                     {/* No separation needed if only one type */}
-                    {hyperlaneChains.length === 0 &&
-                      popularChainsList.length === 0 &&
+                    {popularChainsList.length === 0 &&
                       otherChainsList.length === 0 &&
                       chains.length > 0 && (
                         <>
