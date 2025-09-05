@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { logger } from '../../utils/logger';
 import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { useRelayContext } from '../wallet/context/RelayContext';
 
@@ -307,43 +306,49 @@ export function useRelayQuote({
         quote,
       });
     } catch (err) {
-      logger.error('Failed to get Relay quote:', err);
-
       // Extract meaningful error messages from the error object
       let errorMessage = 'Failed to get quote';
 
       if (err instanceof Error) {
+        // Get the actual error message - check both err.message and err.rawError.message for Relay SDK errors
+        const actualMessage = (err as any).rawError?.message || err.message;
+
         // Check for specific error patterns and provide better messages
-        if (err.message.includes('404') || err.message.includes('not found')) {
-          errorMessage = 'Swap combination not supported';
-        } else if (err.message.includes('insufficient') && err.message.includes('balance')) {
+        if (actualMessage.includes('404') || actualMessage.includes('not found')) {
+          errorMessage = 'No available routes';
+        } else if (actualMessage.includes('insufficient') && actualMessage.includes('balance')) {
           errorMessage = 'Insufficient balance for this swap';
-        } else if (err.message.includes('minimum') || err.message.includes('min')) {
+        } else if (actualMessage.includes('minimum') || actualMessage.includes('min')) {
           errorMessage = 'Amount below minimum required';
-        } else if (err.message.includes('maximum') || err.message.includes('max')) {
+        } else if (actualMessage.includes('maximum') || actualMessage.includes('max')) {
           errorMessage = 'Amount exceeds maximum allowed';
-        } else if (err.message.includes('rate limit') || err.message.includes('429')) {
+        } else if (actualMessage.includes('rate limit') || actualMessage.includes('429')) {
           errorMessage = 'Too many requests, please try again later';
-        } else if (err.message.includes('network') || err.message.includes('connection')) {
+        } else if (actualMessage.includes('network') || actualMessage.includes('connection')) {
           errorMessage = 'Network error, please check your connection';
-        } else if (err.message.includes('chain') && err.message.includes('not supported')) {
+        } else if (actualMessage.includes('chain') && actualMessage.includes('not supported')) {
           errorMessage = 'Chain not supported for this swap';
-        } else if (err.message.includes('token') && err.message.includes('not supported')) {
+        } else if (actualMessage.includes('token') && actualMessage.includes('not supported')) {
           errorMessage = 'Token not supported on this chain';
-        } else if (err.message.includes('liquidity')) {
+        } else if (actualMessage.includes('liquidity')) {
           errorMessage = 'Insufficient liquidity for this swap';
         } else if (
-          err.message.toLowerCase().includes('unauthorized') ||
-          err.message.includes('401')
+          actualMessage.toLowerCase().includes('unauthorized') ||
+          actualMessage.includes('401')
         ) {
           errorMessage = 'Authorization error, please reconnect wallet';
-        } else if (err.message.toLowerCase().includes('forbidden') || err.message.includes('403')) {
+        } else if (
+          actualMessage.toLowerCase().includes('forbidden') ||
+          actualMessage.includes('403')
+        ) {
           errorMessage = 'Access denied for this operation';
-        } else if (err.message.includes('timeout')) {
+        } else if (actualMessage.includes('timeout')) {
           errorMessage = 'Request timed out, please try again';
-        } else if (err.message.trim()) {
+        } else if (actualMessage.includes('Swap combination not supported')) {
+          errorMessage = 'No available routes';
+        } else if (actualMessage.trim()) {
           // Use the actual error message if it's meaningful and not empty
-          errorMessage = err.message;
+          errorMessage = actualMessage;
         }
       }
 

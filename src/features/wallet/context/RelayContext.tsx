@@ -468,14 +468,9 @@ export function RelayProvider({ children }: PropsWithChildren<unknown>) {
         throw new Error('Bridge service is currently unavailable');
       }
 
-      try {
-        // Use SDK getQuote action as per documentation
-        const quote = await client.actions.getQuote(request);
-        return quote;
-      } catch (error) {
-        logger.error('Failed to get Relay quote via SDK:', error);
-        throw error;
-      }
+      // Use SDK getQuote action as per documentation
+      const quote = await client.actions.getQuote(request);
+      return quote;
     },
     [client],
   );

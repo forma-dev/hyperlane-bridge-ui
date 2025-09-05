@@ -40,6 +40,17 @@ export interface TransferContext {
   destination: ChainName;
   originTokenAddressOrDenom?: string;
   destTokenAddressOrDenom?: string;
+  // Store the full selected token object to preserve icon and metadata
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+    currency?: string;
+    contractAddress?: string;
+  };
   amount: string;
   sender: Address;
   recipient: Address;

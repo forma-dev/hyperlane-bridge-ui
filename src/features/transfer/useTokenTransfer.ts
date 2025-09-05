@@ -235,14 +235,21 @@ async function executeRelayTransfer({
 
     // DEBUG: Log transfer type and chain information
 
-    // Get the correct token symbol for the origin chain
-    const getTokenSymbol = (_chainName: string) => {
-      // For deposits: use the selected token symbol or fallback to native token
+    // Get the correct token address/denomination for the origin chain
+    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
+    const getTokenAddressOrDenom = (chainName: string) => {
+      // For deposits: use the selected token address or fallback to native token
       if (isDeposit) {
-        return values.selectedToken?.symbol || 'OP'; // Default to OP for Optimism
+        return values.selectedToken?.address || '0x0000000000000000000000000000000000000000';
       }
-      // For withdrawals: always TIA from Forma
-      return 'TIA';
+      // For withdrawals: use the actual TIA token address on Forma/Sketchpad
+      if (chainName === 'forma' || chainName === 'sketchpad') {
+        // Use the actual TIA token address on Forma/Sketchpad
+        return isMainnet
+          ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
+          : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53';
+      }
+      return '0x0000000000000000000000000000000000000000';
     };
 
     addTransfer({
@@ -250,8 +257,10 @@ async function executeRelayTransfer({
       status: TransferStatus.Preparing,
       origin,
       destination,
-      originTokenAddressOrDenom: getTokenSymbol(origin),
-      destTokenAddressOrDenom: getTokenSymbol(destination),
+      originTokenAddressOrDenom: getTokenAddressOrDenom(origin),
+      destTokenAddressOrDenom: getTokenAddressOrDenom(destination),
+      // Store the full selectedToken object to preserve icon and metadata
+      selectedToken: values.selectedToken,
       sender,
       recipient,
       amount,
@@ -456,6 +465,8 @@ async function executeHyperlaneTransfer({
       destination,
       originTokenAddressOrDenom: originToken.addressOrDenom,
       destTokenAddressOrDenom: connection.token.addressOrDenom,
+      // Store selectedToken for consistency with Relay transfers
+      selectedToken: values.selectedToken,
       sender,
       recipient,
       amount,

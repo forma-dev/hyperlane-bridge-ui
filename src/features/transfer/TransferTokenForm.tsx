@@ -44,6 +44,40 @@ import { useTokenTransfer } from './useTokenTransfer';
 
 // Removed VERIFIED_WORKING_CHAINS constant since we're now using all available Relay chains
 
+function AmountPreserver({
+  amount,
+  preservedAmountRef,
+  transferType,
+}: {
+  amount: string;
+  preservedAmountRef: React.MutableRefObject<string>;
+  transferType: string;
+}) {
+  const prevTransferType = useRef(transferType);
+
+  useEffect(() => {
+    // When transfer type changes, preserve the current amount
+    if (
+      prevTransferType.current !== transferType &&
+      amount &&
+      typeof amount === 'string' &&
+      amount.trim() !== ''
+    ) {
+      preservedAmountRef.current = amount;
+    }
+    prevTransferType.current = transferType;
+  }, [transferType, amount, preservedAmountRef]);
+
+  // Always update the preserved amount when it changes (but not empty)
+  useEffect(() => {
+    if (amount && typeof amount === 'string' && amount.trim() !== '') {
+      preservedAmountRef.current = amount;
+    }
+  }, [amount, preservedAmountRef]);
+
+  return null;
+}
+
 function ChainChangeWatcher() {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { origin, destination } = values;
@@ -52,8 +86,7 @@ function ChainChangeWatcher() {
   useEffect(() => {
     // Check if chains have changed
     if (prevChains.current.origin !== origin || prevChains.current.destination !== destination) {
-      // Clear form fields when chains change
-      setFieldValue('amount', '');
+      // Clear recipient field when chains change (but keep amount)
       setFieldValue('recipient', '');
 
       // Update the ref with current values
@@ -134,6 +167,9 @@ export function TransferTokenForm({
   isReview: boolean;
   setIsReview: any;
 }) {
+  // Store the amount to preserve it across transfer type changes
+  const preservedAmountRef = useRef<string>('');
+
   const initialValues = useFormInitialValues();
   // Accounts are not used directly here but kept for future validation flows
   // const { accounts } = useAccounts();
@@ -151,14 +187,23 @@ export function TransferTokenForm({
 
   return (
     <Formik<TransferFormValues>
-      initialValues={initialValues}
+      key={transferType} // Re-initialize form when transfer type changes
+      initialValues={{
+        ...initialValues,
+        amount: preservedAmountRef.current || initialValues.amount, // Restore preserved amount
+      }}
       onSubmit={onSubmitForm}
       validate={validate}
       validateOnChange={false}
       validateOnBlur={false}
     >
-      {({ isValidating }) => (
+      {({ isValidating, values }) => (
         <Form className="items-stretch w-full">
+          <AmountPreserver
+            amount={values.amount}
+            preservedAmountRef={preservedAmountRef}
+            transferType={transferType}
+          />
           <ChainChangeWatcher />
           <TokenSelectionWatcher transferType={transferType} />
           <div
@@ -431,7 +476,7 @@ function AmountSection({
       )}
       <div className="pt-1 flex items-center justify-between">
         <div className="min-h-[1rem]">
-          {isRelayTransfer && (
+          {isRelayTransfer && transferType === 'deposit' && (
             <QuoteErrorDisplay
               originChain={values.origin}
               destinationChain={values.destination}
@@ -1281,13 +1326,26 @@ function ReceiveSection({ isReview, transferType }: { isReview: boolean; transfe
           section="receive"
         />
       </div>
-      <div className="pt-1 text-right">
-        <TokenBalance
-          label="BALANCE"
-          balance={destinationBalance}
-          disabled={isReview}
-          transferType={transferType}
-        />
+      <div className="pt-1 flex items-center justify-between">
+        <div className="min-h-[1rem]">
+          {isUsingRelay && transferType === 'withdraw' && (
+            <QuoteErrorDisplay
+              originChain={values.origin}
+              destinationChain={values.destination}
+              amount={values.amount}
+              transferType={transferType}
+              selectedToken={values.selectedToken}
+            />
+          )}
+        </div>
+        <div className="text-right">
+          <TokenBalance
+            label="BALANCE"
+            balance={destinationBalance}
+            disabled={isReview}
+            transferType={transferType}
+          />
+        </div>
       </div>
     </div>
   );

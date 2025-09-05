@@ -28,27 +28,54 @@ import { useAccountForChain } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferStatus } from './types';
 
-// Helper function to get native currency symbol for Relay transfers using Relay API data
-function getNativeCurrencySymbol(chainName: string, relayChains: any[]): string {
-  // Use Relay API data first
-  const relayChain = relayChains.find((rc) => {
-    const internalName = rc.name.toLowerCase();
-    const searchName = chainName.toLowerCase();
-    return internalName === searchName || rc.name.toLowerCase() === searchName;
-  });
+// Helper function to get consistent token display info
+function getTokenDisplayInfo(transfer: TransferContext, relayChains: any[]) {
+  const { origin, destination, selectedToken } = transfer;
 
-  if (relayChain?.currency?.symbol) {
-    return relayChain.currency.symbol;
+  // Check if this is a Relay transfer
+  const isRelayTransfer =
+    relayChains.some((chain) => mapRelayChainToInternalName(chain.name) === origin.toLowerCase()) ||
+    relayChains.some(
+      (chain) => mapRelayChainToInternalName(chain.name) === destination.toLowerCase(),
+    ) ||
+    origin === 'forma' ||
+    origin === 'sketchpad' ||
+    destination === 'forma' ||
+    destination === 'sketchpad';
+
+  // For withdrawals (Forma -> other chains), always show TIA
+  const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+  if (isWithdrawal) {
+    return {
+      symbol: 'TIA',
+      logoURI: '/logos/celestia.png',
+      isRelay: isRelayTransfer,
+    };
   }
 
-  // Fallback for chains not in Relay API
-  const fallbackSymbols: Record<string, string> = {
-    forma: 'TIA',
-    sketchpad: 'TIA',
-    celestia: 'TIA',
-    stride: 'STRD',
+  // For deposits (other chains -> Forma), use selectedToken if available
+  if (selectedToken && selectedToken.symbol) {
+    return {
+      symbol: selectedToken.symbol,
+      logoURI: selectedToken.logoURI,
+      isRelay: isRelayTransfer,
+    };
+  }
+
+  // Fallback to TIA for Forma chains
+  if (origin === 'forma' || origin === 'sketchpad') {
+    return {
+      symbol: 'TIA',
+      logoURI: '/logos/celestia.png',
+      isRelay: isRelayTransfer,
+    };
+  }
+
+  return {
+    symbol: 'TIA', // Default fallback
+    logoURI: '/logos/celestia.png',
+    isRelay: isRelayTransfer,
   };
-  return fallbackSymbols[chainName.toLowerCase()] || 'Unknown';
 }
 
 export function TransfersDetailsModal({
@@ -137,15 +164,9 @@ export function TransfersDetailsModal({
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
   }, [transfer, relayChains]);
 
-  // For Relay transfers, derive a user-friendly symbol instead of showing raw addresses
-  // - Withdrawals (Forma -> Relay): always TIA
-  // - Deposits (Relay -> Forma): show the selected token symbol saved in transfer context
-  //   (fallback to Relay native symbol if missing)
-  const relayTokenSymbol = isRelayTransfer
-    ? origin === 'forma' || origin === 'sketchpad'
-      ? 'TIA'
-      : transfer.originTokenAddressOrDenom || getNativeCurrencySymbol(origin, relayChains)
-    : undefined;
+  // Get consistent token display info
+  const tokenDisplayInfo = getTokenDisplayInfo(transfer, relayChains);
+  const displaySymbol = tokenDisplayInfo.symbol;
 
   // For non-Relay transfers, use warp core to find token with error handling
   const token = useMemo(() => {
@@ -209,7 +230,7 @@ export function TransfersDetailsModal({
 
       <div className="mt-4 p-3 flex items-center justify-center w-full bg-gray-150 border border-gray-400 rounded-md">
         {isRelayTransfer ? (
-          // For Relay transfers, show a custom currency icon
+          // For Relay transfers, show token icon using same logic as the form
           (() => {
             // For withdraws (Forma -> Relay chains), always show TIA logo
             const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
@@ -226,41 +247,30 @@ export function TransfersDetailsModal({
               );
             }
 
-            // For deposits (Relay chains -> Forma), use Relay API icon
-            const relayChain = relayChains.find((rc) => {
-              const internalName = mapRelayChainToInternalName(rc.name);
-              return internalName === origin.toLowerCase();
-            });
+            // For deposits, use the token icon from display info
+            if (tokenDisplayInfo.logoURI) {
+              return (
+                <Image
+                  src={tokenDisplayInfo.logoURI}
+                  alt={tokenDisplayInfo.symbol}
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                />
+              );
+            }
 
-            const getCurrencyIcon = (symbol: string) => {
-              // Use Relay API icon if available
-              if (relayChain?.iconUrl || relayChain?.logoUrl) {
-                const iconSrc = relayChain.iconUrl || relayChain.logoUrl;
-                return (
-                  <Image
-                    src={iconSrc!}
-                    alt={symbol}
-                    width={30}
-                    height={30}
-                    className="rounded-full"
-                  />
-                );
-              }
-
-              // No fallback icon - only use Relay API icons
-              return null;
-            };
-
-            return relayTokenSymbol ? getCurrencyIcon(relayTokenSymbol) : null;
+            // No icon available
+            return null;
           })()
         ) : (
           <TokenIcon token={token} size={30} />
         )}
         <div className="ml-2 flex items items-baseline">
-          <span className="text-xl font-medium">{amount}</span>
-          <span className="text-xl font-medium ml-1">
-            {isRelayTransfer ? relayTokenSymbol : token?.symbol}
+          <span className="text-xl font-medium">
+            {amount?.toString().replace(/\s*(utia|TIA)\s*$/, '') || amount}
           </span>
+          <span className="text-xl font-medium ml-1">{displaySymbol}</span>
         </div>
       </div>
 
@@ -290,7 +300,7 @@ export function TransfersDetailsModal({
           {(token?.addressOrDenom || (isRelayTransfer && originTokenAddressOrDenom)) && (
             <TransferProperty
               name="Token Address or Denom"
-              value={isRelayTransfer ? `Native ${relayTokenSymbol}` : token?.addressOrDenom || ''}
+              value={isRelayTransfer ? displaySymbol : token?.addressOrDenom || ''}
             />
           )}
           {originTxHash && (
