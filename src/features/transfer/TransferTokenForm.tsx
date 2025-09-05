@@ -363,10 +363,12 @@ function RecipientAddressField({
 
   // Auto-populate with connected wallet on destination when available
   useEffect(() => {
-    if (!values.recipient && destinationAccount) {
+    if (destinationAccount) {
+      // Always update recipient to match the connected wallet address
+      // This ensures it updates when switching wallets
       setFieldValue('recipient', destinationAccount);
     }
-  }, [destinationAccount, setFieldValue, values.recipient]);
+  }, [destinationAccount, setFieldValue]);
 
   const onSelf = () => {
     setFieldValue('recipient', destinationAccount || '');
