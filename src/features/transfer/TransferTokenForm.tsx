@@ -1230,9 +1230,13 @@ function getRelayChainNames(relayChains: any[]): string[] {
       // Use the chain name directly as the internal name
       const internalName = chain.name.toLowerCase();
 
-      // Exclude Forma from selectable Relay chains
-      // Forma is a hardcoded destination and should not be selectable
-      if (internalName && !chainNames.includes(internalName) && internalName !== 'forma') {
+      // Exclude Forma and Solana from selectable Relay chains
+      // Forma is a hardcoded destination and Solana should not be selectable
+      if (
+        internalName &&
+        !chainNames.includes(internalName) &&
+        !['forma', 'solana'].includes(internalName)
+      ) {
         chainNames.push(internalName);
       }
     }
