@@ -8,7 +8,6 @@ import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hy
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../../context/context';
-import { logger } from '../../../utils/logger';
 import { getChainByRpcEndpoint } from '../../chains/utils';
 
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
@@ -79,7 +78,6 @@ export function useSolTransactionFns(): ChainTransactionFns {
         value: { blockhash, lastValidBlockHeight },
       } = await connection.getLatestBlockhashAndContext();
 
-      logger.debug(`Sending tx on chain ${chainName}`);
       const signature = await sendSolTransaction(tx.transaction, connection, { minContextSlot });
 
       const confirm = (): Promise<TypedTransactionReceipt> =>

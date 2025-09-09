@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import { SmallSpinner } from '../../components/animation/SmallSpinner';
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { Identicon } from '../../components/icons/Identicon';
-import { tryFindToken } from '../../context/context';
 import ArrowRightIcon from '../../images/icons/arrow-right.svg';
 import CollapseIcon from '../../images/icons/collapse-icon-red.svg';
 import Logout from '../../images/icons/logout.svg';
@@ -19,8 +18,44 @@ import { useStore } from '../store';
 import { TransfersDetailsModal } from '../transfer/TransfersDetailsModal';
 import { TransferContext } from '../transfer/types';
 
+import { useRelaySupportedChains } from './context/RelayContext';
 import { useAccounts, useDisconnectFns } from './hooks/multiProtocol';
-import { AccountInfo } from './hooks/types';
+import { AccountInfo, ChainAddress } from './hooks/types';
+
+// Helper function to get consistent token display info (same as in modal)
+function getTokenDisplayInfo(transfer: TransferContext, _relayChains: any[]) {
+  const { origin, selectedToken } = transfer;
+
+  // For withdrawals (Forma -> other chains), always show TIA
+  const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+  if (isWithdrawal) {
+    return {
+      symbol: 'TIA',
+      logoURI: '/logos/celestia.png',
+    };
+  }
+
+  // For deposits (other chains -> Forma), use selectedToken if available
+  if (selectedToken && selectedToken.symbol) {
+    return {
+      symbol: selectedToken.symbol,
+      logoURI: selectedToken.logoURI,
+    };
+  }
+
+  // Fallback to TIA for Forma chains
+  if (origin === 'forma' || origin === 'sketchpad') {
+    return {
+      symbol: 'TIA',
+      logoURI: '/logos/celestia.png',
+    };
+  }
+
+  return {
+    symbol: 'TIA', // Default fallback
+    logoURI: '/logos/celestia.png',
+  };
+}
 
 export function SideBarMenu({
   onConnectWallet,
@@ -114,7 +149,7 @@ export function SideBarMenu({
                       acc.addresses.map((addr, j) => {
                         //if (addr?.chainName?.includes(PLACEHOLDER_COSMOS_CHAIN)) return null;
                         return (
-                          <AccountSummary key={`${i}-${j}`} account={acc} address={addr.address} />
+                          <AccountSummary key={`${i}-${j}`} account={acc} chainAddress={addr} />
                         );
                       }),
                     )}
@@ -176,26 +211,37 @@ export function SideBarMenu({
   );
 }
 
-function AccountSummary({ address }: { account: AccountInfo; address: Address }) {
+function AccountSummary({
+  account: _account,
+  chainAddress,
+}: {
+  account: AccountInfo;
+  chainAddress: ChainAddress;
+}) {
   const onClickCopy = async () => {
-    if (!address) return;
-    await tryClipboardSet(address);
+    if (!chainAddress.address) return;
+    await tryClipboardSet(chainAddress.address);
     toast.success('Address copied to clipboard', { autoClose: 2000 });
   };
 
   return (
     <button
-      key={address}
+      key={chainAddress.address}
       onClick={onClickCopy}
       className={`${styles.btn} bg-white border-[0.5px] border-border border-solid`}
     >
       <div className="shrink-0">
-        <Identicon address={address} size={40} />
+        <Identicon address={chainAddress.address} size={40} />
       </div>
       <div className="flex flex-col mx-3 items-start">
-        {/* <div className="text-gray-800 text-sm font-normal">{account.connectorName || 'Wallet'}</div> */}
+        {/* Show full chain name if available */}
+        {chainAddress.chainName && (
+          <div className="text-gray-600 text-xs font-medium">
+            {getChainDisplayName(chainAddress.chainName, false)}
+          </div>
+        )}
         <div className="text-black font-medium leading-6 text-sm truncate w-64">
-          {address ? address : 'Unknown'}
+          {chainAddress.address ? chainAddress.address : 'Unknown'}
         </div>
       </div>
     </button>
@@ -209,8 +255,10 @@ function TransferSummary({
   transfer: TransferContext;
   onClick: () => void;
 }) {
-  const { amount, origin, destination, status, timestamp, originTokenAddressOrDenom } = transfer;
-  const token = tryFindToken(origin, originTokenAddressOrDenom);
+  const { amount, origin, destination, status, timestamp } = transfer;
+
+  const { relayChains } = useRelaySupportedChains();
+  const tokenDisplayInfo = getTokenDisplayInfo(transfer, relayChains);
 
   return (
     <button
@@ -225,18 +273,20 @@ function TransferSummary({
         <div className="flex flex-col">
           <div className="flex flex-col">
             <div className="flex items items-baseline">
-              <span className="text-black text-sm font-medium leading-6">{amount}</span>
+              <span className="text-black text-sm font-medium leading-6">
+                {amount?.toString().replace(/\s*(utia|TIA)\s*$/, '') || amount}
+              </span>
               <span className="text-black text-sm font-medium leading-6 ml-1">
-                {token?.symbol || ''}
+                {tokenDisplayInfo.symbol}
               </span>
             </div>
             <div className="mt-1 flex flex-row items-center">
               <span className="text-black text-sm font-medium leading-6 tracking-wide">
-                {getChainDisplayName(origin, true)}
+                {getChainDisplayName(origin, false)}
               </span>
               <Image className="mx-1" src={ArrowRightIcon} width={10} height={10} alt="" />
               <span className="text-black text-sm font-medium leading-6 tracking-wide">
-                {getChainDisplayName(destination, true)}
+                {getChainDisplayName(destination, false)}
               </span>
             </div>
           </div>

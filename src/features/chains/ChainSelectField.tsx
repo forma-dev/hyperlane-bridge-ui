@@ -1,10 +1,11 @@
-import { useField } from 'formik';
-import { useCallback, useEffect, useState } from 'react';
+import { useField, useFormikContext } from 'formik';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
+import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
   useAccountAddressForChain,
   useAccounts,
@@ -13,7 +14,7 @@ import {
 } from '../wallet/hooks/multiProtocol';
 
 import { ChainSelectListModal } from './ChainSelectModal';
-import { formatAddress, getChainDisplayName } from './utils';
+import { formatAddress, getChainDisplayName, mapRelayChainToInternalName } from './utils';
 
 type Props = {
   name: string;
@@ -24,29 +25,74 @@ type Props = {
   transferType: string;
 };
 
-const cosmosChainIds = ['stride', 'celestia'];
-const evmChainIds = ['forma', 'sketchpad'];
-
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const previousTransferType = useRef<string | null>(null);
 
   const { accounts } = useAccounts();
   const connectFns = useConnectFns();
   const disconnectFns = useDisconnectFns();
+  const { relayChains } = useRelaySupportedChains();
+  const { setFieldValue } = useFormikContext<any>();
+
+  // Dynamic chain protocol detection
+  const chainProtocols = useMemo(() => {
+    const cosmos: string[] = [];
+    const evm: string[] = [];
+
+    // Add hardcoded known chains for this bridge
+    cosmos.push('stride', 'celestia');
+    evm.push('forma', 'sketchpad');
+
+    // Add Relay chains (all EVM-based) - using centralized mapping
+    relayChains.forEach((chain) => {
+      if (chain.name) {
+        const internalName = mapRelayChainToInternalName(chain.name);
+
+        // Only add if not already present
+        if (internalName && !evm.includes(internalName) && !cosmos.includes(internalName)) {
+          evm.push(internalName);
+        }
+      }
+    });
+
+    return { cosmos, evm };
+  }, [relayChains]);
+
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
 
   const chainId = field.value;
   const account = useAccountAddressForChain(chainId);
 
+  // Wallet connection state for the current chain
+  const isWalletConnected =
+    (chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
+    (chainProtocols.evm.includes(chainId) && evmNumReady > 0);
+
   const handleChange = useCallback(
-    (newChainId: ChainName) => {
+    (newChainId: ChainName, token?: any) => {
       helpers.setValue(newChainId);
       onChange?.(newChainId);
+
+      // If a token was selected, update the form with token details
+      if (token) {
+        const tokenData = {
+          address: token.address,
+          symbol: token.symbol,
+          name: token.name,
+          decimals: token.decimals,
+          logoURI: token.metadata?.logoURI,
+          chainId: relayChains.find(
+            (rc) => mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase(),
+          )?.id,
+        };
+        setFieldValue('selectedToken', tokenData);
+      }
     },
-    [helpers, onChange],
+    [helpers, onChange, setFieldValue, relayChains],
   );
 
   const onClick = () => {
@@ -55,7 +101,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const onDisconnectEnv = () => async () => {
     let env: string = '';
-    if (cosmosChainIds.includes(chainId)) {
+    if (chainProtocols.cosmos.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
       env = ProtocolType.Ethereum;
@@ -67,7 +113,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
 
   const onClickEnv = () => async () => {
     let env: string = '';
-    if (cosmosChainIds.includes(chainId)) {
+    if (chainProtocols.cosmos.includes(chainId)) {
       env = ProtocolType.Cosmos;
     } else {
       env = ProtocolType.Ethereum;
@@ -133,29 +179,62 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     }
 
     const connectFn = connectFns[env];
+    // Do not block connect based on wallet count; rely on wagmi address
     if (connectFn) connectFn();
   };
 
   useEffect(() => {
     const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
-    if (
-      (transferType == 'withdraw' && label == 'From') ||
-      (transferType == 'deposit' && label == 'To')
-    ) {
-      handleChange(isMainnet ? 'forma' : 'sketchpad');
-      setIsLocked(true);
+
+    // Only set defaults when transfer type actually changes or on initial mount
+    if (previousTransferType.current !== transferType) {
+      // Set defaults based on transfer type
+      if (
+        (transferType == 'withdraw' && label == 'From') ||
+        (transferType == 'deposit' && label == 'To')
+      ) {
+        helpers.setValue(isMainnet ? 'forma' : 'sketchpad');
+        onChange?.(isMainnet ? 'forma' : 'sketchpad');
+        setIsLocked(true);
+      } else {
+        setIsLocked(false);
+      }
+
+      if (transferType == 'withdraw' && label == 'To') {
+        helpers.setValue('stride');
+        onChange?.('stride');
+      }
+
+      if (transferType == 'deposit' && label == 'From') {
+        helpers.setValue('celestia');
+        onChange?.('celestia');
+      }
+
+      // Update the previous transfer type
+      previousTransferType.current = transferType;
     } else {
-      setIsLocked(false);
+      // Just handle locking logic for subsequent renders
+      if (
+        (transferType == 'withdraw' && label == 'From') ||
+        (transferType == 'deposit' && label == 'To')
+      ) {
+        setIsLocked(true);
+      } else {
+        setIsLocked(false);
+      }
     }
+  }, [transferType, label, helpers, onChange]);
 
-    if (transferType == 'withdraw' && label == 'To') {
-      handleChange('stride');
-    }
+  const { values } = useFormikContext<any>();
 
-    if (transferType == 'deposit' && label == 'From') {
-      handleChange('celestia');
+  // Auto-set recipient address when wallet is connected for deposit "To" or withdrawal "To" field
+  useEffect(() => {
+    const isDepositTo = transferType === 'deposit' && name === 'destination';
+    const isWithdrawTo = transferType === 'withdraw' && name === 'destination';
+    if ((isDepositTo || isWithdrawTo) && isWalletConnected && account && !values.recipient) {
+      setFieldValue('recipient', account);
     }
-  }, [transferType, label, handleChange]);
+  }, [transferType, name, isWalletConnected, account, values.recipient, setFieldValue, chainId]);
 
   return (
     <div className="flex flex-col items-start w-full">
@@ -165,6 +244,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         </label>
       </div>
       <div className="w-full flex gap-[12px] justify-between items-end">
+        {/* Normal chain selection button (no inline address input) */}
         <button
           type="button"
           name={field.name}
@@ -179,18 +259,17 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         >
           <div className="flex items-center">
             <ChainLogo chainName={field.value} size={32} />
-            <div className="flex flex-col justify-center items-start ml-2">
+            <div className="flex flex-col justify-center items-start ml-2 flex-1 min-w-0">
               <span
-                className={`font-bold text-base leading-5 ${
+                className={`font-bold text-base leading-5 truncate w-full text-left ${
                   disabled ? 'text-secondary' : 'text-black'
                 }`}
               >
-                {getChainDisplayName(field.value, true)}
+                {getChainDisplayName(field.value, false)}
               </span>
-              {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-                (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+              {isWalletConnected && (
                 <span
-                  className={`font-medium text-xs leading-5 ${
+                  className={`font-medium text-xs leading-5 text-left ${
                     disabled ? 'text-secondary' : 'text-black'
                   }`}
                 >
@@ -205,8 +284,9 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             )}
           </div>
         </button>
-        {((cosmosChainIds.includes(chainId) && cosmosNumReady === 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady === 0)) && (
+
+        {/* Connect / Disconnect buttons */}
+        {!isWalletConnected && (
           <button
             disabled={disabled}
             type="button"
@@ -217,7 +297,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
             style={{ borderBottomWidth: '0.5px' }}
           >
             <span
-              className={`w-full font-sans font-bold text-14px leading-6 px-2 py-4 ${
+              className={`w-full font-sans font-bold text-[12px] sm:text-14px leading-6 px-2 py-4 tracking-tight uppercase ${
                 disabled ? 'text-secondary' : 'text-black'
               }`}
             >
@@ -226,8 +306,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
           </button>
         )}
 
-        {((cosmosChainIds.includes(chainId) && cosmosNumReady > 0) ||
-          (evmChainIds.includes(chainId) && evmNumReady > 0)) && (
+        {isWalletConnected && (
           <button
             disabled={disabled}
             type="button"
@@ -238,7 +317,7 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
                 : 'bg-white text-black border-black hover:bg-bg-button-main-disabled'
             }`}
           >
-            <span className="w-full font-sans font-bold text-14px leading-6 px-2 py-4">
+            <span className="w-full font-sans font-bold text-[12px] sm:text-14px leading-6 px-2 py-4 tracking-tight uppercase whitespace-nowrap">
               DISCONNECT
             </span>
           </button>
@@ -250,6 +329,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         close={() => setIsModalOpen(false)}
         chains={chains}
         onSelect={handleChange}
+        transferType={transferType}
+        currentChain={field.value}
       />
     </div>
   );

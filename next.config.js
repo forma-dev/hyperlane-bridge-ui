@@ -10,15 +10,26 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 // Sometimes useful to disable this during development
 const ENABLE_CSP_HEADER = true;
-const FRAME_SRC_HOSTS = ['https://*.walletconnect.com', 'https://*.walletconnect.org','https://*.solflare.com'];
+const FRAME_SRC_HOSTS = [
+  'https://*.walletconnect.com', 
+  'https://*.walletconnect.org',
+  'https://*.privy.io'
+];
 const STYLE_SRC_HOSTS = ['https://*.googleapis.com']
-const IMG_SRC_HOSTS = ['https://*.walletconnect.com'];
+const IMG_SRC_HOSTS = [
+  'https://*.walletconnect.com',
+  'https://*.walletconnect.org',
+  'https://*.googleapis.com',
+  'https://*.relay.link',
+  'https://*.relay.network',
+  'https://*.hyperlane.xyz',
+];
 const cspHeader = `
   default-src 'self';
-  script-src 'self'${isDev ? " 'unsafe-eval'" : ''};
+  script-src 'self' https://www.googletagmanager.com${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ''};
   style-src 'self' 'unsafe-inline' ${STYLE_SRC_HOSTS.join(' ')};
   connect-src *;
-  img-src 'self' blob: data: ${IMG_SRC_HOSTS.join(' ')};
+  img-src 'self' blob: data: https: ${IMG_SRC_HOSTS.join(' ')};
   font-src 'self' data:;
   object-src 'none';
   base-uri 'self';
@@ -59,6 +70,8 @@ const securityHeaders = [
 
 const nextConfig = {
   webpack(config) {
+    // Disable persistent webpack cache to avoid snapshot hangs in some Node versions
+    config.cache = false;
     config.module.rules.push({
       test: /\.ya?ml$/,
       use: 'yaml-loader',

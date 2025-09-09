@@ -1,19 +1,45 @@
-import { ChainNameOrId, chainMetadata } from '@hyperlane-xyz/sdk';
+import { ChainNameOrId } from '@hyperlane-xyz/sdk';
 import { ProtocolType, toTitleCase } from '@hyperlane-xyz/utils';
 
 import { getMultiProvider } from '../../context/context';
 
+// Import centralized Relay utilities
+import { mapRelayChainToInternalName as relayMapChainName } from './relayUtils';
+
+export function mapRelayChainToInternalName(relayChainName: string): string {
+  return relayMapChainName(relayChainName);
+}
+
+// Helper function to check if a chain is a Relay chain
+export function isRelayChain(chain: ChainNameOrId): boolean {
+  try {
+    getMultiProvider().getChainMetadata(chain);
+    return false; // If Hyperlane has metadata, it's not a Relay chain
+  } catch (error) {
+    return true; // If Hyperlane doesn't have metadata, assume it's a Relay chain
+  }
+}
+
 export function getChainDisplayName(chain: ChainName, shortName = false) {
   if (!chain) return 'Unknown';
+
+  // First try to get from Hyperlane
   const metadata = tryGetChainMetadata(chain);
-  if (!metadata) return 'Unknown';
-  const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
-  return displayName || metadata.displayName || toTitleCase(metadata.name);
+  if (metadata) {
+    const displayName = shortName ? metadata.displayNameShort : metadata.displayName;
+    return displayName || metadata.displayName || toTitleCase(metadata.name);
+  }
+
+  return toTitleCase(chain);
 }
 
 export function isPermissionlessChain(chain: ChainName) {
   if (!chain) return true;
-  return getChainMetadata(chain).protocol === ProtocolType.Ethereum || !chainMetadata[chain];
+  try {
+    return getChainMetadata(chain).protocol === ProtocolType.Ethereum;
+  } catch {
+    return true;
+  }
 }
 
 export function hasPermissionlessChain(ids: ChainName[]) {
@@ -29,19 +55,33 @@ export function getChainByRpcEndpoint(endpoint?: string) {
 }
 
 export function tryGetChainMetadata(chain: ChainNameOrId) {
-  return getMultiProvider().tryGetChainMetadata(chain);
+  // First try to get from Hyperlane
+  const hyperlaneMetadata = getMultiProvider().tryGetChainMetadata(chain);
+  if (hyperlaneMetadata) {
+    return hyperlaneMetadata;
+  }
+
+  // Do not fabricate metadata for Relay chains
+  return null;
 }
 
 export function getChainMetadata(chain: ChainNameOrId) {
+  // First try to get from Hyperlane; otherwise throw (callers should use tryGetChainMetadata)
   return getMultiProvider().getChainMetadata(chain);
 }
 
 export function tryGetChainProtocol(chain: ChainNameOrId) {
-  return tryGetChainMetadata(chain)?.protocol;
+  const metadata = tryGetChainMetadata(chain);
+  // Default to EVM for Relay/non-Hyperlane chains
+  return metadata?.protocol ?? ProtocolType.Ethereum;
 }
 
 export function getChainProtocol(chain: ChainNameOrId) {
-  return getChainMetadata(chain).protocol;
+  // Prefer Hyperlane metadata when available
+  const metadata = tryGetChainMetadata(chain);
+  if (metadata) return metadata.protocol;
+  // For Relay (non-Hyperlane) chains, default to EVM protocol
+  return ProtocolType.Ethereum;
 }
 
 export function formatAddress(address: string): string {

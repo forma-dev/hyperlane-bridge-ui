@@ -42,7 +42,7 @@ export function tryGetMsgIdFromTransferReceipt(
     const messages = core.extractMessageIds(origin, receipt);
     if (messages.length) {
       const msgId = messages[0].messageId;
-      logger.debug('Message id found in logs', msgId);
+
       return msgId;
     } else {
       logger.warn('No messages found in logs');

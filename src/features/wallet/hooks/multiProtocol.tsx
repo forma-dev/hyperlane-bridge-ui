@@ -51,21 +51,23 @@ export function useAccounts(): {
     .flat()
     .map((a) => a.address.toLowerCase());
   if (readyAddresses.some((a) => config.addressBlacklist.includes(a))) {
-    throw new Error('Wallet address is blacklisted');
+    throw new Error('This wallet address cannot be used with this application');
   }
 
-  return useMemo(
+  const result = useMemo(
     () => ({
       accounts: {
         [ProtocolType.Ethereum]: evmAccountInfo,
         [ProtocolType.Sealevel]: solAccountInfo,
         [ProtocolType.Cosmos]: cosmAccountInfo,
-        [ProtocolType.Fuel]: { protocol: ProtocolType.Fuel, isReady: false, addresses: [] },
+        // Fuel not supported
       },
       readyAccounts,
     }),
     [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts],
   );
+
+  return result;
 }
 
 export function useAccountForChain(chainName?: ChainName): AccountInfo | undefined {
@@ -116,7 +118,7 @@ export function useConnectFns(): Record<ProtocolType, () => void> {
       [ProtocolType.Ethereum]: onConnectEthereum,
       [ProtocolType.Sealevel]: onConnectSolana,
       [ProtocolType.Cosmos]: onConnectCosmos,
-      [ProtocolType.Fuel]: () => alert('TODO'),
+      // Fuel not supported
     }),
     [onConnectEthereum, onConnectSolana, onConnectCosmos],
   );
@@ -130,7 +132,7 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
   const onClickDisconnect =
     (env: ProtocolType, disconnectFn?: () => Promise<void> | void) => async () => {
       try {
-        if (!disconnectFn) throw new Error('Disconnect function is null');
+        if (!disconnectFn) throw new Error('Unable to disconnect wallet');
         await disconnectFn();
       } catch (error) {
         logger.error(`Error disconnecting from ${env} wallet`, error);
@@ -143,9 +145,7 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
       [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
       [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
       [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
-      [ProtocolType.Fuel]: onClickDisconnect(ProtocolType.Fuel, () => {
-        'TODO';
-      }),
+      // Fuel not supported
     }),
     [disconnectEvm, disconnectSol, disconnectCosmos],
   );
@@ -170,7 +170,7 @@ export function useActiveChains(): {
         [ProtocolType.Ethereum]: evmChain,
         [ProtocolType.Sealevel]: solChain,
         [ProtocolType.Cosmos]: cosmChain,
-        [ProtocolType.Fuel]: {},
+        // Fuel not supported
       },
       readyChains,
     }),
@@ -191,10 +191,7 @@ export function useTransactionFns(): Record<ProtocolType, ChainTransactionFns> {
       [ProtocolType.Ethereum]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork },
       [ProtocolType.Sealevel]: { sendTransaction: onSendSolTx, switchNetwork: onSwitchSolNetwork },
       [ProtocolType.Cosmos]: { sendTransaction: onSendCosmTx, switchNetwork: onSwitchCosmNetwork },
-      [ProtocolType.Fuel]: {
-        sendTransaction: () => alert('TODO') as any,
-        switchNetwork: () => alert('TODO') as any,
-      },
+      // Fuel not supported
     }),
     [
       onSendEvmTx,

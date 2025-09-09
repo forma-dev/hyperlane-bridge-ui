@@ -4,6 +4,17 @@ export interface TransferFormValues {
   tokenIndex: number | undefined;
   amount: string;
   recipient: Address;
+  // Relay token selection
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+    currency?: string; // Optional for compatibility with Relay token objects
+    contractAddress?: string; // Optional for compatibility with Relay token objects
+  };
 }
 
 export enum TransferStatus {
@@ -29,10 +40,35 @@ export interface TransferContext {
   destination: ChainName;
   originTokenAddressOrDenom?: string;
   destTokenAddressOrDenom?: string;
+  // Store the full selected token object to preserve icon and metadata
+  selectedToken?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI?: string;
+    chainId: number;
+    currency?: string;
+    contractAddress?: string;
+  };
   amount: string;
   sender: Address;
   recipient: Address;
   originTxHash?: string;
   msgId?: string;
   timestamp: number;
+  fees?: {
+    gas?: {
+      amountFormatted: string;
+      currency?: {
+        symbol: string;
+      };
+    };
+    relayer?: {
+      amountFormatted: string;
+      currency?: {
+        symbol: string;
+      };
+    };
+  };
 }

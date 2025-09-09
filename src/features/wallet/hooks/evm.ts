@@ -22,34 +22,44 @@ export function useEvmAccount(): AccountInfo {
   const { ready } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const { address: wagmiAddress, connector } = useAccount();
-  const isReady = ready && walletsReady && wallets.length > 0;
+  // Consider the account usable if wagmi has an address, regardless of Privy wallet enumeration
+  const derivedAddress = wagmiAddress as string | undefined;
+  const isReady = !!derivedAddress || (ready && walletsReady && wallets.length > 0);
   const activeWallet = wallets.find((wallet) => wallet.address === wagmiAddress);
 
   return useMemo<AccountInfo>(
     () => ({
       protocol: ProtocolType.Ethereum,
-      addresses: activeWallet ? [{ address: activeWallet.address }] : [],
+      // Always prefer the wagmi-derived address if available; fall back to Privy wallet
+      addresses: derivedAddress
+        ? [{ address: derivedAddress }]
+        : activeWallet
+        ? [{ address: activeWallet.address }]
+        : [],
       connectorName: connector?.name || 'Privy',
       isReady,
     }),
-    [activeWallet, isReady, connector],
+    [activeWallet, isReady, connector, derivedAddress],
   );
 }
 
 export function useEvmConnectFn(): () => Promise<void> {
-  const { connectOrCreateWallet, logout, authenticated } = usePrivy();
+  const { connectOrCreateWallet } = usePrivy();
+  const { wallets: _wallets } = useWallets();
+  const { address: wagmiAddress } = useAccount();
 
   return useCallback(async () => {
     try {
-      if (authenticated) {
-        await logout();
+      // Only treat as connected if wagmi has an address
+      if (wagmiAddress) {
+        return;
       }
-      connectOrCreateWallet();
+      await connectOrCreateWallet();
     } catch (error) {
-      logger.error('Failed to login with Privy:', error);
+      logger.error('Failed to login/connect with Privy:', error);
       throw error;
     }
-  }, [connectOrCreateWallet, logout, authenticated]);
+  }, [connectOrCreateWallet, wagmiAddress]);
 }
 
 export function useEvmDisconnectFn(): () => Promise<void> {
@@ -106,6 +116,7 @@ export function useEvmTransactionFns(): ChainTransactionFns {
   const onSwitchNetwork = useCallback(
     async (chainName: ChainName) => {
       const chainId = getChainMetadata(chainName).chainId as number;
+
       await switchChainAsync({ chainId });
       // Some wallets seem to require a brief pause after switch
       await sleep(2000);
@@ -138,14 +149,36 @@ export function useEvmTransactionFns(): ChainTransactionFns {
       // Since the network switching is not foolproof, we also force a network check here
       const expectedChainId = getChainMetadata(chainName).chainId as number;
       const { chainId: connectedChainId } = getAccount(config);
+
       assert(
         connectedChainId === expectedChainId,
         `Wallet not on chain ${chainName} (ChainMismatchError)`,
       );
 
-      logger.debug(`Sending tx on chain ${chainName}`);
       const wagmiTx = ethers5TxToWagmiTx(tx.transaction);
-      const hash = await sendTransactionAsync(wagmiTx);
+
+      let hash: `0x${string}`;
+      try {
+        // Add timeout to prevent hanging
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Transaction timeout after 30 seconds')), 30000),
+        );
+
+        const txPromise = sendTransactionAsync(wagmiTx);
+        hash = (await Promise.race([txPromise, timeout])) as `0x${string}`;
+      } catch (error) {
+        // Check if it's a user rejection
+        if (error instanceof Error && error.message.includes('rejected')) {
+          throw error;
+        }
+        // Check if it's a timeout
+        if (error instanceof Error && error.message.includes('timeout')) {
+          throw new Error(
+            'Transaction request timed out. Please ensure your wallet is connected and responsive.',
+          );
+        }
+        throw error;
+      }
 
       const confirm = async (): Promise<TypedTransactionReceipt> => {
         const receipt = await waitForTransactionReceipt(config, { hash });
