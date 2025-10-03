@@ -1,7 +1,7 @@
 import type { AssetList, Chain as CosmosChain } from '@chain-registry/types';
 import { Chain } from 'viem';
 
-import { ChainName, chainMetadataToWagmiChain } from '@hyperlane-xyz/sdk';
+import { ChainName, chainMetadataToViemChain } from '@hyperlane-xyz/sdk';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { getWarpContext } from '../../context/context';
@@ -18,7 +18,8 @@ export function getWagmiChainConfig(): Chain[] {
     const evmChains = Object.values(warpContext.chains).filter(
       (c) => !c.protocol || c.protocol === ProtocolType.Ethereum,
     );
-    return evmChains.map(chainMetadataToWagmiChain);
+    // Cast required due to differing viem versions between our app and the SDK
+    return evmChains.map(chainMetadataToViemChain) as unknown as Chain[];
   } catch (error) {
     logger.warn('Error getting Wagmi chain config:', error);
     return [];

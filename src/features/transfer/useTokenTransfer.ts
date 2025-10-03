@@ -542,5 +542,6 @@ const errorMessages: Partial<Record<TransferStatus, string>> = {
 
 const txCategoryToStatuses: Record<WarpTxCategory, [TransferStatus, TransferStatus]> = {
   [WarpTxCategory.Approval]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
+  [WarpTxCategory.Revoke]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
   [WarpTxCategory.Transfer]: [TransferStatus.SigningTransfer, TransferStatus.ConfirmingTransfer],
 };
