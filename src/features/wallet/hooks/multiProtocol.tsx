@@ -54,18 +54,16 @@ export function useAccounts(): {
     throw new Error('This wallet address cannot be used with this application');
   }
 
-  const result = useMemo(
-    () => ({
+  const result = useMemo(() => {
+    return {
       accounts: {
         [ProtocolType.Ethereum]: evmAccountInfo,
         [ProtocolType.Sealevel]: solAccountInfo,
         [ProtocolType.Cosmos]: cosmAccountInfo,
-        // Fuel not supported
-      },
+      } as unknown as Record<ProtocolType, AccountInfo>,
       readyAccounts,
-    }),
-    [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts],
-  );
+    };
+  }, [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts]);
 
   return result;
 }
@@ -114,12 +112,12 @@ export function useConnectFns(): Record<ProtocolType, () => void> {
   const onConnectCosmos = useCosmosConnectFn();
 
   return useMemo(
-    () => ({
-      [ProtocolType.Ethereum]: onConnectEthereum,
-      [ProtocolType.Sealevel]: onConnectSolana,
-      [ProtocolType.Cosmos]: onConnectCosmos,
-      // Fuel not supported
-    }),
+    () =>
+      ({
+        [ProtocolType.Ethereum]: onConnectEthereum,
+        [ProtocolType.Sealevel]: onConnectSolana,
+        [ProtocolType.Cosmos]: onConnectCosmos,
+      } as unknown as Record<ProtocolType, () => void>),
     [onConnectEthereum, onConnectSolana, onConnectCosmos],
   );
 }
@@ -141,12 +139,12 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
     };
 
   return useMemo(
-    () => ({
-      [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
-      [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
-      [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
-      // Fuel not supported
-    }),
+    () =>
+      ({
+        [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
+        [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
+        [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
+      } as unknown as Record<ProtocolType, () => Promise<void>>),
     [disconnectEvm, disconnectSol, disconnectCosmos],
   );
 }
@@ -170,8 +168,7 @@ export function useActiveChains(): {
         [ProtocolType.Ethereum]: evmChain,
         [ProtocolType.Sealevel]: solChain,
         [ProtocolType.Cosmos]: cosmChain,
-        // Fuel not supported
-      },
+      } as unknown as Record<ProtocolType, ActiveChainInfo>,
       readyChains,
     }),
     [evmChain, solChain, cosmChain, readyChains],
@@ -187,12 +184,21 @@ export function useTransactionFns(): Record<ProtocolType, ChainTransactionFns> {
     useCosmosTransactionFns();
 
   return useMemo(
-    () => ({
-      [ProtocolType.Ethereum]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork },
-      [ProtocolType.Sealevel]: { sendTransaction: onSendSolTx, switchNetwork: onSwitchSolNetwork },
-      [ProtocolType.Cosmos]: { sendTransaction: onSendCosmTx, switchNetwork: onSwitchCosmNetwork },
-      // Fuel not supported
-    }),
+    () =>
+      ({
+        [ProtocolType.Ethereum]: {
+          sendTransaction: onSendEvmTx,
+          switchNetwork: onSwitchEvmNetwork,
+        },
+        [ProtocolType.Sealevel]: {
+          sendTransaction: onSendSolTx,
+          switchNetwork: onSwitchSolNetwork,
+        },
+        [ProtocolType.Cosmos]: {
+          sendTransaction: onSendCosmTx,
+          switchNetwork: onSwitchCosmNetwork,
+        },
+      } as unknown as Record<ProtocolType, ChainTransactionFns>),
     [
       onSendEvmTx,
       onSendSolTx,
