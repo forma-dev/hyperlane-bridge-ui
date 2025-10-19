@@ -9,25 +9,25 @@ import { logger } from '../../../utils/logger';
 import { getChainProtocol, tryGetChainProtocol } from '../../chains/utils';
 
 import {
-    useCosmosAccount,
-    useCosmosActiveChain,
-    useCosmosConnectFn,
-    useCosmosDisconnectFn,
-    useCosmosTransactionFns,
+  useCosmosAccount,
+  useCosmosActiveChain,
+  useCosmosConnectFn,
+  useCosmosDisconnectFn,
+  useCosmosTransactionFns,
 } from './cosmos';
 import {
-    useEvmAccount,
-    useEvmActiveChain,
-    useEvmConnectFn,
-    useEvmDisconnectFn,
-    useEvmTransactionFns,
+  useEvmAccount,
+  useEvmActiveChain,
+  useEvmConnectFn,
+  useEvmDisconnectFn,
+  useEvmTransactionFns,
 } from './evm';
 import {
-    useSolAccount,
-    useSolActiveChain,
-    useSolConnectFn,
-    useSolDisconnectFn,
-    useSolTransactionFns,
+  useSolAccount,
+  useSolActiveChain,
+  useSolConnectFn,
+  useSolDisconnectFn,
+  useSolTransactionFns,
 } from './solana';
 import { AccountInfo, ActiveChainInfo, ChainTransactionFns } from './types';
 
@@ -203,7 +203,10 @@ export function useTransactionFns(): Record<ProtocolType, ChainTransactionFns> {
       [ProtocolType.Ethereum]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork },
       [ProtocolType.Sealevel]: { sendTransaction: onSendSolTx, switchNetwork: onSwitchSolNetwork },
       [ProtocolType.Cosmos]: { sendTransaction: onSendCosmTx, switchNetwork: onSwitchCosmNetwork },
-      [ProtocolType.CosmosNative]: { sendTransaction: onSendCosmTx, switchNetwork: onSwitchCosmNetwork }, // Use cosmos functions for cosmosnative
+      [ProtocolType.CosmosNative]: {
+        sendTransaction: onSendCosmTx,
+        switchNetwork: onSwitchCosmNetwork,
+      }, // Use cosmos functions for cosmosnative
       [ProtocolType.Starknet]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork }, // Use ethereum functions for starknet (placeholder)
       [ProtocolType.Radix]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork }, // Use ethereum functions for radix (placeholder)
       // Fuel not supported

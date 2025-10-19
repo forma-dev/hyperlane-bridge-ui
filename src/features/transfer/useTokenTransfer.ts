@@ -11,10 +11,10 @@ import { mapRelayChainToInternalName } from '../chains/relayUtils';
 import { AppState, useStore } from '../store';
 import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
-    getAccountAddressForChain,
-    useAccounts,
-    useActiveChains,
-    useTransactionFns,
+  getAccountAddressForChain,
+  useAccounts,
+  useActiveChains,
+  useTransactionFns,
 } from '../wallet/hooks/multiProtocol';
 
 import { TransferContext, TransferFormValues, TransferStatus } from './types';
@@ -370,18 +370,26 @@ async function executeRelayTransfer({
       // Check if there's a requestId in the steps array (Relay SDK format)
       // The executeResult has a 'data' property that contains the actual response
       const responseData = (executeResult as any).data;
-      if (responseData && responseData.steps && Array.isArray(responseData.steps) && responseData.steps.length > 0) {
+      if (
+        responseData &&
+        responseData.steps &&
+        Array.isArray(responseData.steps) &&
+        responseData.steps.length > 0
+      ) {
         const firstStep = responseData.steps[0];
         if (firstStep && firstStep.requestId && typeof firstStep.requestId === 'string') {
           relayTxHash = firstStep.requestId;
         }
       }
-      
+
       // Fallback: Try to extract hash from various possible response formats
       if (!relayTxHash) {
         if ('hash' in executeResult && typeof executeResult.hash === 'string') {
           relayTxHash = executeResult.hash;
-        } else if ('transactionHash' in executeResult && typeof executeResult.transactionHash === 'string') {
+        } else if (
+          'transactionHash' in executeResult &&
+          typeof executeResult.transactionHash === 'string'
+        ) {
           relayTxHash = executeResult.transactionHash;
         } else if ('txHash' in executeResult && typeof executeResult.txHash === 'string') {
           relayTxHash = executeResult.txHash;
@@ -394,7 +402,10 @@ async function executeRelayTransfer({
           if (firstItem && typeof firstItem === 'object') {
             if ('hash' in firstItem && typeof firstItem.hash === 'string') {
               relayTxHash = firstItem.hash;
-            } else if ('transactionHash' in firstItem && typeof firstItem.transactionHash === 'string') {
+            } else if (
+              'transactionHash' in firstItem &&
+              typeof firstItem.transactionHash === 'string'
+            ) {
               relayTxHash = firstItem.transactionHash;
             } else if ('txHash' in firstItem && typeof firstItem.txHash === 'string') {
               relayTxHash = firstItem.txHash;
@@ -403,7 +414,6 @@ async function executeRelayTransfer({
         }
       }
     }
-
 
     updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
       relayTxHash,
