@@ -137,12 +137,7 @@ export function TransfersDetailsModal({
 
   // Check for Relay transfer
   const isRelayTransfer = useMemo(() => {
-    const { origin, destination, originTokenAddressOrDenom, relayTxHash } = transfer;
-
-    // If we have a relayTxHash, this is definitely a Relay transfer
-    if (relayTxHash) {
-      return true;
-    }
+    const { origin, destination, originTokenAddressOrDenom } = transfer;
 
     // Check for Relay tokens - now dynamic from API
     const relayTokenAddresses: string[] = [];
@@ -337,22 +332,6 @@ export function TransfersDetailsModal({
                 />
               )}
             </>
-          )}
-
-          {/* Show Relay transaction link for Relay transfers */}
-          {isRelayTransfer && transfer.relayTxHash && (
-            <div className="flex justify-between">
-              <span className="text-gray-350 text-sm leading-normal tracking-wider">
-                <a
-                  className="text-blue-500 text-sm leading-normal tracking-wider underline underline-offset-2 hover:opacity-80 active:opacity-70"
-                  href={`https://relay.link/transaction/${transfer.relayTxHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View transaction in Relay Explorer
-                </a>
-              </span>
-            </div>
           )}
 
           {explorerLink && !isRelayTransfer && (

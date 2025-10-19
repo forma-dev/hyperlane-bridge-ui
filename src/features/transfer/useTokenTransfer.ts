@@ -362,62 +362,9 @@ async function executeRelayTransfer({
       wallet,
     });
 
-    const executeResult = await client.actions.execute({ quote, wallet });
+    await client.actions.execute({ quote, wallet });
 
-    // Extract transaction hash from the execute result
-    let relayTxHash: string | undefined;
-    if (executeResult && typeof executeResult === 'object') {
-      // Check if there's a requestId in the steps array (Relay SDK format)
-      // The executeResult has a 'data' property that contains the actual response
-      const responseData = (executeResult as any).data;
-      if (
-        responseData &&
-        responseData.steps &&
-        Array.isArray(responseData.steps) &&
-        responseData.steps.length > 0
-      ) {
-        const firstStep = responseData.steps[0];
-        if (firstStep && firstStep.requestId && typeof firstStep.requestId === 'string') {
-          relayTxHash = firstStep.requestId;
-        }
-      }
-
-      // Fallback: Try to extract hash from various possible response formats
-      if (!relayTxHash) {
-        if ('hash' in executeResult && typeof executeResult.hash === 'string') {
-          relayTxHash = executeResult.hash;
-        } else if (
-          'transactionHash' in executeResult &&
-          typeof executeResult.transactionHash === 'string'
-        ) {
-          relayTxHash = executeResult.transactionHash;
-        } else if ('txHash' in executeResult && typeof executeResult.txHash === 'string') {
-          relayTxHash = executeResult.txHash;
-        } else if ('id' in executeResult && typeof executeResult.id === 'string') {
-          // Some APIs return an ID that can be used to track the transaction
-          relayTxHash = executeResult.id;
-        } else if (Array.isArray(executeResult) && executeResult.length > 0) {
-          // If it's an array, look for transaction hashes in the first item
-          const firstItem = executeResult[0];
-          if (firstItem && typeof firstItem === 'object') {
-            if ('hash' in firstItem && typeof firstItem.hash === 'string') {
-              relayTxHash = firstItem.hash;
-            } else if (
-              'transactionHash' in firstItem &&
-              typeof firstItem.transactionHash === 'string'
-            ) {
-              relayTxHash = firstItem.transactionHash;
-            } else if ('txHash' in firstItem && typeof firstItem.txHash === 'string') {
-              relayTxHash = firstItem.txHash;
-            }
-          }
-        }
-      }
-    }
-
-    updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer), {
-      relayTxHash,
-    });
+    updateTransferStatus(transferIndex, (transferStatus = TransferStatus.ConfirmedTransfer));
     setIsLoading(false);
     if (onDone) onDone();
     return;
@@ -596,5 +543,4 @@ const errorMessages: Partial<Record<TransferStatus, string>> = {
 const txCategoryToStatuses: Record<WarpTxCategory, [TransferStatus, TransferStatus]> = {
   [WarpTxCategory.Approval]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
   [WarpTxCategory.Transfer]: [TransferStatus.SigningTransfer, TransferStatus.ConfirmingTransfer],
-  [WarpTxCategory.Revoke]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
 };

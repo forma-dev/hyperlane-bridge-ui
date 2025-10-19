@@ -56,7 +56,6 @@ export interface TransferContext {
   recipient: Address;
   originTxHash?: string;
   msgId?: string;
-  relayTxHash?: string; // Transaction hash from Relay SDK for status tracking
   timestamp: number;
   fees?: {
     gas?: {
