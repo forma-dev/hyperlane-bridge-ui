@@ -107,7 +107,7 @@ export function ChainLogo({
     });
 
     // For Forma, prioritize local logo over Relay's logo
-    const shouldUseLocalLogo = chainName === 'forma' || chainName === 'sketchpad';
+    const shouldUseLocalLogo = chainName === 'forma';
 
     if (
       shouldUseLocalLogo &&
@@ -115,7 +115,7 @@ export function ChainLogo({
       'logoURI' in chainMetadata &&
       chainMetadata.logoURI
     ) {
-      // Use local logo for Forma/Sketchpad
+      // Use local logo for Forma
       icon = (props: { width: number; height: number; title?: string }) => (
         <Image
           src={chainMetadata.logoURI!}

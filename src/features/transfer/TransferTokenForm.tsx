@@ -316,8 +316,8 @@ function ChainSelectSection({
 
     if (type === 'to' && transferType === 'withdraw') {
       // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
-      // But for Hyperlane: Only Stride is supported for withdrawals from Forma
-      const hyperlaneToChains = ['stride']; // Only Stride supported for Forma withdrawals
+      // But for Hyperlane: Only Celestia is supported for withdrawals from Forma
+      const hyperlaneToChains = ['celestia', 'stride']; // Only Celestia and Stride supported for Forma withdrawals
       const relayChainNames = getRelayChainNames(relayChains);
 
       return [...hyperlaneToChains, ...relayChainNames];

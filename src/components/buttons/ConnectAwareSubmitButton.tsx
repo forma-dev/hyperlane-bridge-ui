@@ -39,8 +39,8 @@ export function ConnectAwareSubmitButton<FormValues = any>({
   const isDestinationReady = destinationAccount?.isReady;
 
   // Determine transfer type based on form values
-  const isDeposit = values.destination === 'forma' || values.destination === 'sketchpad'; // TO Forma
-  const isWithdrawal = values.origin === 'forma' || values.origin === 'sketchpad'; // FROM Forma
+  const isDeposit = values.destination === 'forma'; // TO Forma
+  const isWithdrawal = values.origin === 'forma'; // FROM Forma
 
   // For deposits/withdrawals with manual address, we need origin wallet + (destination wallet OR manual recipient address)
   // For other transfers, we need both wallets connected

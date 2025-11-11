@@ -3732,6 +3732,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hyperlane-xyz/cosmos-sdk@npm:^18.2.0":
+  version: 18.3.0
+  resolution: "@hyperlane-xyz/cosmos-sdk@npm:18.3.0"
+  dependencies:
+    "@cosmjs/stargate": "npm:^0.32.4"
+    "@hyperlane-xyz/cosmos-types": "npm:18.3.0"
+  checksum: 10/baee432c3ea5158bd066265a4b04ed6ee2ec840b3c92d17f88bc115d65ef97f521eadffcdcc1a5b3e5b0020c68642b54ab54a6f7bfe704501345f346119bf3bb
+  languageName: node
+  linkType: hard
+
 "@hyperlane-xyz/cosmos-types@npm:18.2.0":
   version: 18.2.0
   resolution: "@hyperlane-xyz/cosmos-types@npm:18.2.0"
@@ -3739,6 +3749,16 @@ __metadata:
     long: "npm:^5.2.4"
     protobufjs: "npm:^7.4.0"
   checksum: 10/005ad7f474c24c304b25debefe8d334675d6e7d2a28bacb2b075d559580d5e7238006131a7d8792cc9b572850e107ec5c720f19b6e69b769fc12a13ce244d63e
+  languageName: node
+  linkType: hard
+
+"@hyperlane-xyz/cosmos-types@npm:18.3.0":
+  version: 18.3.0
+  resolution: "@hyperlane-xyz/cosmos-types@npm:18.3.0"
+  dependencies:
+    long: "npm:^5.2.4"
+    protobufjs: "npm:^7.4.0"
+  checksum: 10/470d9a5788776b02353adf3ee1c46bc0316f7f50ddcbbb89f1cee7570763b701da6b0ced3f942cd7e477e1299c11df8cd351f1933e771a622839183a2a69e6c8
   languageName: node
   linkType: hard
 
@@ -3854,6 +3874,7 @@ __metadata:
     "@emotion/react": "npm:^11.11.1"
     "@emotion/styled": "npm:^11.11.0"
     "@headlessui/react": "npm:^1.7.14"
+    "@hyperlane-xyz/cosmos-sdk": "npm:^18.2.0"
     "@hyperlane-xyz/registry": "npm:^20.0.0"
     "@hyperlane-xyz/sdk": "npm:^18.2.0"
     "@hyperlane-xyz/utils": "npm:^18.2.0"

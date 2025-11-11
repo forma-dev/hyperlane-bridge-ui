@@ -60,6 +60,7 @@ export function useAccounts(): {
         [ProtocolType.Ethereum]: evmAccountInfo,
         [ProtocolType.Sealevel]: solAccountInfo,
         [ProtocolType.Cosmos]: cosmAccountInfo,
+        [ProtocolType.CosmosNative]: cosmAccountInfo,
       } as unknown as Record<ProtocolType, AccountInfo>,
       readyAccounts,
     };
@@ -87,7 +88,7 @@ export function getAccountAddressForChain(
   if (!chainName || !accounts) return undefined;
   const protocol = getChainProtocol(chainName);
   const account = accounts[protocol];
-  if (protocol === ProtocolType.Cosmos) {
+  if (protocol === ProtocolType.Cosmos || protocol === ProtocolType.CosmosNative) {
     return account?.addresses.find((a) => a.chainName === chainName)?.address;
   } else {
     // Use first because only cosmos has the notion of per-chain addresses
@@ -117,6 +118,7 @@ export function useConnectFns(): Record<ProtocolType, () => void> {
         [ProtocolType.Ethereum]: onConnectEthereum,
         [ProtocolType.Sealevel]: onConnectSolana,
         [ProtocolType.Cosmos]: onConnectCosmos,
+        [ProtocolType.CosmosNative]: onConnectCosmos,
       } as unknown as Record<ProtocolType, () => void>),
     [onConnectEthereum, onConnectSolana, onConnectCosmos],
   );
@@ -144,6 +146,7 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
         [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
         [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
         [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
+        [ProtocolType.CosmosNative]: onClickDisconnect(ProtocolType.CosmosNative, disconnectCosmos),
       } as unknown as Record<ProtocolType, () => Promise<void>>),
     [disconnectEvm, disconnectSol, disconnectCosmos],
   );
@@ -168,6 +171,7 @@ export function useActiveChains(): {
         [ProtocolType.Ethereum]: evmChain,
         [ProtocolType.Sealevel]: solChain,
         [ProtocolType.Cosmos]: cosmChain,
+        [ProtocolType.CosmosNative]: cosmChain,
       } as unknown as Record<ProtocolType, ActiveChainInfo>,
       readyChains,
     }),
@@ -195,6 +199,10 @@ export function useTransactionFns(): Record<ProtocolType, ChainTransactionFns> {
           switchNetwork: onSwitchSolNetwork,
         },
         [ProtocolType.Cosmos]: {
+          sendTransaction: onSendCosmTx,
+          switchNetwork: onSwitchCosmNetwork,
+        },
+        [ProtocolType.CosmosNative]: {
           sendTransaction: onSendCosmTx,
           switchNetwork: onSwitchCosmNetwork,
         },
