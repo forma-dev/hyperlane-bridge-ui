@@ -107,7 +107,7 @@ function TokenSelectionWatcher({ transferType }: { transferType: string }) {
     // Trigger token reselection when transferType changes or when origin/destination change
     if (prevTransferType.current !== transferType || origin || destination) {
       // Special case: Forma withdrawals to ANY destination need Forma TIA token
-      if ((origin === 'forma' || origin === 'sketchpad') && transferType === 'withdraw') {
+      if (origin === 'forma' && transferType === 'withdraw') {
         const tokens = getTokens();
 
         let formaToken = tokens.find(
@@ -316,8 +316,8 @@ function ChainSelectSection({
 
     if (type === 'to' && transferType === 'withdraw') {
       // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
-      // But for Hyperlane: Only Stride is supported for withdrawals from Forma
-      const hyperlaneToChains = ['stride']; // Only Stride supported for Forma withdrawals
+      // But for Hyperlane: Only Celestia is supported for withdrawals from Forma
+      const hyperlaneToChains = ['celestia', 'stride']; // Only Celestia and Stride supported for Forma withdrawals
       const relayChainNames = getRelayChainNames(relayChains);
 
       return [...hyperlaneToChains, ...relayChainNames];
@@ -522,7 +522,7 @@ function TokenBalance({
   // Check if this is a Relay deposit
   const isRelayDeposit =
     transferType === 'deposit' &&
-    (destination === 'forma' || destination === 'sketchpad') &&
+    destination === 'forma' &&
     relayChains.some((rc) => {
       const internalName = rc.name.toLowerCase();
       return internalName === origin.toLowerCase();
@@ -765,9 +765,9 @@ function ReviewDetails({ visible }: { visible: boolean }) {
 
   // Determine transfer type based on origin and destination
   const transferType = (() => {
-    if (values.destination === 'forma' || values.destination === 'sketchpad') {
+    if (values.destination === 'forma') {
       return 'deposit';
-    } else if (values.origin === 'forma' || values.origin === 'sketchpad') {
+    } else if (values.origin === 'forma') {
       return 'withdraw';
     }
     return '';
@@ -1099,11 +1099,9 @@ function isUsingRelayForTransfer(
 
   const isFormaInvolved =
     origin === 'forma' ||
-    origin === 'sketchpad' ||
-    destination === 'forma' ||
-    destination === 'sketchpad';
+    destination === 'forma';
 
-  const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
+  const isDeposit = destination === 'forma'; // TO Forma
 
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
@@ -1461,8 +1459,8 @@ function TokenDisplaySection({
     );
   }
 
-  // Always show TIA for Forma/Sketchpad chains regardless of transfer type
-  if (chain === 'forma' || chain === 'sketchpad') {
+  // Always show TIA for Forma chains regardless of transfer type
+  if (chain === 'forma') {
     return (
       <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image

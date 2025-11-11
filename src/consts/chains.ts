@@ -1,8 +1,6 @@
 import { ChainMap, ChainMetadata, ExplorerFamily } from '@hyperlane-xyz/sdk';
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
-const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
-
 // A map of chain names to ChainMetadata
 // Chains can be defined here, in chains.json, or in chains.yaml
 // Chains already in the SDK need not be included here unless you want to override some fields
@@ -33,143 +31,75 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       },
     ],
   },
-  stride: isMainnet
-    ? {
-        protocol: ProtocolType.Cosmos,
-        isTestnet: false,
-        domainId: 745,
-        chainId: 'stride-1',
-        name: 'stride',
-        displayName: 'Stride',
-        bech32Prefix: 'stride',
-        slip44: 118,
-        nativeToken: {
-          name: 'Stride',
-          symbol: 'STRD',
-          decimals: 6,
-          denom: 'ustrd',
-        },
-        grpcUrls: [{ http: 'https://stride-grpc.publicnode.com' }],
-        restUrls: [{ http: 'https://stride-rest.publicnode.com' }],
-        rpcUrls: [{ http: 'https://stride-rpc.publicnode.com' }],
-        blockExplorers: [],
-        logoURI: '/logos/stride.png',
-        transactionOverrides: {
-          gasPrice: 0.025,
-        },
-      }
-    : {
-        protocol: ProtocolType.Cosmos,
-        isTestnet: true,
-        domainId: 1651,
-        chainId: 'stride-internal-1',
-        name: 'stride',
-        displayName: 'Stride',
-        bech32Prefix: 'stride',
-        slip44: 118,
-        nativeToken: {
-          name: 'Stride',
-          symbol: 'STRD',
-          decimals: 6,
-          denom: 'ustrd',
-        },
-        grpcUrls: [{ http: 'http://stride-direct.testnet-1.stridenet.co:9090' }],
-        restUrls: [{ http: 'https://stride.testnet-1.stridenet.co/api/' }],
-        rpcUrls: [{ http: 'https://stride.testnet-1.stridenet.co' }],
-        blockExplorers: [],
-        logoURI: '/logos/stride.png',
-        transactionOverrides: {
-          gasPrice: 0.025,
-        },
-      },
-  celestia: isMainnet
-    ? {
-        protocol: ProtocolType.Cosmos,
-        isTestnet: false,
-        domainId: 123456789, // TODO not a real domain id
-        chainId: 'celestia',
-        name: 'celestia',
-        displayName: 'Celestia',
-        bech32Prefix: 'celestia',
-        slip44: 118,
-        nativeToken: {
-          name: 'Tia',
-          symbol: 'TIA',
-          decimals: 6,
-          denom: 'utia',
-        },
-        grpcUrls: [{ http: 'https://celestia-grpc.publicnode.com' }],
-        restUrls: [{ http: 'https://celestia-rest.publicnode.com' }],
-        rpcUrls: [{ http: 'https://celestia-rpc.publicnode.com' }],
-        blockExplorers: [
-          {
-            name: 'MintScan',
-            url: 'https://www.mintscan.io/celestia',
-            // TODO API not supported, using url to meet validation requirements
-            apiUrl: 'https://www.mintscan.io/celestia',
-            family: ExplorerFamily.Other,
-          },
-        ],
-        logoURI: '/logos/celestia.png',
-        transactionOverrides: {
-          gasPrice: 0.1,
-        },
-      }
-    : {
-        protocol: ProtocolType.Cosmos,
-        isTestnet: true,
-        domainId: 123456789, // TODO not a real domain id
-        chainId: 'mocha-4',
-        name: 'celestia',
-        displayName: 'Celestia',
-        bech32Prefix: 'celestia',
-        slip44: 118,
-        nativeToken: {
-          name: 'Tia',
-          symbol: 'TIA',
-          decimals: 6,
-          denom: 'utia',
-        },
-        grpcUrls: [{ http: 'https://grpc-mocha.pops.one' }],
-        restUrls: [{ http: 'https://api-mocha.pops.one' }],
-        rpcUrls: [{ http: 'https://rpc-1.testnet.celestia.nodes.guru' }],
-        blockExplorers: [
-          {
-            name: 'MintScan',
-            url: 'https://www.mintscan.io/celestia',
-            // TODO API not supported, using url to meet validation requirements
-            apiUrl: 'https://www.mintscan.io/celestia',
-            family: ExplorerFamily.Other,
-          },
-        ],
-        logoURI: '/logos/celestia.png',
-        transactionOverrides: {
-          gasPrice: 0.1,
-        },
-      },
-  sketchpad: {
-    name: 'sketchpad',
-    displayName: 'Forma Sketchpad',
-    displayNameShort: 'Sketchpad',
-    logoURI: '/logos/forma.png',
-    chainId: 984123,
-    domainId: 984123,
-    protocol: ProtocolType.Ethereum,
-    isTestnet: true,
-    rpcUrls: [{ http: 'https://rpc.sketchpad-1.forma.art' }],
+  stride: {
+    protocol: ProtocolType.Cosmos,
+    isTestnet: false,
+    domainId: 745,
+    chainId: 'stride-1',
+    name: 'stride',
+    displayName: 'Stride',
+    bech32Prefix: 'stride',
+    slip44: 118,
+    nativeToken: {
+      name: 'Stride',
+      symbol: 'STRD',
+      decimals: 6,
+      denom: 'ustrd',
+    },
+    grpcUrls: [{ http: 'https://stride-grpc.publicnode.com' }],
+    restUrls: [{ http: 'https://stride-rest.publicnode.com' }],
+    rpcUrls: [{ http: 'https://stride-rpc.publicnode.com' }],
+    blockExplorers: [],
+    logoURI: '/logos/stride.png',
+    transactionOverrides: {
+      gasPrice: 0.025,
+    },
+  },
+  celestia: {
+    protocol: ProtocolType.Cosmos,
+    isTestnet: false,
+    domainId: 1128614981,
+    chainId: 'celestia',
+    name: 'celestia',
+    displayName: 'Celestia',
+    bech32Prefix: 'celestia',
+    slip44: 118,
     nativeToken: {
       name: 'Tia',
       symbol: 'TIA',
-      decimals: 18,
-      denom: '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53',
+      decimals: 6,
+      denom: 'utia',
+    },
+    grpcUrls: [{ http: 'https://celestia-grpc.publicnode.com' }],
+    restUrls: [{ http: 'https://celestia-rest.publicnode.com' }],
+    rpcUrls: [{ http: 'https://celestia-rpc.publicnode.com' }],
+    blocks: {
+      confirmations: 1,
+      reorgPeriod: 1,
+      estimateBlockTime: 6,
     },
     blockExplorers: [
       {
-        name: 'Forma Explorer',
-        url: 'https://explorer.sketchpad-1.forma.art',
-        apiUrl: 'https://explorer.sketchpad-1.forma.art/api',
-        family: ExplorerFamily.Blockscout,
+        name: 'Celenium',
+        url: 'https://celenium.io',
+        apiUrl: 'https://celenium.io',
+        family: ExplorerFamily.Other,
+      },
+      {
+        name: 'MintScan',
+        url: 'https://www.mintscan.io/celestia',
+        // TODO API not supported, using url to meet validation requirements
+        apiUrl: 'https://www.mintscan.io/celestia',
+        family: ExplorerFamily.Other,
       },
     ],
+    logoURI: '/logos/celestia.png',
+    gasPrice: {
+      amount: '0.002',
+      denom: 'utia',
+    },
+    transactionOverrides: {
+      gasPrice: 0.002,
+    },
   },
 };

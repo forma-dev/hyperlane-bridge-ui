@@ -40,7 +40,7 @@ export function initWarpContext() {
 
   for (let i = 0; i < warpCore.tokens.length; i++) {
     const { standard, chainName, addressOrDenom } = warpCore.tokens[i];
-    if ((chainName == 'sketchpad' || chainName == 'forma') && standard == 'EvmNative') {
+    if (chainName == 'forma' && standard == 'EvmNative') {
       warpCore.tokens[i].getHypAdapter = function (multiProvider, _destination) {
         return new EvmHypNativeMinterAdapter(chainName, multiProvider, {
           token: addressOrDenom,

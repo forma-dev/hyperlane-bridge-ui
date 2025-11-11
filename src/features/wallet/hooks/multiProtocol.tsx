@@ -54,8 +54,8 @@ export function useAccounts(): {
     throw new Error('This wallet address cannot be used with this application');
   }
 
-  const result = useMemo(
-    () => ({
+  const result = useMemo(() => {
+    return {
       accounts: {
         [ProtocolType.Ethereum]: evmAccountInfo,
         [ProtocolType.Sealevel]: solAccountInfo,
@@ -66,9 +66,8 @@ export function useAccounts(): {
         // Fuel not supported
       },
       readyAccounts,
-    }),
-    [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts],
-  );
+    };
+  }, [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts]);
 
   return result;
 }
@@ -92,7 +91,7 @@ export function getAccountAddressForChain(
   if (!chainName || !accounts) return undefined;
   const protocol = getChainProtocol(chainName);
   const account = accounts[protocol];
-  if (protocol === ProtocolType.Cosmos) {
+  if (protocol === ProtocolType.Cosmos || protocol === ProtocolType.CosmosNative) {
     return account?.addresses.find((a) => a.chainName === chainName)?.address;
   } else {
     // Use first because only cosmos has the notion of per-chain addresses
