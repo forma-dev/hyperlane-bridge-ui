@@ -73,7 +73,18 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
     grpcUrls: [{ http: 'https://celestia-grpc.publicnode.com' }],
     restUrls: [{ http: 'https://celestia-rest.publicnode.com' }],
     rpcUrls: [{ http: 'https://celestia-rpc.publicnode.com' }],
+    blocks: {
+      confirmations: 1,
+      reorgPeriod: 1,
+      estimateBlockTime: 6,
+    },
     blockExplorers: [
+      {
+        name: 'Celenium',
+        url: 'https://celenium.io',
+        apiUrl: 'https://celenium.io',
+        family: ExplorerFamily.Other,
+      },
       {
         name: 'MintScan',
         url: 'https://www.mintscan.io/celestia',
@@ -83,8 +94,12 @@ export const chains: ChainMap<ChainMetadata & { mailbox?: Address }> = {
       },
     ],
     logoURI: '/logos/celestia.png',
-    // transactionOverrides: {
-    //   gasPrice: 0.1,
-    // },
+    gasPrice: {
+      amount: '0.002',
+      denom: 'utia',
+    },
+    transactionOverrides: {
+      gasPrice: 0.002,
+    },
   },
 };
