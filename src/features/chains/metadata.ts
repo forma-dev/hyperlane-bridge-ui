@@ -18,8 +18,7 @@ export function getWagmiChainConfig(): Chain[] {
     const evmChains = Object.values(warpContext.chains).filter(
       (c) => !c.protocol || c.protocol === ProtocolType.Ethereum,
     );
-    // Cast required due to differing viem versions between our app and the SDK
-    return evmChains.map(chainMetadataToViemChain) as unknown as Chain[];
+    return evmChains.map(chainMetadataToViemChain) as Chain[];
   } catch (error) {
     logger.warn('Error getting Wagmi chain config:', error);
     return [];

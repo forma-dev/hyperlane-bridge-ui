@@ -60,8 +60,11 @@ export function useAccounts(): {
         [ProtocolType.Ethereum]: evmAccountInfo,
         [ProtocolType.Sealevel]: solAccountInfo,
         [ProtocolType.Cosmos]: cosmAccountInfo,
-        [ProtocolType.CosmosNative]: cosmAccountInfo,
-      } as unknown as Record<ProtocolType, AccountInfo>,
+        [ProtocolType.CosmosNative]: cosmAccountInfo, // Use cosmos account for cosmosnative
+        [ProtocolType.Starknet]: evmAccountInfo, // Use evm account for starknet (placeholder)
+        [ProtocolType.Radix]: evmAccountInfo, // Use evm account for radix (placeholder)
+        // Fuel not supported
+      },
       readyAccounts,
     };
   }, [evmAccountInfo, solAccountInfo, cosmAccountInfo, readyAccounts]);
@@ -113,13 +116,15 @@ export function useConnectFns(): Record<ProtocolType, () => void> {
   const onConnectCosmos = useCosmosConnectFn();
 
   return useMemo(
-    () =>
-      ({
-        [ProtocolType.Ethereum]: onConnectEthereum,
-        [ProtocolType.Sealevel]: onConnectSolana,
-        [ProtocolType.Cosmos]: onConnectCosmos,
-        [ProtocolType.CosmosNative]: onConnectCosmos,
-      } as unknown as Record<ProtocolType, () => void>),
+    () => ({
+      [ProtocolType.Ethereum]: onConnectEthereum,
+      [ProtocolType.Sealevel]: onConnectSolana,
+      [ProtocolType.Cosmos]: onConnectCosmos,
+      [ProtocolType.CosmosNative]: onConnectCosmos, // Use cosmos connect for cosmosnative
+      [ProtocolType.Starknet]: onConnectEthereum, // Use ethereum connect for starknet (placeholder)
+      [ProtocolType.Radix]: onConnectEthereum, // Use ethereum connect for radix (placeholder)
+      // Fuel not supported
+    }),
     [onConnectEthereum, onConnectSolana, onConnectCosmos],
   );
 }
@@ -141,13 +146,15 @@ export function useDisconnectFns(): Record<ProtocolType, () => Promise<void>> {
     };
 
   return useMemo(
-    () =>
-      ({
-        [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
-        [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
-        [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
-        [ProtocolType.CosmosNative]: onClickDisconnect(ProtocolType.CosmosNative, disconnectCosmos),
-      } as unknown as Record<ProtocolType, () => Promise<void>>),
+    () => ({
+      [ProtocolType.Ethereum]: onClickDisconnect(ProtocolType.Ethereum, disconnectEvm),
+      [ProtocolType.Sealevel]: onClickDisconnect(ProtocolType.Sealevel, disconnectSol),
+      [ProtocolType.Cosmos]: onClickDisconnect(ProtocolType.Cosmos, disconnectCosmos),
+      [ProtocolType.CosmosNative]: onClickDisconnect(ProtocolType.CosmosNative, disconnectCosmos), // Use cosmos disconnect for cosmosnative
+      [ProtocolType.Starknet]: onClickDisconnect(ProtocolType.Starknet, disconnectEvm), // Use ethereum disconnect for starknet (placeholder)
+      [ProtocolType.Radix]: onClickDisconnect(ProtocolType.Radix, disconnectEvm), // Use ethereum disconnect for radix (placeholder)
+      // Fuel not supported
+    }),
     [disconnectEvm, disconnectSol, disconnectCosmos],
   );
 }
@@ -171,8 +178,11 @@ export function useActiveChains(): {
         [ProtocolType.Ethereum]: evmChain,
         [ProtocolType.Sealevel]: solChain,
         [ProtocolType.Cosmos]: cosmChain,
-        [ProtocolType.CosmosNative]: cosmChain,
-      } as unknown as Record<ProtocolType, ActiveChainInfo>,
+        [ProtocolType.CosmosNative]: cosmChain, // Use cosmos chain for cosmosnative
+        [ProtocolType.Starknet]: evmChain, // Use ethereum chain for starknet (placeholder)
+        [ProtocolType.Radix]: evmChain, // Use ethereum chain for radix (placeholder)
+        // Fuel not supported
+      },
       readyChains,
     }),
     [evmChain, solChain, cosmChain, readyChains],
@@ -188,25 +198,18 @@ export function useTransactionFns(): Record<ProtocolType, ChainTransactionFns> {
     useCosmosTransactionFns();
 
   return useMemo(
-    () =>
-      ({
-        [ProtocolType.Ethereum]: {
-          sendTransaction: onSendEvmTx,
-          switchNetwork: onSwitchEvmNetwork,
-        },
-        [ProtocolType.Sealevel]: {
-          sendTransaction: onSendSolTx,
-          switchNetwork: onSwitchSolNetwork,
-        },
-        [ProtocolType.Cosmos]: {
-          sendTransaction: onSendCosmTx,
-          switchNetwork: onSwitchCosmNetwork,
-        },
-        [ProtocolType.CosmosNative]: {
-          sendTransaction: onSendCosmTx,
-          switchNetwork: onSwitchCosmNetwork,
-        },
-      } as unknown as Record<ProtocolType, ChainTransactionFns>),
+    () => ({
+      [ProtocolType.Ethereum]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork },
+      [ProtocolType.Sealevel]: { sendTransaction: onSendSolTx, switchNetwork: onSwitchSolNetwork },
+      [ProtocolType.Cosmos]: { sendTransaction: onSendCosmTx, switchNetwork: onSwitchCosmNetwork },
+      [ProtocolType.CosmosNative]: {
+        sendTransaction: onSendCosmTx,
+        switchNetwork: onSwitchCosmNetwork,
+      }, // Use cosmos functions for cosmosnative
+      [ProtocolType.Starknet]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork }, // Use ethereum functions for starknet (placeholder)
+      [ProtocolType.Radix]: { sendTransaction: onSendEvmTx, switchNetwork: onSwitchEvmNetwork }, // Use ethereum functions for radix (placeholder)
+      // Fuel not supported
+    }),
     [
       onSendEvmTx,
       onSendSolTx,
