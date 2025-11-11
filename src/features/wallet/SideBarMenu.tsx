@@ -27,7 +27,7 @@ function getTokenDisplayInfo(transfer: TransferContext, _relayChains: any[]) {
   const { origin, selectedToken } = transfer;
 
   // For withdrawals (Forma -> other chains), always show TIA
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+  const isWithdrawal = origin === 'forma';
   if (isWithdrawal) {
     return {
       symbol: 'TIA',
@@ -44,7 +44,7 @@ function getTokenDisplayInfo(transfer: TransferContext, _relayChains: any[]) {
   }
 
   // Fallback to TIA for Forma chains
-  if (origin === 'forma' || origin === 'sketchpad') {
+  if (origin === 'forma') {
     return {
       symbol: 'TIA',
       logoURI: '/logos/celestia.png',

@@ -225,7 +225,7 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
   // Check if this is a Relay chain
   const isRelayOrigin = isRelayChain(origin, relayChains);
 
-  const isFormaWithdrawal = origin === 'forma' || origin === 'sketchpad';
+  const isFormaWithdrawal = origin === 'forma';
 
   // Quiet: no chain analysis logs
 
@@ -246,7 +246,7 @@ export function useOriginBalance(values: TransferFormValues, _transferType?: str
   // For Hyperlane transfers (including ALL Forma withdrawals), use Hyperlane balance fetching
   // The tokenIndex system is unreliable and often picks the wrong TIA token
   let hyperlaneToken = token;
-  if (origin === 'forma' || origin === 'sketchpad') {
+  if (origin === 'forma') {
     const tokens = getTokens();
 
     // ALWAYS find the EVM TIA token for Forma, regardless of what tokenIndex says
@@ -309,8 +309,8 @@ export function useDestinationBalance(values: TransferFormValues, transferType?:
   // Check if this is a Relay transfer
   const isDestinationRelay = isRelayChain(destination, relayChains);
 
-  // SPECIAL CASE: Forma/Sketchpad should always use Hyperlane balance, even though they're in Relay chains list
-  const isFormaDestination = destination === 'forma' || destination === 'sketchpad';
+  // SPECIAL CASE: Forma should always use Hyperlane balance, even though they're in Relay chains list
+  const isFormaDestination = destination === 'forma';
   const shouldUseRelayBalance = isDestinationRelay && !isFormaDestination;
 
   // Use dynamic balance fetching for ALL Relay chains

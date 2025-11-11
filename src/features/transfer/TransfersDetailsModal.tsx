@@ -39,12 +39,10 @@ function getTokenDisplayInfo(transfer: TransferContext, relayChains: any[]) {
       (chain) => mapRelayChainToInternalName(chain.name) === destination.toLowerCase(),
     ) ||
     origin === 'forma' ||
-    origin === 'sketchpad' ||
-    destination === 'forma' ||
-    destination === 'sketchpad';
+    destination === 'forma';
 
   // For withdrawals (Forma -> other chains), always show TIA
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+  const isWithdrawal = origin === 'forma';
   if (isWithdrawal) {
     return {
       symbol: 'TIA',
@@ -63,7 +61,7 @@ function getTokenDisplayInfo(transfer: TransferContext, relayChains: any[]) {
   }
 
   // Fallback to TIA for Forma chains
-  if (origin === 'forma' || origin === 'sketchpad') {
+  if (origin === 'forma') {
     return {
       symbol: 'TIA',
       logoURI: '/logos/celestia.png',
@@ -162,9 +160,7 @@ export function TransfersDetailsModal({
     // Check for Forma involvement (Relay bridge)
     const isFormaInvolved =
       origin === 'forma' ||
-      origin === 'sketchpad' ||
-      destination === 'forma' ||
-      destination === 'sketchpad';
+      destination === 'forma';
 
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
   }, [transfer, relayChains]);
@@ -238,7 +234,7 @@ export function TransfersDetailsModal({
           // For Relay transfers, show token icon using same logic as the form
           (() => {
             // For withdraws (Forma -> Relay chains), always show TIA logo
-            const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+            const isWithdrawal = origin === 'forma';
 
             if (isWithdrawal) {
               return (

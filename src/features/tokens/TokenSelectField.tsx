@@ -68,8 +68,8 @@ export function TokenSelectField({ name, disabled, setIsNft }: Props) {
       helpers.setValue(-1);
       setIsAutomaticSelection(false); // Allow manual selection
       setIsNft(false); // Native tokens are never NFTs
-    } else if (origin === 'forma' || origin === 'sketchpad') {
-      // Special case: Forma/Sketchpad withdrawals to ANY destination
+    } else if (origin === 'forma') {
+      // Special case: Forma withdrawals to ANY destination
       // We need to find the Forma TIA token in the Hyperlane token list
       const warpCore = getWarpCore();
       const tokens = warpCore.tokens;

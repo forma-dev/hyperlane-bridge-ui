@@ -128,8 +128,6 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
   };
 
   useEffect(() => {
-    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
-
     // Only set defaults when transfer type actually changes or on initial mount
     if (previousTransferType.current !== transferType) {
       // Set defaults based on transfer type
@@ -137,8 +135,8 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         (transferType == 'withdraw' && label == 'From') ||
         (transferType == 'deposit' && label == 'To')
       ) {
-        helpers.setValue(isMainnet ? 'forma' : 'sketchpad');
-        onChange?.(isMainnet ? 'forma' : 'sketchpad');
+        helpers.setValue('forma');
+        onChange?.('forma');
         setIsLocked(true);
       } else {
         setIsLocked(false);

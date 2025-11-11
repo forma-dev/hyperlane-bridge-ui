@@ -93,7 +93,7 @@ export function useRelayQuote({
 
     if (transferType === 'deposit') {
       // For deposits: Check if destination is Forma and origin is a Relay chain
-      const isToForma = destinationChain === 'forma' || destinationChain === 'sketchpad';
+      const isToForma = destinationChain === 'forma';
       const isFromRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         return internalName === originChain.toLowerCase();
@@ -101,7 +101,7 @@ export function useRelayQuote({
       isRelayTransfer = isToForma && isFromRelay;
     } else if (transferType === 'withdraw') {
       // For withdrawals: Check if origin is Forma and destination is a Relay chain
-      const isFromForma = originChain === 'forma' || originChain === 'sketchpad';
+      const isFromForma = originChain === 'forma';
       const isToRelay = relayChains.some((chain) => {
         const internalName = mapRelayChainToInternalName(chain.name);
         return internalName === destinationChain.toLowerCase();
@@ -223,9 +223,9 @@ export function useRelayQuote({
           originCurrency = '0x0000000000000000000000000000000000000000';
         }
 
-        // Destination is Forma/Sketchpad native TIA -> use zero address per Relay expectations
+        // Destination is Forma native TIA -> use zero address per Relay expectations
         destinationCurrency =
-          destinationChain === 'forma' || destinationChain === 'sketchpad'
+          destinationChain === 'forma'
             ? '0x0000000000000000000000000000000000000000'
             : '0x0000000000000000000000000000000000000000'; // Native token
       } else {
