@@ -285,46 +285,46 @@ function ChainSelectSection({
   type: string;
   transferType: string;
 }) {
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
-  const chains = useMemo(() => {
-    const hyperlaneChains = getWarpCore().getTokenChains();
+  // const chains = useMemo(() => {
+  //   const hyperlaneChains = getWarpCore().getTokenChains();
 
-    if (type === 'from' && transferType === 'deposit') {
-      // For deposit FROM: Show Hyperlane chains AND Relay chains as separate options
-      // Hyperlane chains: Celestia, Stride
-      const hyperlaneFromChains = hyperlaneChains.filter(
-        (chain) => !['forma', 'sketchpad'].includes(chain),
-      );
+  //   if (type === 'from' && transferType === 'deposit') {
+  //     // For deposit FROM: Show Hyperlane chains AND Relay chains as separate options
+  //     // Hyperlane chains: Celestia, Stride
+  //     const hyperlaneFromChains = hyperlaneChains.filter(
+  //       (chain) => !['forma', 'sketchpad'].includes(chain),
+  //     );
 
-      // Relay chains
-      const relayChainNames = getRelayChainNames(relayChains);
+  //     // Relay chains
+  //     const relayChainNames = getRelayChainNames(relayChains);
 
-      // Return combined list but keep them logically separate
-      return [...hyperlaneFromChains, ...relayChainNames];
-    }
+  //     // Return combined list but keep them logically separate
+  //     return [...hyperlaneFromChains, ...relayChainNames];
+  //   }
 
-    if (type === 'to' && transferType === 'deposit') {
-      // For deposit TO: Always Forma/Sketchpad (destination) - no change needed
-      return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
-    }
+  //   if (type === 'to' && transferType === 'deposit') {
+  //     // For deposit TO: Always Forma/Sketchpad (destination) - no change needed
+  //     return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
+  //   }
 
-    if (type === 'from' && transferType === 'withdraw') {
-      // For withdraw FROM: Always Forma/Sketchpad (source) - no change needed
-      return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
-    }
+  //   if (type === 'from' && transferType === 'withdraw') {
+  //     // For withdraw FROM: Always Forma/Sketchpad (source) - no change needed
+  //     return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
+  //   }
 
-    if (type === 'to' && transferType === 'withdraw') {
-      // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
-      // But for Hyperlane: Only Celestia is supported for withdrawals from Forma
-      const hyperlaneToChains = ['celestia', 'stride']; // Only Celestia and Stride supported for Forma withdrawals
-      const relayChainNames = getRelayChainNames(relayChains);
+  //   if (type === 'to' && transferType === 'withdraw') {
+  //     // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
+  //     // But for Hyperlane: Only Celestia is supported for withdrawals from Forma
+  //     const hyperlaneToChains = ['celestia', 'stride']; // Only Celestia and Stride supported for Forma withdrawals
+  //     const relayChainNames = getRelayChainNames(relayChains);
 
-      return [...hyperlaneToChains, ...relayChainNames];
-    }
+  //     return [...hyperlaneToChains, ...relayChainNames];
+  //   }
 
-    return hyperlaneChains;
-  }, [relayChains, type, transferType]);
+  //   return hyperlaneChains;
+  // }, [relayChains, type, transferType]);
 
   return (
     <div className="flex items-center justify-start space-x-7 sm:space-x-10">
@@ -332,7 +332,7 @@ function ChainSelectSection({
         <ChainSelectField
           name="origin"
           label="From"
-          chains={chains}
+          // chains={chains}
           disabled={isReview}
           transferType={transferType}
         />
@@ -340,7 +340,7 @@ function ChainSelectSection({
         <ChainSelectField
           name="destination"
           label="To"
-          chains={chains}
+          // chains={chains}
           disabled={isReview}
           transferType={transferType}
         />
@@ -1225,29 +1225,29 @@ async function validateRelayTransfer({
 }
 
 // Utility function to get available chain names from Relay supported chains
-function getRelayChainNames(relayChains: any[]): string[] {
-  const chainNames: string[] = [];
+// function getRelayChainNames(relayChains: any[]): string[] {
+//   const chainNames: string[] = [];
 
-  // Add all Relay supported chains regardless of deposit/disabled flags
-  relayChains.forEach((chain) => {
-    if (chain.name) {
-      // Use the chain name directly as the internal name
-      const internalName = chain.name.toLowerCase();
+//   // Add all Relay supported chains regardless of deposit/disabled flags
+//   relayChains.forEach((chain) => {
+//     if (chain.name) {
+//       // Use the chain name directly as the internal name
+//       const internalName = chain.name.toLowerCase();
 
-      // Exclude Forma and Solana from selectable Relay chains
-      // Forma is a hardcoded destination and Solana should not be selectable
-      if (
-        internalName &&
-        !chainNames.includes(internalName) &&
-        !['forma', 'solana'].includes(internalName)
-      ) {
-        chainNames.push(internalName);
-      }
-    }
-  });
+//       // Exclude Forma and Solana from selectable Relay chains
+//       // Forma is a hardcoded destination and Solana should not be selectable
+//       if (
+//         internalName &&
+//         !chainNames.includes(internalName) &&
+//         !['forma', 'solana'].includes(internalName)
+//       ) {
+//         chainNames.push(internalName);
+//       }
+//     }
+//   });
 
-  return chainNames;
-}
+//   return chainNames;
+// }
 
 function ReceiveSection({ isReview, transferType }: { isReview: boolean; transferType: string }) {
   const { values } = useFormikContext<TransferFormValues>();

@@ -18,13 +18,13 @@ import { formatAddress, getChainDisplayName } from './utils';
 type Props = {
   name: string;
   label: string;
-  chains: ChainName[];
+  // chains: ChainName[];
   onChange?: (id: ChainName) => void;
   disabled?: boolean;
   transferType: string;
 };
 
-export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
+export function ChainSelectField({ name, label, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
   // const [isModalOpen, setIsModalOpen] = useState(false);
   // const [isLocked, setIsLocked] = useState(false);
