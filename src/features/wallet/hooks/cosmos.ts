@@ -1,8 +1,10 @@
 import { DeliverTxResponse, ExecuteResult, IndexedTx } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
 import { useChain, useChains } from '@cosmos-kit/react';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 
+import { SigningHyperlaneModuleClient } from '@hyperlane-xyz/cosmos-sdk';
 import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hyperlane-xyz/sdk';
 import { HexString, ProtocolType, assert } from '@hyperlane-xyz/utils';
 
@@ -108,7 +110,8 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
 
       // Convert Long objects to strings for amino encoding compatibility
       const processedTransaction = convertLongToString(tx.transaction);
-      const { getSigningCosmWasmClient, getSigningStargateClient } = chainContext;
+      const { getSigningCosmWasmClient, getSigningStargateClient, getOfflineSigner, chain } =
+        chainContext;
       let result: ExecuteResult | DeliverTxResponse;
       let txDetails: IndexedTx | null;
       if (tx.type === ProviderType.CosmJsWasm) {
@@ -122,6 +125,20 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
           [processedTransaction],
           'auto',
         );
+        txDetails = await client.getTx(result.transactionHash);
+      } else if (tx.type === ProviderType.CosmJsNative) {
+        const signer = getOfflineSigner();
+        const client = await SigningHyperlaneModuleClient.connectWithSigner(
+          chain.apis!.rpc![0].address,
+          signer,
+          {
+            // set zero gas price here so it does not error. actual gas price
+            // will be injected from the wallet registry like Keplr or Leap
+            gasPrice: GasPrice.fromString('0token'),
+          },
+        );
+
+        result = await client.signAndBroadcast(chainContext.address, [tx.transaction], 2);
         txDetails = await client.getTx(result.transactionHash);
       } else {
         throw new Error(`Invalid cosmos provider type ${tx.type}`);

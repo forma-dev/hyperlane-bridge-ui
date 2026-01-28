@@ -107,7 +107,7 @@ function TokenSelectionWatcher({ transferType }: { transferType: string }) {
     // Trigger token reselection when transferType changes or when origin/destination change
     if (prevTransferType.current !== transferType || origin || destination) {
       // Special case: Forma withdrawals to ANY destination need Forma TIA token
-      if ((origin === 'forma' || origin === 'sketchpad') && transferType === 'withdraw') {
+      if (origin === 'forma' && transferType === 'withdraw') {
         const tokens = getTokens();
 
         let formaToken = tokens.find(
@@ -285,46 +285,46 @@ function ChainSelectSection({
   type: string;
   transferType: string;
 }) {
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
-  const chains = useMemo(() => {
-    const hyperlaneChains = getWarpCore().getTokenChains();
+  // const chains = useMemo(() => {
+  //   const hyperlaneChains = getWarpCore().getTokenChains();
 
-    if (type === 'from' && transferType === 'deposit') {
-      // For deposit FROM: Show Hyperlane chains AND Relay chains as separate options
-      // Hyperlane chains: Celestia, Stride
-      const hyperlaneFromChains = hyperlaneChains.filter(
-        (chain) => !['forma', 'sketchpad'].includes(chain),
-      );
+  //   if (type === 'from' && transferType === 'deposit') {
+  //     // For deposit FROM: Show Hyperlane chains AND Relay chains as separate options
+  //     // Hyperlane chains: Celestia, Stride
+  //     const hyperlaneFromChains = hyperlaneChains.filter(
+  //       (chain) => !['forma', 'sketchpad'].includes(chain),
+  //     );
 
-      // Relay chains
-      const relayChainNames = getRelayChainNames(relayChains);
+  //     // Relay chains
+  //     const relayChainNames = getRelayChainNames(relayChains);
 
-      // Return combined list but keep them logically separate
-      return [...hyperlaneFromChains, ...relayChainNames];
-    }
+  //     // Return combined list but keep them logically separate
+  //     return [...hyperlaneFromChains, ...relayChainNames];
+  //   }
 
-    if (type === 'to' && transferType === 'deposit') {
-      // For deposit TO: Always Forma/Sketchpad (destination) - no change needed
-      return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
-    }
+  //   if (type === 'to' && transferType === 'deposit') {
+  //     // For deposit TO: Always Forma/Sketchpad (destination) - no change needed
+  //     return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
+  //   }
 
-    if (type === 'from' && transferType === 'withdraw') {
-      // For withdraw FROM: Always Forma/Sketchpad (source) - no change needed
-      return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
-    }
+  //   if (type === 'from' && transferType === 'withdraw') {
+  //     // For withdraw FROM: Always Forma/Sketchpad (source) - no change needed
+  //     return hyperlaneChains.filter((chain) => ['forma', 'sketchpad'].includes(chain));
+  //   }
 
-    if (type === 'to' && transferType === 'withdraw') {
-      // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
-      // But for Hyperlane: Only Stride is supported for withdrawals from Forma
-      const hyperlaneToChains = ['stride']; // Only Stride supported for Forma withdrawals
-      const relayChainNames = getRelayChainNames(relayChains);
+  //   if (type === 'to' && transferType === 'withdraw') {
+  //     // For withdraw TO: Show Hyperlane chains AND Relay chains as separate options
+  //     // But for Hyperlane: Only Celestia is supported for withdrawals from Forma
+  //     const hyperlaneToChains = ['celestia', 'stride']; // Only Celestia and Stride supported for Forma withdrawals
+  //     const relayChainNames = getRelayChainNames(relayChains);
 
-      return [...hyperlaneToChains, ...relayChainNames];
-    }
+  //     return [...hyperlaneToChains, ...relayChainNames];
+  //   }
 
-    return hyperlaneChains;
-  }, [relayChains, type, transferType]);
+  //   return hyperlaneChains;
+  // }, [relayChains, type, transferType]);
 
   return (
     <div className="flex items-center justify-start space-x-7 sm:space-x-10">
@@ -332,7 +332,7 @@ function ChainSelectSection({
         <ChainSelectField
           name="origin"
           label="From"
-          chains={chains}
+          // chains={chains}
           disabled={isReview}
           transferType={transferType}
         />
@@ -340,7 +340,7 @@ function ChainSelectSection({
         <ChainSelectField
           name="destination"
           label="To"
-          chains={chains}
+          // chains={chains}
           disabled={isReview}
           transferType={transferType}
         />
@@ -426,10 +426,11 @@ function AmountSection({
   const { values } = useFormikContext<TransferFormValues>();
   const originBalanceResult = useOriginBalance(values, transferType);
   const { balance } = originBalanceResult;
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  // const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const isRelayTransfer = false;
 
   return (
     <div className="flex-1">
@@ -517,16 +518,17 @@ function TokenBalance({
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
   const { fetchMaxAmount } = useFetchMaxAmount();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay deposit
-  const isRelayDeposit =
-    transferType === 'deposit' &&
-    (destination === 'forma' || destination === 'sketchpad') &&
-    relayChains.some((rc) => {
-      const internalName = rc.name.toLowerCase();
-      return internalName === origin.toLowerCase();
-    });
+  // const isRelayDeposit =
+  //   transferType === 'deposit' &&
+  //   destination === 'forma' &&
+  //   relayChains.some((rc) => {
+  //     const internalName = rc.name.toLowerCase();
+  //     return internalName === origin.toLowerCase();
+  //   });
+  const isRelayDeposit = false;
 
   // Use Relay max amount hook for Relay deposits
   const { calculateMaxAmount: calculateRelayMaxAmount, isLoading: isRelayLoading } =
@@ -618,29 +620,31 @@ function ButtonSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { data: wallet } = useWalletClient();
   // const { switchChainAsync } = useSwitchChain();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  // const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const isRelayTransfer = false;
 
   // Get user address for origin chain
-  const userAddress = useAccountAddressForChain(values.origin) || '';
+  // const userAddress = useAccountAddressForChain(values.origin) || '';
 
   // Get recipient address - always call the hook, handle errors in the quote
-  const destinationAddress = useAccountAddressForChain(values.destination) || '';
-  const recipientAddress = destinationAddress || userAddress;
+  // const destinationAddress = useAccountAddressForChain(values.destination) || '';
+  // const recipientAddress = destinationAddress || userAddress;
 
   // Get quote error for Relay transfers
-  const { error: quoteError } = useRelayQuote({
-    originChain: values.origin,
-    destinationChain: values.destination,
-    amount: values.amount,
-    transferType,
-    relayChains,
-    user: userAddress,
-    recipient: recipientAddress,
-    selectedToken: values.selectedToken,
-  });
+  // const { error: quoteError } = useRelayQuote({
+  //   originChain: values.origin,
+  //   destinationChain: values.destination,
+  //   amount: values.amount,
+  //   transferType,
+  //   relayChains,
+  //   user: userAddress,
+  //   recipient: recipientAddress,
+  //   selectedToken: values.selectedToken,
+  // });
+  const quoteError = null;
 
   // Disable button if there's a quote error for Relay transfers
   const isDisabled = isRelayTransfer && !!quoteError;
@@ -743,126 +747,127 @@ function ButtonSection({
 
 function ReviewDetails({ visible }: { visible: boolean }) {
   const { values } = useFormikContext<TransferFormValues>();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Only fetch fee quotes for Hyperlane transfers, not Relay transfers
-  const { accounts: reviewAccounts } = useAccounts();
-  const isUsingRelay = isUsingRelayForTransfer(
-    values.origin,
-    values.destination,
-    relayChains,
-    reviewAccounts,
-  );
+  // const { accounts: reviewAccounts } = useAccounts();
+  // const isUsingRelay = isUsingRelayForTransfer(
+  //   values.origin,
+  //   values.destination,
+  //   relayChains,
+  //   reviewAccounts,
+  // );
+  const isUsingRelay = false;
   const { fees } = useFeeQuotes(values, visible && !isUsingRelay);
 
   // For Relay transfers, get fee information from Relay quote
-  const user = useAccountAddressForChain(values.origin);
+  // const user = useAccountAddressForChain(values.origin);
 
   // Get destination user - always call the hook
-  const destinationUser = useAccountAddressForChain(values.destination) || user;
+  // const destinationUser = useAccountAddressForChain(values.destination) || user;
 
-  const recipient = values.recipient || destinationUser || '';
+  // const recipient = values.recipient || destinationUser || '';
 
   // Determine transfer type based on origin and destination
-  const transferType = (() => {
-    if (values.destination === 'forma' || values.destination === 'sketchpad') {
-      return 'deposit';
-    } else if (values.origin === 'forma' || values.origin === 'sketchpad') {
-      return 'withdraw';
-    }
-    return '';
-  })();
+  // const transferType = (() => {
+  //   if (values.destination === 'forma') {
+  //     return 'deposit';
+  //   } else if (values.origin === 'forma') {
+  //     return 'withdraw';
+  //   }
+  //   return '';
+  // })();
 
-  const { estimatedOutput } = useRelayQuote({
-    originChain: values.origin,
-    destinationChain: values.destination,
-    amount: values.amount,
-    transferType: transferType,
-    relayChains,
-    user: user || '',
-    recipient: recipient || '',
-    selectedToken: values.selectedToken,
-  });
+  // const { estimatedOutput } = useRelayQuote({
+  //   originChain: values.origin,
+  //   destinationChain: values.destination,
+  //   amount: values.amount,
+  //   transferType: transferType,
+  //   relayChains,
+  //   user: user || '',
+  //   recipient: recipient || '',
+  //   selectedToken: values.selectedToken,
+  // });
 
-  // Extract fee information from Relay quote if available
-  const relayQuote = estimatedOutput?.quote;
-  const relayFees = relayQuote?.fees;
+  // // Extract fee information from Relay quote if available
+  // const relayQuote = estimatedOutput?.quote;
+  // const relayFees = relayQuote?.fees;
 
-  // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
-  const [depositFees, setDepositFees] = useState(null);
+  // // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
+  // const [depositFees, setDepositFees] = useState(null);
 
-  useEffect(() => {
-    if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
-      const fetchDepositFees = async () => {
-        try {
-          const { getClient } = await import('@reservoir0x/relay-sdk');
-          const client = getClient();
-          if (client) {
-            // Get chain IDs from dynamic Relay data (not hardcoded)
-            const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
+  // useEffect(() => {
+  //   if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
+  //     const fetchDepositFees = async () => {
+  //       try {
+  //         const { getClient } = await import('@reservoir0x/relay-sdk');
+  //         const client = getClient();
+  //         if (client) {
+  //           // Get chain IDs from dynamic Relay data (not hardcoded)
+  //           const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
 
-            const originRelayChain = relayChains.find((chain) => {
-              const internalName = mapRelayChainToInternalName(chain.name);
-              return internalName === values.origin.toLowerCase();
-            });
+  //           const originRelayChain = relayChains.find((chain) => {
+  //             const internalName = mapRelayChainToInternalName(chain.name);
+  //             return internalName === values.origin.toLowerCase();
+  //           });
 
-            const destinationRelayChain = relayChains.find((chain) => {
-              const internalName = mapRelayChainToInternalName(chain.name);
-              return internalName === values.destination.toLowerCase();
-            });
+  //           const destinationRelayChain = relayChains.find((chain) => {
+  //             const internalName = mapRelayChainToInternalName(chain.name);
+  //             return internalName === values.destination.toLowerCase();
+  //           });
 
-            const originChainId = originRelayChain?.id;
-            const destinationChainId = destinationRelayChain?.id;
-            if (!originChainId || !destinationChainId) return;
+  //           const originChainId = originRelayChain?.id;
+  //           const destinationChainId = destinationRelayChain?.id;
+  //           if (!originChainId || !destinationChainId) return;
 
-            // Resolve currencies
-            const originCurrency =
-              values.selectedToken?.address ||
-              (values.selectedToken as any)?.currency ||
-              (values.selectedToken as any)?.contractAddress ||
-              '0x0000000000000000000000000000000000000000'; // Native token
+  //           // Resolve currencies
+  //           const originCurrency =
+  //             values.selectedToken?.address ||
+  //             (values.selectedToken as any)?.currency ||
+  //             (values.selectedToken as any)?.contractAddress ||
+  //             '0x0000000000000000000000000000000000000000'; // Native token
 
-            const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
+  //           const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
 
-            const decimals = values.selectedToken?.decimals ?? 18;
-            const amountWei = (
-              parseFloat(
-                typeof values.amount === 'string' ? values.amount : String(values.amount),
-              ) * Math.pow(10, decimals)
-            ).toString();
+  //           const decimals = values.selectedToken?.decimals ?? 18;
+  //           const amountWei = (
+  //             parseFloat(
+  //               typeof values.amount === 'string' ? values.amount : String(values.amount),
+  //             ) * Math.pow(10, decimals)
+  //           ).toString();
 
-            const quote = await client.actions.getQuote({
-              chainId: originChainId,
-              toChainId: destinationChainId,
-              currency: originCurrency,
-              toCurrency,
-              amount: amountWei,
-              tradeType: 'EXACT_INPUT',
-              user,
-              recipient,
-            });
+  //           const quote = await client.actions.getQuote({
+  //             chainId: originChainId,
+  //             toChainId: destinationChainId,
+  //             currency: originCurrency,
+  //             toCurrency,
+  //             amount: amountWei,
+  //             tradeType: 'EXACT_INPUT',
+  //             user,
+  //             recipient,
+  //           });
 
-            if (quote?.fees) setDepositFees(quote.fees as any);
-          }
-        } catch (err) {
-          // Swallow and keep UI minimal; user will still be able to proceed
-        }
-      };
-      fetchDepositFees();
-    }
-  }, [
-    transferType,
-    values.amount,
-    values.origin,
-    values.destination,
-    values.selectedToken,
-    user,
-    recipient,
-    estimatedOutput,
-  ]);
+  //           if (quote?.fees) setDepositFees(quote.fees as any);
+  //         }
+  //       } catch (err) {
+  //         // Swallow and keep UI minimal; user will still be able to proceed
+  //       }
+  //     };
+  //     fetchDepositFees();
+  //   }
+  // }, [
+  //   transferType,
+  //   values.amount,
+  //   values.origin,
+  //   values.destination,
+  //   values.selectedToken,
+  //   user,
+  //   recipient,
+  //   estimatedOutput,
+  // ]);
 
   // Use depositFees for deposits if relayFees is not available
-  const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
+  // const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
 
   return (
     <div
@@ -893,7 +898,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       )}
 
       {/* Show Relay fees for Relay transfers */}
-      {isUsingRelay && finalRelayFees && (
+      {/* {isUsingRelay && finalRelayFees && (
         <>
           {finalRelayFees.gas &&
             finalRelayFees.gas.amountFormatted &&
@@ -936,7 +941,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
               </p>
             )}
         </>
-      )}
+      )} */}
 
       <p className="flex justify-between">
         <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
@@ -1033,7 +1038,8 @@ async function validateForm(
     if (!address) return { origin: 'Please connect wallet for origin chain' };
 
     // Determine if this should use Relay or Hyperlane based on connected wallets
-    const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains, accounts);
+    // const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains, accounts);
+    const isRelayTransfer = false;
 
     if (isRelayTransfer) {
       // Relay-specific validation (no token requirement)
@@ -1097,13 +1103,9 @@ function isUsingRelayForTransfer(
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
 
-  const isFormaInvolved =
-    origin === 'forma' ||
-    origin === 'sketchpad' ||
-    destination === 'forma' ||
-    destination === 'sketchpad';
+  const isFormaInvolved = origin === 'forma' || destination === 'forma';
 
-  const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
+  const isDeposit = destination === 'forma'; // TO Forma
 
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
@@ -1221,29 +1223,29 @@ async function validateRelayTransfer({
 }
 
 // Utility function to get available chain names from Relay supported chains
-function getRelayChainNames(relayChains: any[]): string[] {
-  const chainNames: string[] = [];
+// function getRelayChainNames(relayChains: any[]): string[] {
+//   const chainNames: string[] = [];
 
-  // Add all Relay supported chains regardless of deposit/disabled flags
-  relayChains.forEach((chain) => {
-    if (chain.name) {
-      // Use the chain name directly as the internal name
-      const internalName = chain.name.toLowerCase();
+//   // Add all Relay supported chains regardless of deposit/disabled flags
+//   relayChains.forEach((chain) => {
+//     if (chain.name) {
+//       // Use the chain name directly as the internal name
+//       const internalName = chain.name.toLowerCase();
 
-      // Exclude Forma and Solana from selectable Relay chains
-      // Forma is a hardcoded destination and Solana should not be selectable
-      if (
-        internalName &&
-        !chainNames.includes(internalName) &&
-        !['forma', 'solana'].includes(internalName)
-      ) {
-        chainNames.push(internalName);
-      }
-    }
-  });
+//       // Exclude Forma and Solana from selectable Relay chains
+//       // Forma is a hardcoded destination and Solana should not be selectable
+//       if (
+//         internalName &&
+//         !chainNames.includes(internalName) &&
+//         !['forma', 'solana'].includes(internalName)
+//       ) {
+//         chainNames.push(internalName);
+//       }
+//     }
+//   });
 
-  return chainNames;
-}
+//   return chainNames;
+// }
 
 function ReceiveSection({ isReview, transferType }: { isReview: boolean; transferType: string }) {
   const { values } = useFormikContext<TransferFormValues>();
@@ -1461,8 +1463,8 @@ function TokenDisplaySection({
     );
   }
 
-  // Always show TIA for Forma/Sketchpad chains regardless of transfer type
-  if (chain === 'forma' || chain === 'sketchpad') {
+  // Always show TIA for Forma chains regardless of transfer type
+  if (chain === 'forma') {
     return (
       <div className="flex items-center gap-2 pl-[14px] pr-3 py-2 h-full min-w-[105px]">
         <Image
