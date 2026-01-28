@@ -426,10 +426,11 @@ function AmountSection({
   const { values } = useFormikContext<TransferFormValues>();
   const originBalanceResult = useOriginBalance(values, transferType);
   const { balance } = originBalanceResult;
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  // const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const isRelayTransfer = false;
 
   return (
     <div className="flex-1">
@@ -517,16 +518,17 @@ function TokenBalance({
   const { origin, destination, tokenIndex } = values;
   const { accounts } = useAccounts();
   const { fetchMaxAmount } = useFetchMaxAmount();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay deposit
-  const isRelayDeposit =
-    transferType === 'deposit' &&
-    destination === 'forma' &&
-    relayChains.some((rc) => {
-      const internalName = rc.name.toLowerCase();
-      return internalName === origin.toLowerCase();
-    });
+  // const isRelayDeposit =
+  //   transferType === 'deposit' &&
+  //   destination === 'forma' &&
+  //   relayChains.some((rc) => {
+  //     const internalName = rc.name.toLowerCase();
+  //     return internalName === origin.toLowerCase();
+  //   });
+  const isRelayDeposit = false;
 
   // Use Relay max amount hook for Relay deposits
   const { calculateMaxAmount: calculateRelayMaxAmount, isLoading: isRelayLoading } =
@@ -618,29 +620,31 @@ function ButtonSection({
   const { values } = useFormikContext<TransferFormValues>();
   const { data: wallet } = useWalletClient();
   // const { switchChainAsync } = useSwitchChain();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Check if this is a Relay transfer
-  const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  // const isRelayTransfer = isUsingRelayForTransfer(values.origin, values.destination, relayChains);
+  const isRelayTransfer = false;
 
   // Get user address for origin chain
-  const userAddress = useAccountAddressForChain(values.origin) || '';
+  // const userAddress = useAccountAddressForChain(values.origin) || '';
 
   // Get recipient address - always call the hook, handle errors in the quote
-  const destinationAddress = useAccountAddressForChain(values.destination) || '';
-  const recipientAddress = destinationAddress || userAddress;
+  // const destinationAddress = useAccountAddressForChain(values.destination) || '';
+  // const recipientAddress = destinationAddress || userAddress;
 
   // Get quote error for Relay transfers
-  const { error: quoteError } = useRelayQuote({
-    originChain: values.origin,
-    destinationChain: values.destination,
-    amount: values.amount,
-    transferType,
-    relayChains,
-    user: userAddress,
-    recipient: recipientAddress,
-    selectedToken: values.selectedToken,
-  });
+  // const { error: quoteError } = useRelayQuote({
+  //   originChain: values.origin,
+  //   destinationChain: values.destination,
+  //   amount: values.amount,
+  //   transferType,
+  //   relayChains,
+  //   user: userAddress,
+  //   recipient: recipientAddress,
+  //   selectedToken: values.selectedToken,
+  // });
+  const quoteError = null;
 
   // Disable button if there's a quote error for Relay transfers
   const isDisabled = isRelayTransfer && !!quoteError;
@@ -743,126 +747,127 @@ function ButtonSection({
 
 function ReviewDetails({ visible }: { visible: boolean }) {
   const { values } = useFormikContext<TransferFormValues>();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
 
   // Only fetch fee quotes for Hyperlane transfers, not Relay transfers
-  const { accounts: reviewAccounts } = useAccounts();
-  const isUsingRelay = isUsingRelayForTransfer(
-    values.origin,
-    values.destination,
-    relayChains,
-    reviewAccounts,
-  );
+  // const { accounts: reviewAccounts } = useAccounts();
+  // const isUsingRelay = isUsingRelayForTransfer(
+  //   values.origin,
+  //   values.destination,
+  //   relayChains,
+  //   reviewAccounts,
+  // );
+  const isUsingRelay = false;
   const { fees } = useFeeQuotes(values, visible && !isUsingRelay);
 
   // For Relay transfers, get fee information from Relay quote
-  const user = useAccountAddressForChain(values.origin);
+  // const user = useAccountAddressForChain(values.origin);
 
   // Get destination user - always call the hook
-  const destinationUser = useAccountAddressForChain(values.destination) || user;
+  // const destinationUser = useAccountAddressForChain(values.destination) || user;
 
-  const recipient = values.recipient || destinationUser || '';
+  // const recipient = values.recipient || destinationUser || '';
 
   // Determine transfer type based on origin and destination
-  const transferType = (() => {
-    if (values.destination === 'forma') {
-      return 'deposit';
-    } else if (values.origin === 'forma') {
-      return 'withdraw';
-    }
-    return '';
-  })();
+  // const transferType = (() => {
+  //   if (values.destination === 'forma') {
+  //     return 'deposit';
+  //   } else if (values.origin === 'forma') {
+  //     return 'withdraw';
+  //   }
+  //   return '';
+  // })();
 
-  const { estimatedOutput } = useRelayQuote({
-    originChain: values.origin,
-    destinationChain: values.destination,
-    amount: values.amount,
-    transferType: transferType,
-    relayChains,
-    user: user || '',
-    recipient: recipient || '',
-    selectedToken: values.selectedToken,
-  });
+  // const { estimatedOutput } = useRelayQuote({
+  //   originChain: values.origin,
+  //   destinationChain: values.destination,
+  //   amount: values.amount,
+  //   transferType: transferType,
+  //   relayChains,
+  //   user: user || '',
+  //   recipient: recipient || '',
+  //   selectedToken: values.selectedToken,
+  // });
 
-  // Extract fee information from Relay quote if available
-  const relayQuote = estimatedOutput?.quote;
-  const relayFees = relayQuote?.fees;
+  // // Extract fee information from Relay quote if available
+  // const relayQuote = estimatedOutput?.quote;
+  // const relayFees = relayQuote?.fees;
 
-  // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
-  const [depositFees, setDepositFees] = useState(null);
+  // // For deposits, if estimatedOutput is null, try to get fees from the working transfer form logic
+  // const [depositFees, setDepositFees] = useState(null);
 
-  useEffect(() => {
-    if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
-      const fetchDepositFees = async () => {
-        try {
-          const { getClient } = await import('@reservoir0x/relay-sdk');
-          const client = getClient();
-          if (client) {
-            // Get chain IDs from dynamic Relay data (not hardcoded)
-            const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
+  // useEffect(() => {
+  //   if (transferType === 'deposit' && !estimatedOutput && values.amount && user && recipient) {
+  //     const fetchDepositFees = async () => {
+  //       try {
+  //         const { getClient } = await import('@reservoir0x/relay-sdk');
+  //         const client = getClient();
+  //         if (client) {
+  //           // Get chain IDs from dynamic Relay data (not hardcoded)
+  //           const { mapRelayChainToInternalName } = await import('../chains/relayUtils');
 
-            const originRelayChain = relayChains.find((chain) => {
-              const internalName = mapRelayChainToInternalName(chain.name);
-              return internalName === values.origin.toLowerCase();
-            });
+  //           const originRelayChain = relayChains.find((chain) => {
+  //             const internalName = mapRelayChainToInternalName(chain.name);
+  //             return internalName === values.origin.toLowerCase();
+  //           });
 
-            const destinationRelayChain = relayChains.find((chain) => {
-              const internalName = mapRelayChainToInternalName(chain.name);
-              return internalName === values.destination.toLowerCase();
-            });
+  //           const destinationRelayChain = relayChains.find((chain) => {
+  //             const internalName = mapRelayChainToInternalName(chain.name);
+  //             return internalName === values.destination.toLowerCase();
+  //           });
 
-            const originChainId = originRelayChain?.id;
-            const destinationChainId = destinationRelayChain?.id;
-            if (!originChainId || !destinationChainId) return;
+  //           const originChainId = originRelayChain?.id;
+  //           const destinationChainId = destinationRelayChain?.id;
+  //           if (!originChainId || !destinationChainId) return;
 
-            // Resolve currencies
-            const originCurrency =
-              values.selectedToken?.address ||
-              (values.selectedToken as any)?.currency ||
-              (values.selectedToken as any)?.contractAddress ||
-              '0x0000000000000000000000000000000000000000'; // Native token
+  //           // Resolve currencies
+  //           const originCurrency =
+  //             values.selectedToken?.address ||
+  //             (values.selectedToken as any)?.currency ||
+  //             (values.selectedToken as any)?.contractAddress ||
+  //             '0x0000000000000000000000000000000000000000'; // Native token
 
-            const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
+  //           const toCurrency = '0x0000000000000000000000000000000000000000'; // TIA on Forma
 
-            const decimals = values.selectedToken?.decimals ?? 18;
-            const amountWei = (
-              parseFloat(
-                typeof values.amount === 'string' ? values.amount : String(values.amount),
-              ) * Math.pow(10, decimals)
-            ).toString();
+  //           const decimals = values.selectedToken?.decimals ?? 18;
+  //           const amountWei = (
+  //             parseFloat(
+  //               typeof values.amount === 'string' ? values.amount : String(values.amount),
+  //             ) * Math.pow(10, decimals)
+  //           ).toString();
 
-            const quote = await client.actions.getQuote({
-              chainId: originChainId,
-              toChainId: destinationChainId,
-              currency: originCurrency,
-              toCurrency,
-              amount: amountWei,
-              tradeType: 'EXACT_INPUT',
-              user,
-              recipient,
-            });
+  //           const quote = await client.actions.getQuote({
+  //             chainId: originChainId,
+  //             toChainId: destinationChainId,
+  //             currency: originCurrency,
+  //             toCurrency,
+  //             amount: amountWei,
+  //             tradeType: 'EXACT_INPUT',
+  //             user,
+  //             recipient,
+  //           });
 
-            if (quote?.fees) setDepositFees(quote.fees as any);
-          }
-        } catch (err) {
-          // Swallow and keep UI minimal; user will still be able to proceed
-        }
-      };
-      fetchDepositFees();
-    }
-  }, [
-    transferType,
-    values.amount,
-    values.origin,
-    values.destination,
-    values.selectedToken,
-    user,
-    recipient,
-    estimatedOutput,
-  ]);
+  //           if (quote?.fees) setDepositFees(quote.fees as any);
+  //         }
+  //       } catch (err) {
+  //         // Swallow and keep UI minimal; user will still be able to proceed
+  //       }
+  //     };
+  //     fetchDepositFees();
+  //   }
+  // }, [
+  //   transferType,
+  //   values.amount,
+  //   values.origin,
+  //   values.destination,
+  //   values.selectedToken,
+  //   user,
+  //   recipient,
+  //   estimatedOutput,
+  // ]);
 
   // Use depositFees for deposits if relayFees is not available
-  const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
+  // const finalRelayFees = relayFees || (transferType === 'deposit' ? depositFees : null);
 
   return (
     <div
@@ -893,7 +898,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
       )}
 
       {/* Show Relay fees for Relay transfers */}
-      {isUsingRelay && finalRelayFees && (
+      {/* {isUsingRelay && finalRelayFees && (
         <>
           {finalRelayFees.gas &&
             finalRelayFees.gas.amountFormatted &&
@@ -936,7 +941,7 @@ function ReviewDetails({ visible }: { visible: boolean }) {
               </p>
             )}
         </>
-      )}
+      )} */}
 
       <p className="flex justify-between">
         <span className="text-left text-secondary text-14px font-medium min-w-[7rem]">
@@ -1033,7 +1038,8 @@ async function validateForm(
     if (!address) return { origin: 'Please connect wallet for origin chain' };
 
     // Determine if this should use Relay or Hyperlane based on connected wallets
-    const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains, accounts);
+    // const isRelayTransfer = isUsingRelayForTransfer(origin, destination, relayChains, accounts);
+    const isRelayTransfer = false;
 
     if (isRelayTransfer) {
       // Relay-specific validation (no token requirement)

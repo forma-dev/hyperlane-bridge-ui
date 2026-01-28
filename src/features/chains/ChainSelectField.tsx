@@ -1,11 +1,11 @@
 import { useField, useFormikContext } from 'formik';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { ProtocolType } from '@hyperlane-xyz/utils';
 
 import { ChainLogo } from '../../components/icons/ChainLogo';
 import { ChevronIcon } from '../../components/icons/ChevronIcon';
-import { useRelaySupportedChains } from '../wallet/context/RelayContext';
+//import { useRelaySupportedChains } from '../wallet/context/RelayContext';
 import {
   useAccountAddressForChain,
   useAccounts,
@@ -13,8 +13,7 @@ import {
   useDisconnectFns,
 } from '../wallet/hooks/multiProtocol';
 
-import { ChainSelectListModal } from './ChainSelectModal';
-import { formatAddress, getChainDisplayName, mapRelayChainToInternalName } from './utils';
+import { formatAddress, getChainDisplayName } from './utils';
 
 type Props = {
   name: string;
@@ -27,14 +26,15 @@ type Props = {
 
 export function ChainSelectField({ name, label, chains, onChange, disabled, transferType }: Props) {
   const [field, , helpers] = useField<ChainName>(name);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isLocked, setIsLocked] = useState(false);
+  const isLocked = true;
   const previousTransferType = useRef<string | null>(null);
 
   const { accounts } = useAccounts();
   const connectFns = useConnectFns();
   const disconnectFns = useDisconnectFns();
-  const { relayChains } = useRelaySupportedChains();
+  // const { relayChains } = useRelaySupportedChains();
   const { setFieldValue } = useFormikContext<any>();
 
   // Dynamic chain protocol detection
@@ -43,26 +43,28 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     const evm: string[] = [];
 
     // Add hardcoded known chains for this bridge
-    cosmos.push('celestia');
+    if (transferType == 'deposit') {
+      cosmos.push('celestia');
+    }
     if (transferType == 'withdraw') {
       cosmos.push('stride');
     }
     evm.push('forma');
 
     // Add Relay chains (all EVM-based) - using centralized mapping
-    relayChains.forEach((chain) => {
-      if (chain.name) {
-        const internalName = mapRelayChainToInternalName(chain.name);
+    // relayChains.forEach((chain) => {
+    //   if (chain.name) {
+    //     const internalName = mapRelayChainToInternalName(chain.name);
 
-        // Only add if not already present
-        if (internalName && !evm.includes(internalName) && !cosmos.includes(internalName)) {
-          evm.push(internalName);
-        }
-      }
-    });
+    //     // Only add if not already present
+    //     if (internalName && !evm.includes(internalName) && !cosmos.includes(internalName)) {
+    //       evm.push(internalName);
+    //     }
+    //   }
+    // });
 
     return { cosmos, evm };
-  }, [transferType, relayChains]);
+  }, [transferType]);
 
   const cosmosNumReady = accounts[ProtocolType.Cosmos].addresses.length;
   const evmNumReady = accounts[ProtocolType.Ethereum].addresses.length;
@@ -75,31 +77,31 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
     (chainProtocols.cosmos.includes(chainId) && cosmosNumReady > 0) ||
     (chainProtocols.evm.includes(chainId) && evmNumReady > 0);
 
-  const handleChange = useCallback(
-    (newChainId: ChainName, token?: any) => {
-      helpers.setValue(newChainId);
-      onChange?.(newChainId);
+  // const handleChange = useCallback(
+  //   (newChainId: ChainName, token?: any) => {
+  //     helpers.setValue(newChainId);
+  //     onChange?.(newChainId);
 
-      // If a token was selected, update the form with token details
-      if (token) {
-        const tokenData = {
-          address: token.address,
-          symbol: token.symbol,
-          name: token.name,
-          decimals: token.decimals,
-          logoURI: token.metadata?.logoURI,
-          chainId: relayChains.find(
-            (rc) => mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase(),
-          )?.id,
-        };
-        setFieldValue('selectedToken', tokenData);
-      }
-    },
-    [helpers, onChange, setFieldValue, relayChains],
-  );
+  //     // If a token was selected, update the form with token details
+  //     if (token) {
+  //       const tokenData = {
+  //         address: token.address,
+  //         symbol: token.symbol,
+  //         name: token.name,
+  //         decimals: token.decimals,
+  //         logoURI: token.metadata?.logoURI,
+  //         chainId: relayChains.find(
+  //           (rc) => mapRelayChainToInternalName(rc.name) === newChainId.toLowerCase(),
+  //         )?.id,
+  //       };
+  //       setFieldValue('selectedToken', tokenData);
+  //     }
+  //   },
+  //   [helpers, onChange, setFieldValue, relayChains],
+  // );
 
   const onClick = () => {
-    if (!disabled && !isLocked) setIsModalOpen(true);
+    // if (!disabled && !isLocked) setIsModalOpen(true);
   };
 
   const onDisconnectEnv = () => async () => {
@@ -137,14 +139,15 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       ) {
         helpers.setValue('forma');
         onChange?.('forma');
-        setIsLocked(true);
+        // setIsLocked(true);
       } else {
-        setIsLocked(false);
+        // setIsLocked(false);
       }
 
+      // @todo: change to celestia when liquidity is cycled
       if (transferType == 'withdraw' && label == 'To') {
-        helpers.setValue('celestia');
-        onChange?.('celestia');
+        helpers.setValue('stride');
+        onChange?.('stride');
       }
 
       if (transferType == 'deposit' && label == 'From') {
@@ -156,14 +159,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
       previousTransferType.current = transferType;
     } else {
       // Just handle locking logic for subsequent renders
-      if (
-        (transferType == 'withdraw' && label == 'From') ||
-        (transferType == 'deposit' && label == 'To')
-      ) {
-        setIsLocked(true);
-      } else {
-        setIsLocked(false);
-      }
+      // if (
+      //   (transferType == 'withdraw' && label == 'From') ||
+      //   (transferType == 'deposit' && label == 'To')
+      // ) {
+      //   setIsLocked(true);
+      // } else {
+      //   setIsLocked(false);
+      // }
     }
   }, [transferType, label, helpers, onChange]);
 
@@ -266,14 +269,14 @@ export function ChainSelectField({ name, label, chains, onChange, disabled, tran
         )}
       </div>
 
-      <ChainSelectListModal
+      {/* <ChainSelectListModal
         isOpen={isModalOpen}
         close={() => setIsModalOpen(false)}
         chains={chains}
         onSelect={handleChange}
         transferType={transferType}
         currentChain={field.value}
-      />
+      /> */}
     </div>
   );
 }
