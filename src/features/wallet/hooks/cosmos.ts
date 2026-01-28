@@ -1,8 +1,10 @@
 import { DeliverTxResponse, ExecuteResult, IndexedTx } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
 import { useChain, useChains } from '@cosmos-kit/react';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 
+import { SigningHyperlaneModuleClient } from '@hyperlane-xyz/cosmos-sdk';
 import { ProviderType, TypedTransactionReceipt, WarpTypedTransaction } from '@hyperlane-xyz/sdk';
 import { HexString, ProtocolType, assert } from '@hyperlane-xyz/utils';
 
@@ -10,8 +12,6 @@ import { PLACEHOLDER_COSMOS_CHAIN } from '../../../consts/values';
 import { getCosmosChainNames } from '../../chains/metadata';
 import { getChainMetadata } from '../../chains/utils';
 
-import { GasPrice } from '@cosmjs/stargate';
-import { SigningHyperlaneModuleClient } from '@hyperlane-xyz/cosmos-sdk';
 import { AccountInfo, ActiveChainInfo, ChainAddress, ChainTransactionFns } from './types';
 
 // Helper function to convert Long objects to strings for amino encoding
@@ -110,7 +110,8 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
 
       // Convert Long objects to strings for amino encoding compatibility
       const processedTransaction = convertLongToString(tx.transaction);
-      const { getSigningCosmWasmClient, getSigningStargateClient, getOfflineSigner, chain } = chainContext;
+      const { getSigningCosmWasmClient, getSigningStargateClient, getOfflineSigner, chain } =
+        chainContext;
       let result: ExecuteResult | DeliverTxResponse;
       let txDetails: IndexedTx | null;
       if (tx.type === ProviderType.CosmJsWasm) {
@@ -137,11 +138,7 @@ export function useCosmosTransactionFns(): ChainTransactionFns {
           },
         );
 
-        result = await client.signAndBroadcast(
-          chainContext.address,
-          [tx.transaction],
-          2,
-        );
+        result = await client.signAndBroadcast(chainContext.address, [tx.transaction], 2);
         txDetails = await client.getTx(result.transactionHash);
       } else {
         throw new Error(`Invalid cosmos provider type ${tx.type}`);

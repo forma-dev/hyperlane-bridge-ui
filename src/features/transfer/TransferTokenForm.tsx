@@ -1103,9 +1103,7 @@ function isUsingRelayForTransfer(
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
 
-  const isFormaInvolved =
-    origin === 'forma' ||
-    destination === 'forma';
+  const isFormaInvolved = origin === 'forma' || destination === 'forma';
 
   const isDeposit = destination === 'forma'; // TO Forma
 

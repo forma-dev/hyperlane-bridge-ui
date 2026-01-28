@@ -158,9 +158,7 @@ export function TransfersDetailsModal({
     );
 
     // Check for Forma involvement (Relay bridge)
-    const isFormaInvolved =
-      origin === 'forma' ||
-      destination === 'forma';
+    const isFormaInvolved = origin === 'forma' || destination === 'forma';
 
     return hasRelayToken || ((originIsRelay || destinationIsRelay) && isFormaInvolved);
   }, [transfer, relayChains]);

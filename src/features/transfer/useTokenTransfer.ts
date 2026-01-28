@@ -99,9 +99,7 @@ function getTransferProtocol(
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
 
-  const isFormaInvolved =
-    origin === 'forma' ||
-    destination === 'forma';
+  const isFormaInvolved = origin === 'forma' || destination === 'forma';
 
   const isDeposit = destination === 'forma'; // TO Forma
   const isWithdrawal = origin === 'forma'; // FROM Forma

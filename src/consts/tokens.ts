@@ -33,7 +33,8 @@ export const tokenConfigs: WarpCoreConfig = {
       logoURI: '/logos/celestia.png',
       connections: [
         {
-          token: 'cosmosnative|celestia|0x726f757465725f61707000000000000000000000000000010000000000000008',
+          token:
+            'cosmosnative|celestia|0x726f757465725f61707000000000000000000000000000010000000000000008',
         },
         {
           token: 'cosmos|stride|stride1h4rhlwcmdwnnd99agxm3gp7uqkr4vcjd73m4586hcuklh3vdtldqgqmjxc',
@@ -49,7 +50,8 @@ export const tokenConfigs: WarpCoreConfig = {
       symbol: 'TIA',
       decimals: 6,
       addressOrDenom: 'stride1h4rhlwcmdwnnd99agxm3gp7uqkr4vcjd73m4586hcuklh3vdtldqgqmjxc',
-      collateralAddressOrDenom: 'ibc/BF3B4F53F3694B66E13C23107C84B6485BD2B96296BB7EC680EA77BBA75B4801',
+      collateralAddressOrDenom:
+        'ibc/BF3B4F53F3694B66E13C23107C84B6485BD2B96296BB7EC680EA77BBA75B4801',
       logoURI: '/logos/celestia.png',
       connections: [
         {
