@@ -45,7 +45,7 @@ export function useRelayMaxAmount({
     // Only calculate for Relay deposits (origin is Relay chain, destination is Forma)
     const isRelayDeposit =
       transferType === 'deposit' &&
-      (destination === 'forma' || destination === 'sketchpad') &&
+      destination === 'forma' &&
       relayChains.some((rc) => {
         const internalName = rc.name.toLowerCase();
         return internalName === origin.toLowerCase();

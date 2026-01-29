@@ -99,14 +99,10 @@ function getTransferProtocol(
   const warpCore = getWarpCore();
   const hyperlaneChains = warpCore.getTokenChains();
 
-  const isFormaInvolved =
-    origin === 'forma' ||
-    origin === 'sketchpad' ||
-    destination === 'forma' ||
-    destination === 'sketchpad';
+  const isFormaInvolved = origin === 'forma' || destination === 'forma';
 
-  const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
+  const isDeposit = destination === 'forma'; // TO Forma
+  const isWithdrawal = origin === 'forma'; // FROM Forma
 
   const originIsRelay = isRelayChain(origin, relayChains);
   const destinationIsRelay = isRelayChain(destination, relayChains);
@@ -193,9 +189,6 @@ async function executeRelayTransfer({
 }) {
   const { origin, destination, amount, recipient } = values;
 
-  // const isDeposit = destination === 'forma' || destination === 'sketchpad'; // TO Forma
-  // const isWithdrawal = origin === 'forma' || origin === 'sketchpad'; // FROM Forma
-
   setIsLoading(true);
   let transferStatus: TransferStatus = TransferStatus.Preparing;
   updateTransferStatus(transferIndex, transferStatus);
@@ -230,24 +223,21 @@ async function executeRelayTransfer({
     }
 
     // Determine if this is a deposit or withdrawal
-    const isDeposit = destination === 'forma' || destination === 'sketchpad';
-    const isWithdrawal = origin === 'forma' || origin === 'sketchpad';
+    const isDeposit = destination === 'forma';
+    const isWithdrawal = origin === 'forma';
 
     // DEBUG: Log transfer type and chain information
 
     // Get the correct token address/denomination for the origin chain
-    const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
     const getTokenAddressOrDenom = (chainName: string) => {
       // For deposits: use the selected token address or fallback to native token
       if (isDeposit) {
         return values.selectedToken?.address || '0x0000000000000000000000000000000000000000';
       }
-      // For withdrawals: use the actual TIA token address on Forma/Sketchpad
-      if (chainName === 'forma' || chainName === 'sketchpad') {
-        // Use the actual TIA token address on Forma/Sketchpad
-        return isMainnet
-          ? '0x832d26B6904BA7539248Db4D58614251FD63dC05'
-          : '0x2F9C0BCD2C37eE6211763E7688F7D6758FDdCF53';
+      // For withdrawals: use the actual TIA token address on Forma
+      if (chainName === 'forma') {
+        // Use the actual TIA token address on Forma
+        return '0x832d26B6904BA7539248Db4D58614251FD63dC05';
       }
       return '0x0000000000000000000000000000000000000000';
     };
@@ -595,6 +585,6 @@ const errorMessages: Partial<Record<TransferStatus, string>> = {
 
 const txCategoryToStatuses: Record<WarpTxCategory, [TransferStatus, TransferStatus]> = {
   [WarpTxCategory.Approval]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
-  [WarpTxCategory.Transfer]: [TransferStatus.SigningTransfer, TransferStatus.ConfirmingTransfer],
   [WarpTxCategory.Revoke]: [TransferStatus.SigningApprove, TransferStatus.ConfirmingApprove],
+  [WarpTxCategory.Transfer]: [TransferStatus.SigningTransfer, TransferStatus.ConfirmingTransfer],
 };

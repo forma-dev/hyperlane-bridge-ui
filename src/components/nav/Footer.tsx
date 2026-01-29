@@ -14,7 +14,7 @@ export function Footer({ isSideBarOpen = false, setIsSideBarOpen }: Props) {
       <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 items-center justify-center">
         <div className="flex items-center">
           <p className="text-black text-sm">
-            Built with Hyperlane, Stride, and Relay. © Cocode Labs 2025 ✨
+            Built with Hyperlane, Celestia, and Relay. © Cocode Labs 2025 ✨
           </p>
         </div>
       </div>

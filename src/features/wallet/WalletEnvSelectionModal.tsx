@@ -22,65 +22,6 @@ export function WalletEnvSelectionModal({
   const connectFns = useConnectFns();
 
   const onClickEnv = (env: ProtocolType) => async () => {
-    if (env == ProtocolType.Cosmos) {
-      if (process.env.NEXT_PUBLIC_NETWORK === 'testnet' && window && (window as any).keplr) {
-        const chains = await (window as any).keplr.getChainInfosWithoutEndpoints();
-        const hasStrideTestnet = chains.find((el) => el.chainId === 'stride-internal-1')
-          ? true
-          : false;
-        if (!hasStrideTestnet) {
-          await (window as any).keplr.experimentalSuggestChain({
-            chainId: 'stride-internal-1',
-            chainName: 'Stride (Testnet)',
-            rpc: 'https://stride.testnet-1.stridenet.co',
-            rest: 'https://stride.testnet-1.stridenet.co/api/',
-            stakeCurrency: {
-              coinDenom: 'STRD',
-              coinMinimalDenom: 'ustrd',
-              coinDecimals: 6,
-            },
-            bip44: {
-              coinType: 118,
-            },
-            bech32Config: {
-              bech32PrefixAccAddr: 'stride',
-              bech32PrefixAccPub: 'stridepub',
-              bech32PrefixValAddr: 'stridevaloper',
-              bech32PrefixValPub: 'stridevaloperpub',
-              bech32PrefixConsAddr: 'stridevalcons',
-              bech32PrefixConsPub: 'stridevalconspub',
-            },
-            currencies: [
-              {
-                coinDenom: 'STRD',
-                coinMinimalDenom: 'ustrd',
-                coinDecimals: 6,
-              },
-            ],
-            feeCurrencies: [
-              {
-                coinDenom: 'STRD',
-                coinMinimalDenom: 'ustrd',
-                coinDecimals: 6,
-              },
-              {
-                coinDenom: 'TIA',
-                coinMinimalDenom:
-                  'ibc/1A7653323C1A9E267FF7BEBF40B3EEA8065E8F069F47F2493ABC3E0B621BF793',
-                coinDecimals: 6,
-                coinGeckoId: 'celestia',
-                gasPriceStep: {
-                  low: 0.01,
-                  average: 0.01,
-                  high: 0.01,
-                },
-              },
-            ],
-          });
-        }
-      }
-    }
-
     close();
     setIsSideBarOpen(true);
     const connectFn = connectFns[env];

@@ -76,6 +76,12 @@ const nextConfig = {
       test: /\.ya?ml$/,
       use: 'yaml-loader',
     });
+    // Ensure widgets can resolve @hyperlane-xyz/registry from our installed package
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@hyperlane-xyz/registry': require.resolve('@hyperlane-xyz/registry'),
+    };
     return config;
   },
 

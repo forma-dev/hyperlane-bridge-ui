@@ -344,8 +344,8 @@ export function ChainSelectListModal({
   let otherChainsList: ChainName[] = [];
 
   if (transferType === 'deposit') {
-    // For deposits: Celestia and Stride at top, then popular chains, then A-Z
-    const depositPriorityChains: ChainName[] = ['celestia', 'stride'];
+    // For deposits: Celestia at top, then popular chains, then A-Z
+    const depositPriorityChains: ChainName[] = ['celestia'];
     const standardPopularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
 
     // Add priority chains first
@@ -364,8 +364,8 @@ export function ChainSelectListModal({
       (chain) => !popularChainsList.includes(chain.toLowerCase()),
     );
   } else if (transferType === 'withdraw') {
-    // For withdrawals: Stride at top, then popular chains, then A-Z
-    const withdrawPriorityChains: ChainName[] = ['stride'];
+    // For withdrawals: Celestia and Stride at top, then popular chains, then A-Z
+    const withdrawPriorityChains: ChainName[] = ['celestia', 'stride'];
     const standardPopularChains: ChainName[] = ['ethereum', 'arbitrum', 'optimism'];
 
     // Add priority chains first
