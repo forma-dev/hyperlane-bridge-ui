@@ -43,13 +43,15 @@ export function ChainSelectField({ name, label, onChange, disabled, transferType
     const evm: string[] = [];
 
     // Add hardcoded known chains for this bridge
-    if (transferType == 'deposit') {
-      cosmos.push('celestia');
-    }
-    if (transferType == 'withdraw') {
-      cosmos.push('stride');
-    }
+    // if (transferType == 'deposit') {
+    //   cosmos.push('celestia');
+    // }
+    // if (transferType == 'withdraw') {
+    //   cosmos.push('stride');
+    // }
+
     evm.push('forma');
+    cosmos.push('celestia');
 
     // Add Relay chains (all EVM-based) - using centralized mapping
     // relayChains.forEach((chain) => {
@@ -146,8 +148,10 @@ export function ChainSelectField({ name, label, onChange, disabled, transferType
 
       // @todo: change to celestia when liquidity is cycled
       if (transferType == 'withdraw' && label == 'To') {
-        helpers.setValue('stride');
-        onChange?.('stride');
+        // helpers.setValue('stride');
+        // onChange?.('stride');
+        helpers.setValue('celestia');
+        onChange?.('celestia');
       }
 
       if (transferType == 'deposit' && label == 'From') {
