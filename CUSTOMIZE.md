@@ -1,4 +1,4 @@
-# Customizing tokens and branding
+# Customizing Tokens and Branding
 
 Find below instructions for customizing the token list and branding assets of this app.
 
@@ -19,7 +19,7 @@ Or it can be hidden entirely with the `showTipBox` setting in `./src/consts/conf
 
 ## Branding
 
-## App name
+## App Name
 
 The values to describe the app itself (e.g. to WalletConnect) are in `./src/consts/app.ts`
 
@@ -40,7 +40,7 @@ These are images are primarily used in the header and footer files:
 - `./src/components/nav/Header.tsx`
 - `./src/components/nav/Footer.tsx`
 
-### Social links
+### Social Links
 
 The links used in the footer can be found here: `./src/consts/links.ts`
 
