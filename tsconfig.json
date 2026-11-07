@@ -1,38 +1,16 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowImportingTsExtensions":true,
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "incremental": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
-    "moduleResolution": "node",
-    "noEmit": true,
-    "noEmitOnError": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "preserveSymlinks": true,
-    "preserveWatchOutput": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "strict": true,
-    "target": "ES2022"
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "dist"],
-  "include": ["next-env.d.ts", "./src/"],
-  "files": ["./src/global.d.ts"],
-  "ts-node": {
-    "files": true,
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  }
+  "include": ["src", "vite.config.ts"]
 }

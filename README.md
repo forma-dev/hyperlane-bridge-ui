@@ -1,66 +1,19 @@
-# Hyperlane Warp Route UI Template
+# Forma Bridge
 
-This repo contains an example web interface for interchain tokens built with [Hyperlane Warp Route](https://docs.hyperlane.xyz/docs/reference/applications/warp-routes). Warp is a framework to permisionlessly bridge tokens to any chain.
+Forma has shut down. This site is a static notice pointing users to [Eden](https://eden.zone/), where unbridged TIA was airdropped and can be bridged to Celestia.
 
-## Architecture
-
-This app is built with Next+React, Wagmi, RainbowKit, and the Hyperlane SDK.
-
-- Constants that you may want to change are in `./src/consts/`, see the following Customization section for details.
-- The index page is located at `./src/pages/index.tsx`
-- The primary features are implemented in `./src/features/`
-
-## Customization
-
-See [CUSTOMIZE.md](./CUSTOMIZE.md) for details about adjusting the tokens and branding of this app.
+The original bridge app is in git history.
 
 ## Development
 
-### Setup
-
 ```sh
-# Install dependencies
-yarn
-
-# Build Next project
-yarn build
-```
-
-### Run
-
-```sh
-# Start the Next dev server
-yarn dev
-```
-
-### Test
-
-```sh
-# Lint check code
-yarn lint
-
-# Check code types
-yarn typecheck
-```
-
-### Format
-
-```sh
-# Format code using Prettier
-yarn prettier
-```
-
-### Clean / Reset
-
-```sh
-# Delete build artifacts to start fresh 
-yarn clean
+pnpm install
+pnpm dev        # start the Vite dev server
+pnpm build      # typecheck and build to dist/
+pnpm lint
+pnpm prettier
 ```
 
 ## Deployment
 
-The easiest hosting solution for this Next.JS app is to create a project on Vercel.
-
-## Learn more
-
-For more information, see the [Hyperlane documentation](https://docs.hyperlane.xyz/docs/reference/applications/warp-routes).
+Static site built to `dist/`.
